@@ -1,6 +1,6 @@
 ---
 name: audit
-description: "Full chain audit — verify Ghost's brain works end-to-end: prompt coherence from /new to EOD, cross-file consistency, self-learning lifecycle, plus infrastructure health."
+description: "Full chain audit — verify Ghost Brain works end-to-end across 12 dimensions: prompt coherence, capture, learning, proactive systems, token efficiency, obligations, infrastructure, and resilience."
 user-invocable: true
 ---
 
@@ -15,103 +15,100 @@ Ghost Brain exists to be the **best personal assistant** — measured by 4 pilla
 3. **Proactive** — does it anticipate needs, flag risks, surface context before asked?
 4. **Critique** — does it challenge assumptions, catch gaps, push for better decisions?
 
-Every check below should be evaluated against these 4 pillars. Not just "does it exist" but "does it serve productivity, efficiency, proactivity, or critique?"
+Every check below should be evaluated against these 4 pillars.
 
 ## Instructions
 
-Run all checks, then compose the output. Use sub-agents for parallel reads if needed.
+Run all checks, then compose the output.
 
 ---
 
-### Part 1 — 🧠 Brain Coherence (main focus)
-
-Verify the prompt/MD chain works end-to-end across a full day cycle.
-
-#### 1A. Session Boot (`/new`)
+### Part 1 — 🔗 Boot Chain
 AGENTS.md tells Ghost to read GHOST_PLAYBOOK.md + ACTIVE_WORK.md on startup. Verify:
-- [ ] Both files exist and are non-empty
-- [ ] ACTIVE_WORK.md workstreams match MEMORY.md `### Key workstreams` — flag mismatches (project in one but not the other, status contradictions)
-- [ ] SOUL.md + IDENTITY.md + USER.md — no contradictions between them
-- [ ] AGENTS.md policies still make sense (sub-agent rules, daily note format, etc.)
+- [ ] All core files exist and non-empty: AGENTS.md, GHOST_PLAYBOOK.md, ACTIVE_WORK.md, SOUL.md, IDENTITY.md, USER.md, MEMORY.md, HEARTBEAT.md, TOOLS.md
+- [ ] ACTIVE_WORK.md workstreams match MEMORY.md workstreams — flag mismatches
+- [ ] SOUL.md + IDENTITY.md + USER.md — no contradictions
+- [ ] AGENTS.md policies still make sense
 
-#### 1B. During-session prompts
+### Part 2 — 📋 Prompt Effectiveness
 GHOST_PLAYBOOK.md drives response behavior. Verify:
-- [ ] Fast lanes cover the current active workstreams (e.g., if a new domain appeared in ACTIVE_WORK.md, is there a relevant fast lane?)
-- [ ] Capture triggers (decisions, people, ideas, commitments, follow-ups) — read each trigger definition and verify the target file has the structure those triggers expect (headers, table format, etc.)
-- [ ] Proactive maintenance triggers — still relevant to current work context?
-- [ ] Quick commands list — all referenced files/skills still exist?
+- [ ] Fast lanes cover current active workstreams (new domain without fast lane = gap)
+- [ ] Capture triggers (decisions, people, ideas, commitments, follow-ups) — target files exist with expected format
+- [ ] Proactive maintenance triggers — still relevant?
+- [ ] Quick commands — all referenced files/skills exist?
+- [ ] Any dead references in playbook to removed tools/files?
 
-#### 1C. Heartbeat
-HEARTBEAT.md drives between-cron checks. Verify:
-- [ ] Checks listed still match current reality (e.g., does it reference files/tools that exist?)
-- [ ] heartbeat_pulse.sh exists and is executable (or verify heartbeat works without it per HEARTBEAT.md rules)
-- [ ] heartbeat-state.json — exists? Format still valid?
+### Part 3 — 🧠 Capture Systems
+Are all 5 second-brain files actively being used?
 
-#### 1D. EOD & Weekly cycle
-Cron jobs handle EOD summary, Obsidian push, weekly distillation, weekly backup. Verify:
-- [ ] Cron jobs exist for: EOD summary, Obsidian push, weekly distillation, weekly backup
-- [ ] EOD cron target matches AGENTS.md `/logs` behavior expectations
-- [ ] Weekly distillation output (MEMORY.md) — does `_Last updated` show the distillation is actually running?
-- [ ] Obsidian push script exists at path referenced in TOOLS.md
+| File | Check | Healthy | Warning |
+|---|---|---|---|
+| `decisions.md` | Entries from last 7 days | >0 recent | 0 recent |
+| `people.md` | Last update date | <14 days | >30 days |
+| `ideas.md` | Active idea count | Has active | 0 or stale >30d |
+| `commitments.md` | Active entries when customers active | Has entries | Empty with active customer projects |
+| `follow-ups.md` | Active items tracked, none stale | Active items, 0 stale >14d | Stale items or 0 when work active |
 
-#### 1E. Cross-file consistency
-The real test — do files agree with each other?
-- [ ] **ACTIVE_WORK.md vs follow-ups.md** — any active project missing from follow-ups that should have tracked items? Any follow-up referencing a project now completed/dormant?
-- [ ] **ACTIVE_WORK.md vs commitments.md** — active customer projects with no commitments tracked (⚠️ if customer-facing work)
-- [ ] **MEMORY.md vs ACTIVE_WORK.md** — workstreams section in MEMORY.md vs ACTIVE_WORK.md entries. Flag duplicated info that drifted, contradictions, or stale entries in either
-- [ ] **GHOST_PLAYBOOK.md vs AGENTS.md** — any conflicting policies? (e.g., sub-agent approval rules, response patterns)
-- [ ] **TOOLS.md** — referenced paths/scripts still exist?
+### Part 4 — 📝 Memory Freshness
+- [ ] MEMORY.md `_Last updated:` — fresh (<14 days)?
+- [ ] Daily notes: count last 7 days (expect 5+)
+- [ ] Today's note: missing after 12:00 = ⚠️ (before noon = normal)
+- [ ] `wc -c MEMORY.md` — size check (flag if >15KB = bloat risk)
 
----
+### Part 5 — 🔄 Learning Lifecycle
+Full cycle: capture → scope → promote → archive → review
 
-### Part 2 — 🔄 Self-Learning Verification
+| Stage | Check | Healthy |
+|---|---|---|
+| Capture | `.learnings/ERRORS.md` entry count + last date | Within 14 days |
+| Scope | `domains/*.md` + `projects/*.md` — non-empty, cover active work | Coverage matches active projects |
+| Promote | `LEARNINGS.md` rule count | >0 promoted |
+| Archive | `archive/` has content | Used at least once |
+| Review | `REVIEW.md` exists + has recent entry | Exists with date |
 
-Not just "files exist" but "the learning loop actually works."
+### Part 6 — 💓 Proactive Coverage
+Are proactive systems actually firing?
+- [ ] Heartbeat pulse script exists + executable
+- [ ] heartbeat-state.json exists + valid
+- [ ] Commitment Deadline Alert cron exists + status ok/idle (not errored)
+- [ ] Morning Summary cron exists + last run <24h on workdays
+- [ ] EOD Summary cron exists + last run <24h
+- [ ] Follow-up nudge: heartbeat-state.json tracks cooldowns
+- [ ] Weekly Distillation cron exists + status ok/idle
 
-#### 2A. Capture → is Ghost actually logging lessons?
-- `.learnings/ERRORS.md` — count entries, date of most recent. >14 days since last = ⚠️
-- `.learnings/FEATURE_REQUESTS.md` — count open items
+### Part 7 — ⏰ Obligation Health
+- [ ] Overdue commitments (deadline < today, not fulfilled) — count
+- [ ] Stale follow-ups (active, since >14 days) — count + list
+- [ ] Active customer projects with NO commitments or follow-ups tracked — flag
+- [ ] Follow-ups referencing completed/dormant projects — flag
 
-#### 2B. Scope → are lessons going to the right place?
-- `.learnings/domains/*.md` — list files, check not empty (<100 bytes = empty). Do domain files cover the active workstreams? (e.g., if ERP work is active, `erp.md` should exist and have content)
-- `.learnings/projects/*.md` — list files. Do they match active projects? Missing project file for a major active project = ⚠️
+### Part 8 — 💡 Token Efficiency
+- [ ] `wc -c MEMORY.md` — flag if >15KB (it's in every message)
+- [ ] Cron models — should be cost-efficient (gpt-5.4 or similar), not premium unless needed
+- [ ] MEMORY.md vs ACTIVE_WORK.md — check for fully duplicated paragraphs (some overlap is OK, full duplicate = waste)
+- [ ] Heartbeat design — verify bash-first (0 tokens when idle)
+- [ ] Any cron running premium model unnecessarily?
 
-#### 2C. Promote → are recurring patterns being elevated?
-- `.learnings/LEARNINGS.md` — count promoted rules. 0 = never promoted = ⚠️
-- Check: any domain/project entries that appear 3+ times but haven't been promoted? (quick grep for repeated patterns)
+### Part 9 — ⚡ Runtime
+- [ ] `openclaw gateway status` — running + RPC ok
+- [ ] PID stable, no crash indicators
 
-#### 2D. Archive → is cleanup happening?
-- `.learnings/archive/` — has content? If LEARNINGS.md is growing but nothing archived = lifecycle incomplete
-- `.learnings/REVIEW.md` — exists? Has recent review date?
+### Part 10 — ⚙️ Automation
+- [ ] `openclaw cron list` — count jobs, flag any status=error/failed
+- [ ] All expected crons present (EOD, Morning, Obsidian, Weekly Backup, Weekly Distillation, Commitment Alert, Gateway Health, Monthly Archive, Biweekly Learnings Review)
+- [ ] Heartbeat cron configured
 
-#### 2E. Feedback loop → do learnings actually influence behavior?
-- Quick spot-check: pick 1-2 rules from LEARNINGS.md and verify they're still relevant (not about a completed/archived project, not contradicted by newer info)
-- Any learnings that reference tools/paths that no longer exist?
+### Part 11 — 🛡️ Resilience
+- [ ] Backup freshness: `ls -lt backups/ | head -3`
+- [ ] Git: last commit age (<7 days = healthy)
+- [ ] Obsidian: today/yesterday note in vault
+- [ ] TOOLS.md referenced paths all exist
+- [ ] Skills count
+- [ ] Workspace root hygiene (only durable files, no temp/loose files)
 
----
-
-### Part 3 — 🏗️ Infrastructure & Resilience (quick pass)
-
-Report only problems — if all green, one line summary.
-
-**Infrastructure:**
-1. `openclaw gateway status` → running + RPC ok
-2. `openclaw cron list` → count, flag failures
-3. `openclaw security audit` → flag critical/warn
-
-**Resilience:**
-4. Backups: `ls -lt backups/ | head -3` — freshness
-5. Git: last commit age
-6. Obsidian: today/yesterday note in vault
-7. Skills count + workspace root hygiene
-
----
-
-### Part 4 — ⏰ Obligations (brief)
-
-- Overdue commitments (deadline < today)
-- Stale follow-ups (>14 days active)
-- Active follow-up count
+### Part 12 — 🔒 Security
+- [ ] `openclaw security audit` — count critical/warn/info
+- [ ] Flag critical findings
 
 ---
 
@@ -120,61 +117,70 @@ Report only problems — if all green, one line summary.
 ```
 👻 Ghost Audit — {date}
 
-━━━ 🧠 Brain Coherence ━━━
+━━━ 🧠 Brain Health ━━━
 
-🔗 Boot chain: {✅ all connected / ⚠️ issues}
-  {list any mismatches found}
-
-📋 Session prompts: {✅ aligned / ⚠️ gaps}
-  {list any fast lane gaps, broken trigger targets, missing referenced files}
-
-💓 Heartbeat: {✅ valid / ⚠️ issues}
-
-🌙 EOD/Weekly cycle: {✅ running / ⚠️ issues}
-  {list any cron/script issues}
-
-🔀 Cross-file consistency: {✅ consistent / ⚠️ drifts found}
-  {list specific contradictions or gaps between files}
-
-━━━ 🔄 Self-Learning ━━━
-
-Capture: {✅/⚠️} — {N} errors logged, last {date}
-Scope: {✅/⚠️} — domains: {list} | projects: {list}
-Promote: {✅/⚠️} — {N} global rules
-Archive: {✅/⚠️} — {status}
-Feedback: {✅/⚠️} — {spot-check result}
+🔗 Boot Chain: {details}
+📋 Prompts: {details}
+🧠 Capture: {X}/5 active — {details}
+📝 Memory: {details}
+🔄 Learning: capture {✅/⚠️} → scope {✅/⚠️} → promote {✅/⚠️} → archive {✅/⚠️} → review {✅/⚠️}
+💓 Proactive: {details}
+⏰ Obligations: {details}
+💡 Efficiency: {details}
 
 ━━━ 🏗️ Infrastructure ━━━
-{one line if healthy, or bullet list of issues}
 
-━━━ ⏰ Obligations ━━━
-Overdue: {N} | Stale: {N} | Active: {N}
-{list items if any issues}
+⚡ Runtime: {details}
+⚙️ Automation: {details}
+🛡️ Resilience: {details}
+🔒 Security: {details}
 
-━━━ Overall ━━━
+━━━ 📊 Scorecard ━━━
 
-🧠 Coherence {score}/10 · 🔄 Learning {score}/10 · 🏗️ Infra {score}/10
+| Area | Score | Detail |
+|---|---|---|
+| 🔗 Boot Chain | X/10 | {1-line} |
+| 📋 Prompt Effectiveness | X/10 | {1-line} |
+| 🧠 Capture Systems | X/10 | {1-line} |
+| 📝 Memory Freshness | X/10 | {1-line} |
+| 🔄 Learning Lifecycle | X/10 | {1-line} |
+| 💓 Proactive Coverage | X/10 | {1-line} |
+| ⏰ Obligation Health | X/10 | {1-line} |
+| 💡 Token Efficiency | X/10 | {1-line} |
+| ⚡ Runtime | X/10 | {1-line} |
+| ⚙️ Automation | X/10 | {1-line} |
+| 🛡️ Resilience | X/10 | {1-line} |
+| 🔒 Security | X/10 | {1-line} |
+| | | |
+| 🧠 **Brain** | **X/10** | weighted avg (brain dims × 2) |
+| 🏗️ **Infra** | **X/10** | weighted avg (infra dims × 1) |
+| 🏆 **Overall** | **X/10** | combined |
 
-{🔴 Issues that need fixing now}
-{📋 Recommendations}
+━━━ 🔴 Alerts ━━━
+{only if problems}
+
+━━━ 📋 Recommendations ━━━
+{top 1-3, ordered by impact}
 ```
 
-### Scoring
+### Scoring Guide
 
-**🧠 Coherence:**
-- 10: all files consistent, no contradictions, boot chain clean, triggers valid, cross-file aligned
-- 8: minor drift (1-2 stale references) but no contradictions
-- 6: contradictions found or significant gaps in cross-file alignment
-- 4: major inconsistencies — brain is giving conflicting instructions to itself
+| Area | 10 | 8 | 6 | 4 |
+|---|---|---|---|---|
+| 🔗 Boot Chain | All files present + policies current | 1 stale ref | Missing file or broken instruction | Boot would fail |
+| 📋 Prompt Effectiveness | Fast lanes match work + triggers valid + no dead refs | 1 gap | Multiple gaps or stale triggers | Playbook misaligned |
+| 🧠 Capture Systems | 5/5 active | 4/5 | 3/5 | Most idle |
+| 📝 Memory Freshness | <7d + 6+/7 notes | <14d or 5/7 | >14d or <5/7 | Stale + poor coverage |
+| 🔄 Learning Lifecycle | All 5 stages active + coverage matches work | 4/5 stages | Capture only | Barely used |
+| 💓 Proactive Coverage | All systems verified working | 1 unconfigured | Multiple not firing | Proactive dead |
+| ⏰ Obligation Health | 0 overdue + 0 stale + all customers tracked | 0 overdue, 1-2 gaps | Overdue or untracked | Multiple overdue |
+| 💡 Token Efficiency | Lean MEMORY + efficient models + no redundancy | Minor bloat | Significant bloat | Wasteful |
+| ⚡ Runtime | Up + RPC ok | Doctor warnings | Degraded | Down |
+| ⚙️ Automation | All ok/idle | 1 failure | Multiple failures | Broken |
+| 🛡️ Resilience | All fresh (<24h backup, <7d git, Obsidian synced) | 1 stale | 2 stale | No backups |
+| 🔒 Security | 0 critical + 0 warn | Warns only | Critical findings | Unpatched critical |
 
-**🔄 Learning:**
-- 10: full lifecycle active + spot-check passes + domain/project coverage matches active work
-- 8: capture+scope working, promotion/archive not regular
-- 6: capture only, scoping incomplete
-- 4: barely used or stale
-
-**🏗️ Infra:**
-- 10: all green
-- 8: minor warnings
-- 6: failures present
-- 4: critical issues
+### Overall Calculation
+- **Brain score** = weighted avg of 8 brain dims (Boot, Prompt, Capture, Memory, Learning, Proactive, Obligation, Efficiency) — **weight 2x**
+- **Infra score** = weighted avg of 4 infra dims (Runtime, Automation, Resilience, Security) — **weight 1x**
+- **Overall** = (Brain × 2 + Infra × 1) / 3
