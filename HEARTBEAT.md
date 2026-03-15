@@ -5,7 +5,7 @@ Goal: catch urgent signals between cron runs. Bash-first, 0 tokens when nothing 
 ## How it works
 1. Run `scripts/heartbeat_pulse.sh` — pure bash/python, no LLM needed.
 2. If output = `HEARTBEAT_OK` → reply HEARTBEAT_OK (silent, 0 tokens).
-3. If output contains alerts → forward to Joe. If `NEEDS_MEETING_PREP` is in any alert, pull context from ACTIVE_WORK.md + recent daily notes and prepare 3-5 bullet talking points.
+3. If output contains alerts → forward to the user. If `NEEDS_MEETING_PREP` is in any alert, pull context from ACTIVE_WORK.md + recent daily notes and prepare 3-5 bullet talking points.
 
 ## Checks (all bash, 0 tokens unless alert)
 1. **Meeting in 2h** — gog calendar → if found, signal NEEDS_MEETING_PREP
@@ -21,6 +21,6 @@ Goal: catch urgent signals between cron runs. Bash-first, 0 tokens when nothing 
 - Typical day: **0-2,000 tokens** vs old design ~48,000/day
 
 ## Rules
-- Never spam Joe with routine OK messages.
+- Never spam the user with routine OK messages.
 - Dedup follow-up nudges via `memory/heartbeat-state.json` (3-day cooldown).
 - If heartbeat_pulse.sh is missing or errors → reply HEARTBEAT_OK (fail silent).

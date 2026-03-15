@@ -25,7 +25,7 @@
 ## Quick Install
 
 ```bash
-git clone https://github.com/skzjoe/ghost-brain.git
+git clone https://github.com/YOUR_USERNAME/ghost-brain.git
 cd ghost-brain
 bash install.sh
 ```
