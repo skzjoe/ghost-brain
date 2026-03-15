@@ -1,0 +1,139 @@
+# 👻 Ghost Brain
+
+**AI Second Brain for OpenClaw** — self-learning, token efficiency, and automated routines that make your AI assistant smarter every day.
+
+> Your AI forgets everything every session. Ghost Brain fixes that in 30 seconds.
+
+## What it does
+
+🧠 **Second Brain** — 5 auto-capture systems
+- Decisions, people, ideas, commitments, follow-ups — all captured automatically from conversations
+
+📝 **Self-Learning** — your AI learns from mistakes
+- Errors logged once, never repeated. Patterns promoted to global rules automatically.
+
+💰 **Token Efficiency** — save 30-50% on API costs
+- Rate limiting, context management, output discipline rules
+
+⏰ **10 Automated Routines**
+- Morning brief, EOD summary, weekly distillation, commitment alerts, health checks, backups
+
+🔧 **9 System Commands**
+- `/audit` — full system health check with second brain + self-learning scoring
+- `/health` `/projects` `/commitments` `/decisions` `/followups` `/ideas` `/people`
+
+## Quick Install
+
+```bash
+git clone https://github.com/skzjoe/ghost-brain.git
+cd ghost-brain
+bash install.sh
+```
+
+Or download and extract:
+```bash
+tar -xzf ghost-brain.tar.gz
+cd ghost-brain
+bash install.sh
+```
+
+That's it. 30 seconds. No dependencies.
+
+## What gets installed
+
+| Component | Count | Location |
+|---|---|---|
+| Skills | 9 | `~/.openclaw/workspace/skills/` |
+| Knowledge docs | 5 | `~/.openclaw/workspace/memory/reference/` |
+| Memory templates | 6 | `~/.openclaw/workspace/memory/` |
+| Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
+| Cron prompts | 9 | `~/.openclaw/workspace/scripts/` |
+
+Won't overwrite existing files. Use `--force` to replace all.
+
+## Skills
+
+| Command | What it does |
+|---|---|
+| `/audit` | Full system audit — runtime, automation, second brain health, self-learning effectiveness |
+| `/health` | Deep security + update check |
+| `/projects` | Active and dormant workstreams |
+| `/commitments` | Promises and deadline tracking with urgency indicators |
+| `/decisions` | Decision journal with reasoning |
+| `/followups` | Follow-up items with staleness (🟢🟡🔴) |
+| `/ideas` | Idea parking lot with age tracking |
+| `/people` | Key contacts CRM |
+
+Plus `self-improving-agent` — automatically captures errors, corrections, and lessons learned.
+
+## Knowledge Docs
+
+| Doc | What you learn |
+|---|---|
+| `TOKEN-EFFICIENCY.md` | Context management, rate limiting, output discipline, anti-patterns |
+| `SELF-LEARNING.md` | How to set up `.learnings/` for continuous improvement |
+| `PLAYBOOK.md` | Response patterns, critique-by-default, proactive triggers |
+| `SECOND-BRAIN.md` | Memory architecture — daily notes + 5 specialized capture files |
+| `CRON-PATTERNS.md` | 10 automation patterns with schedules and prompt templates |
+
+## Automated Routines
+
+Set up all 10 cron jobs in one command:
+```bash
+# Edit timezone first (default: Asia/Bangkok)
+nano setup-crons.sh
+bash setup-crons.sh
+```
+
+| Schedule | Job |
+|---|---|
+| Daily 08:00 | Morning summary (priorities, calendar, blockers) |
+| Daily 08:30 | Commitment deadline alerts |
+| Daily 23:00 | EOD summary (consolidate daily note + second brain capture) |
+| Daily 23:05 | Push daily note to Obsidian |
+| Every 6h | Gateway health check |
+| Sunday 20:00 | Weekly backup |
+| Sunday 21:00 | Weekly distillation (memory compaction + weekly brief) |
+| Monday 08:30 | Weekly report |
+| 1st & 15th 10:00 | Biweekly learnings review |
+| 1st of month 06:00 | Archive old daily notes |
+
+## How it works
+
+```
+You chat normally
+    ↓
+Ghost Brain auto-captures decisions, people, ideas, commitments
+    ↓
+Daily: EOD summarizes → structured notes
+    ↓
+Weekly: distillation compacts memory → weekly brief
+    ↓
+Biweekly: learnings reviewed → patterns promoted
+    ↓
+/audit tells you if everything is working
+```
+
+## Requirements
+
+- [OpenClaw](https://github.com/openclaw/openclaw) installed and configured
+- Any LLM provider (Claude, GPT, Gemini, etc.)
+
+## Before / After
+
+| | Without | With Ghost Brain |
+|---|---|---|
+| New session | Re-explain everything | AI knows your context |
+| Same mistake | Repeats every time | Learns, never repeats |
+| Deadlines | Forget until someone asks | Alerts 2 days before |
+| API costs | Uncontrolled | 30-50% reduction |
+| End of day | Nothing saved | Auto-summarized daily note |
+| Weekly review | Manual effort | Auto-generated brief |
+
+## License
+
+MIT
+
+## Credits
+
+Built by [Joe](https://github.com/skzjoe) with Ghost 👻
