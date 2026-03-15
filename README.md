@@ -55,6 +55,7 @@ Won't overwrite existing files. Use `--force` to replace all.
 
 | Command | What it does |
 |---|---|
+| `/logs` | Summarize session → daily note + second brain capture (decisions, people, ideas, commitments, learnings) |
 | `/audit` | Full system audit — runtime, automation, second brain health, self-learning effectiveness |
 | `/health` | Deep security + update check |
 | `/projects` | Active and dormant workstreams |
