@@ -114,6 +114,22 @@ Biweekly: learnings reviewed → patterns promoted
 /audit tells you if everything is working
 ```
 
+## Gateway Watchdog
+
+OpenClaw cron jobs can't alert you if the gateway itself is down. Ghost Brain includes an OS-level watchdog that monitors independently:
+
+```bash
+# Create secrets
+echo "YOUR_BOT_TOKEN" > ~/.openclaw/workspace/secrets/telegram_bot_token.txt
+echo "YOUR_CHAT_ID" > ~/.openclaw/workspace/secrets/telegram_chat_id.txt
+
+# Add to OS crontab (every 2 minutes)
+crontab -e
+# Add: */2 * * * * bash ~/.openclaw/workspace/scripts/gateway_watchdog.sh
+```
+
+If gateway goes down → you get a Telegram alert within 2 minutes. systemd auto-restarts it in 5 seconds.
+
 ## Requirements
 
 - [OpenClaw](https://github.com/openclaw/openclaw) installed and configured

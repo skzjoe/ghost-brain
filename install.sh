@@ -70,7 +70,13 @@ for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md; do
   safe_copy "$SCRIPT_DIR/structure/.learnings/$f" "$WORKSPACE/.learnings/$f"
 done
 
-# ── 5. Cron prompts ──
+# ── 5. Gateway watchdog ──
+echo ""
+echo "🛡️ Installing gateway watchdog..."
+safe_copy "$SCRIPT_DIR/scripts/gateway_watchdog.sh" "$WORKSPACE/scripts/gateway_watchdog.sh"
+chmod +x "$WORKSPACE/scripts/gateway_watchdog.sh" 2>/dev/null
+
+# ── 6. Cron prompts ──
 echo ""
 echo "⏰ Installing cron prompts..."
 mkdir -p "$WORKSPACE/scripts"
@@ -89,6 +95,12 @@ echo "  • 5 knowledge docs → memory/reference/"
 echo "  • Second brain templates → memory/"
 echo "  • .learnings/ structure"
 echo "  • $(ls "$WORKSPACE"/scripts/cron_*.md 2>/dev/null | wc -l) cron prompt templates → scripts/"
+echo ""
+echo ""
+echo "  🛡️ Gateway watchdog (recommended):"
+echo "     1. Create secrets/telegram_bot_token.txt and secrets/telegram_chat_id.txt"
+echo "     2. Add to OS crontab: */2 * * * * bash $WORKSPACE/scripts/gateway_watchdog.sh"
+echo "     This monitors gateway outside OpenClaw — alerts you if it goes down."
 echo ""
 echo "Next steps:"
 echo "  1. Read memory/reference/PLAYBOOK.md and copy patterns you like into AGENTS.md"
