@@ -23,6 +23,11 @@ Usage:
   ghost_memory_db.py links --rebuild    # Auto-link from content
   ghost_memory_db.py pipeline           # Full maintenance: index→dedup→links→report
   ghost_memory_db.py export --json      # Export all items as JSON
+  ghost_memory_db.py context            # Generate session startup context
+  ghost_memory_db.py context --json     # Session context as JSON
+  ghost_memory_db.py temporal           # Temporal intelligence report
+  ghost_memory_db.py temporal --stale   # Show stale items needing review
+  ghost_memory_db.py temporal --hot     # Show most accessed items
 """
 
 import hashlib
@@ -108,6 +113,9 @@ class GhostMemory:
                 area TEXT DEFAULT '',
                 priority TEXT DEFAULT '',
                 status TEXT DEFAULT 'active',
+                source_type TEXT DEFAULT 'markdown',
+                access_count INTEGER DEFAULT 0,
+                last_accessed TEXT,
                 metadata_json TEXT DEFAULT '',
                 created_at TEXT DEFAULT (datetime('now')),
                 updated_at TEXT DEFAULT (datetime('now'))
@@ -158,10 +166,22 @@ class GhostMemory:
                 INSERT INTO items_fts(rowid, title, content, item_type, area)
                 VALUES (new.id, new.title, new.content, new.item_type, new.area);
             END;
+            -- Access log for temporal intelligence
+            CREATE TABLE IF NOT EXISTS access_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                item_id INTEGER REFERENCES items(id) ON DELETE CASCADE,
+                accessed_at TEXT DEFAULT (datetime('now')),
+                context TEXT DEFAULT ''
+            );
+
             CREATE INDEX IF NOT EXISTS idx_items_type ON items(item_type);
             CREATE INDEX IF NOT EXISTS idx_items_date ON items(logged_date);
             CREATE INDEX IF NOT EXISTS idx_items_source ON items(source_file);
             CREATE INDEX IF NOT EXISTS idx_items_status ON items(status);
+            CREATE INDEX IF NOT EXISTS idx_items_source_type ON items(source_type);
+            CREATE INDEX IF NOT EXISTS idx_items_access_count ON items(access_count);
+            CREATE INDEX IF NOT EXISTS idx_access_log_item ON access_log(item_id);
+            CREATE INDEX IF NOT EXISTS idx_access_log_time ON access_log(accessed_at);
         """)
         self.db.execute(f"""
             CREATE VIRTUAL TABLE IF NOT EXISTS items_vec USING vec0(
@@ -177,15 +197,15 @@ class GhostMemory:
 
     def add_item(self, item_type, title, content, source_file,
                  logged_date=None, area="", priority="", status="active",
-                 tags=None, metadata=None) -> int:
+                 tags=None, metadata=None, source_type="markdown") -> int:
         """Add an item and return its ID."""
         cur = self.db.execute("""
             INSERT INTO items (item_type, title, content, source_file, source_hash,
-                             logged_date, area, priority, status, metadata_json)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                             logged_date, area, priority, status, source_type, metadata_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (item_type, title, content, source_file,
               hashlib.sha256(content.encode()).hexdigest()[:16],
-              logged_date, area, priority, status,
+              logged_date, area, priority, status, source_type,
               json.dumps(metadata) if metadata else ""))
         item_id = cur.lastrowid
 
@@ -231,12 +251,13 @@ class GhostMemory:
         for item, vec in zip(items, vecs):
             cur = self.db.execute("""
                 INSERT INTO items (item_type, title, content, source_file, source_hash,
-                                 logged_date, area, priority, status, metadata_json)
-                VALUES (?,?,?,?,?,?,?,?,?,?)
+                                 logged_date, area, priority, status, source_type, metadata_json)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?)
             """, (item["item_type"], item["title"], item["content"], item["source_file"],
                   hashlib.sha256(item["content"].encode()).hexdigest()[:16],
                   item.get("logged_date"), item.get("area", ""), item.get("priority", ""),
-                  item.get("status", "active"), item.get("metadata_json", "")))
+                  item.get("status", "active"), item.get("source_type", "markdown"),
+                  item.get("metadata_json", "")))
             iid = cur.lastrowid
             for tag in item.get("tags", []):
                 if not tag: continue
@@ -540,6 +561,216 @@ class GhostMemory:
         return [{"id": r[0], "type": r[1], "title": r[2], "content": r[3], "source": r[4],
                  "date": r[5], "area": r[6], "priority": r[7], "status": r[8]} for r in rows]
 
+    # --- Source Tracking ---
+
+    def get_by_source_type(self, source_type: str, limit: int = 20) -> list[dict]:
+        """Query items by source type."""
+        rows = self.db.execute("""
+            SELECT id, item_type, title, logged_date, source_file, status
+            FROM items WHERE source_type=? ORDER BY logged_date DESC LIMIT ?
+        """, (source_type, limit)).fetchall()
+        return [{"id": r[0], "type": r[1], "title": r[2], "date": r[3], "source": r[4], "status": r[5]}
+                for r in rows]
+
+    def source_distribution(self) -> dict:
+        """Show distribution of items by source type."""
+        return dict(self.db.execute(
+            "SELECT source_type, COUNT(*) FROM items GROUP BY source_type ORDER BY COUNT(*) DESC"
+        ).fetchall())
+
+    # --- Temporal Intelligence ---
+
+    def record_access(self, item_id: int, context: str = ""):
+        """Record that an item was accessed (search result clicked, context loaded, etc.)."""
+        self.db.execute("INSERT INTO access_log (item_id, context) VALUES (?,?)", (item_id, context))
+        self.db.execute("""
+            UPDATE items SET access_count = access_count + 1,
+                           last_accessed = datetime('now')
+            WHERE id = ?
+        """, (item_id,))
+        self.db.commit()
+
+    def get_stale_items(self, days: int = 90) -> list[dict]:
+        """Find items that haven't been accessed or updated in N days."""
+        cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d")
+        rows = self.db.execute("""
+            SELECT id, item_type, title, logged_date, status, access_count, last_accessed
+            FROM items
+            WHERE item_type NOT IN ('daily_note')
+              AND (last_accessed IS NULL OR last_accessed < ?)
+              AND (logged_date IS NULL OR logged_date < ?)
+              AND status = 'active'
+            ORDER BY logged_date
+            LIMIT 20
+        """, (cutoff, cutoff)).fetchall()
+        return [{"id": r[0], "type": r[1], "title": r[2], "date": r[3], "status": r[4],
+                 "access_count": r[5], "last_accessed": r[6]} for r in rows]
+
+    def get_hot_items(self, limit: int = 10) -> list[dict]:
+        """Items most frequently accessed — these are the important ones."""
+        rows = self.db.execute("""
+            SELECT id, item_type, title, logged_date, access_count, last_accessed
+            FROM items WHERE access_count > 0
+            ORDER BY access_count DESC LIMIT ?
+        """, (limit,)).fetchall()
+        return [{"id": r[0], "type": r[1], "title": r[2], "date": r[3],
+                 "access_count": r[4], "last_accessed": r[5]} for r in rows]
+
+    def get_review_candidates(self) -> list[dict]:
+        """Decisions older than 30 days that haven't been reviewed — might be stale."""
+        cutoff = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        rows = self.db.execute("""
+            SELECT id, title, logged_date, access_count
+            FROM items
+            WHERE item_type = 'decision'
+              AND logged_date IS NOT NULL AND logged_date < ?
+              AND status = 'active'
+            ORDER BY logged_date
+            LIMIT 10
+        """, (cutoff,)).fetchall()
+        return [{"id": r[0], "title": r[1], "date": r[2], "access_count": r[3]} for r in rows]
+
+    # --- Cross-Session Context Bridge ---
+
+    def get_session_context(self, max_items: int = 30) -> dict:
+        """Generate startup context for a new session.
+        Returns the most relevant current state from the DB,
+        replacing static MEMORY.md for dynamic context."""
+        today = datetime.now().strftime("%Y-%m-%d")
+        week_ago = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+
+        context = {}
+
+        # 1. Recent decisions (last 7 days)
+        context["recent_decisions"] = [r[0] for r in self.db.execute("""
+            SELECT title FROM items WHERE item_type='decision'
+            AND logged_date >= ? ORDER BY logged_date DESC LIMIT 10
+        """, (week_ago,)).fetchall()]
+
+        # 2. Active follow-ups
+        context["active_followups"] = [{"title": r[0], "content": r[1]} for r in self.db.execute("""
+            SELECT title, substr(content, 1, 150) FROM items
+            WHERE item_type='follow-up' AND status='active'
+            ORDER BY logged_date DESC LIMIT 10
+        """).fetchall()]
+
+        # 3. Active commitments
+        context["active_commitments"] = [{"title": r[0], "content": r[1]} for r in self.db.execute("""
+            SELECT title, substr(content, 1, 150) FROM items
+            WHERE item_type='commitment' AND status='active'
+            ORDER BY logged_date DESC LIMIT 5
+        """).fetchall()]
+
+        # 4. Active ideas
+        context["active_ideas"] = [r[0] for r in self.db.execute("""
+            SELECT title FROM items WHERE item_type='idea'
+            AND status IN ('active', 'parked')
+            ORDER BY id DESC LIMIT 5
+        """).fetchall()]
+
+        # 5. Recent learnings (last 7 days)
+        context["recent_learnings"] = [{"title": r[0], "priority": r[1]} for r in self.db.execute("""
+            SELECT title, priority FROM items
+            WHERE item_type IN ('learning', 'error')
+            AND logged_date >= ?
+            ORDER BY logged_date DESC LIMIT 5
+        """, (week_ago,)).fetchall()]
+
+        # 6. People with recent mentions
+        context["active_people"] = [r[0] for r in self.db.execute("""
+            SELECT title FROM items WHERE item_type='person' AND status='active'
+            ORDER BY id LIMIT 10
+        """).fetchall()]
+
+        # 7. Hot items (most accessed)
+        hot = self.db.execute("""
+            SELECT title, item_type, access_count FROM items
+            WHERE access_count > 2 ORDER BY access_count DESC LIMIT 5
+        """).fetchall()
+        if hot:
+            context["hot_items"] = [{"title": r[0], "type": r[1], "accesses": r[2]} for r in hot]
+
+        # 8. Stale decisions needing review
+        cutoff_30d = (datetime.now() - timedelta(days=30)).strftime("%Y-%m-%d")
+        stale_decisions = self.db.execute("""
+            SELECT title, logged_date FROM items
+            WHERE item_type='decision' AND logged_date < ? AND status='active'
+            ORDER BY logged_date LIMIT 3
+        """, (cutoff_30d,)).fetchall()
+        if stale_decisions:
+            context["stale_decisions"] = [{"title": r[0], "date": r[1]} for r in stale_decisions]
+
+        # 9. Today's activity so far
+        today_count = self.db.execute(
+            "SELECT COUNT(*) FROM items WHERE logged_date=?", (today,)).fetchone()[0]
+        context["today_items"] = today_count
+
+        # 10. Brain health snapshot
+        total = self.db.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+        links = self.db.execute("SELECT COUNT(*) FROM links").fetchone()[0]
+        context["brain_size"] = {"items": total, "links": links}
+
+        # Record access for returned items (boosts their ranking over time)
+        for row in self.db.execute("""
+            SELECT id FROM items WHERE item_type IN ('follow-up','commitment')
+            AND status='active' LIMIT 20
+        """).fetchall():
+            self.db.execute("""
+                UPDATE items SET access_count = access_count + 1,
+                               last_accessed = datetime('now')
+                WHERE id = ?
+            """, (row[0],))
+        self.db.commit()
+
+        return context
+
+    def format_session_context(self) -> str:
+        """Format session context as readable markdown for injection into agent prompt."""
+        ctx = self.get_session_context()
+        lines = ["## 🧠 Session Context (from Memory DB)", ""]
+
+        if ctx.get("recent_decisions"):
+            lines.append(f"**Recent decisions ({len(ctx['recent_decisions'])}):**")
+            for d in ctx["recent_decisions"][:5]:
+                lines.append(f"- {d}")
+            lines.append("")
+
+        if ctx.get("active_followups"):
+            lines.append(f"**Active follow-ups ({len(ctx['active_followups'])}):**")
+            for f in ctx["active_followups"]:
+                lines.append(f"- {f['title']}")
+            lines.append("")
+
+        if ctx.get("active_commitments"):
+            lines.append(f"**Commitments ({len(ctx['active_commitments'])}):**")
+            for c in ctx["active_commitments"]:
+                lines.append(f"- {c['title']}")
+            lines.append("")
+
+        if ctx.get("recent_learnings"):
+            lines.append(f"**Recent learnings:**")
+            for l in ctx["recent_learnings"]:
+                prio = "🔴" if l["priority"] == "critical" else "🟡" if l["priority"] == "high" else ""
+                lines.append(f"- {prio} {l['title']}")
+            lines.append("")
+
+        if ctx.get("stale_decisions"):
+            lines.append("**⚠️ Decisions needing review (>30 days):**")
+            for s in ctx["stale_decisions"]:
+                lines.append(f"- [{s['date']}] {s['title']}")
+            lines.append("")
+
+        if ctx.get("hot_items"):
+            lines.append("**🔥 Frequently accessed:**")
+            for h in ctx["hot_items"]:
+                lines.append(f"- [{h['type']}] {h['title']} ({h['accesses']}×)")
+            lines.append("")
+
+        brain = ctx.get("brain_size", {})
+        lines.append(f"_Brain: {brain.get('items', 0)} items, {brain.get('links', 0)} links, {ctx.get('today_items', 0)} today_")
+
+        return "\n".join(lines)
+
 
 # ---------------------------------------------------------------------------
 # Embeddings (module-level for reuse)
@@ -625,18 +856,40 @@ def file_hash(fp: Path) -> str:
 # Parsers
 # ---------------------------------------------------------------------------
 
+def _detect_source_type(source_file: str) -> str:
+    """Detect source type from file path."""
+    if "memory/" in source_file:
+        if re.search(r'\d{4}-\d{2}-\d{2}', source_file):
+            return "daily_log"
+        return "second_brain"
+    elif ".learnings/" in source_file:
+        return "learning_system"
+    return "markdown"
+
 def parse_decisions(content, src):
     items = []
+    st = _detect_source_type(src)
     for line in content.split("\n"):
         m = re.match(r'\[(\d{4}-\d{2}-\d{2})\]\s+(.+?)(?:\s+—\s+(.+))?$', line.strip())
         if m:
+            # Detect if decision came from a conversation/meeting/email context
+            reasoning = m[3] or ""
+            decision_source = st
+            if any(kw in reasoning.lower() for kw in ("meeting", "discussion", "call")):
+                decision_source = "meeting"
+            elif any(kw in reasoning.lower() for kw in ("email", "mail")):
+                decision_source = "email"
+            elif any(kw in reasoning.lower() for kw in ("user", "feedback", "correction")):
+                decision_source = "conversation"
             items.append({"item_type": "decision", "title": m[2][:200],
-                "content": f"{m[2]}\n\nReasoning: {m[3]}" if m[3] else m[2],
-                "source_file": src, "logged_date": m[1], "status": "active"})
+                "content": f"{m[2]}\n\nReasoning: {reasoning}" if reasoning else m[2],
+                "source_file": src, "logged_date": m[1], "status": "active",
+                "source_type": decision_source})
     return items
 
 def parse_learning_blocks(content, src):
     items = []
+    st = _detect_source_type(src)
     for m in re.finditer(r'## \[((?:LRN|ERR)-\d{8}-\d{3})\]\s+(\S+)(.*?)(?=\n## \[|$)', content, re.DOTALL):
         eid, block = m[1], m[3]
         title, priority, status, area, logged, tags = "", "medium", "active", "", "", []
@@ -650,24 +903,35 @@ def parse_learning_blocks(content, src):
         tm = re.search(r'Tags:\s*(.+)', block)
         if tm: tags = [t.strip() for t in tm[1].split(",")]
         dm = re.match(r'(\d{4}-\d{2}-\d{2})', logged) if logged else None
+        # Detect source from block content
+        lrn_source = st
+        source_match = re.search(r'Source:\s*(\S+)', block)
+        if source_match:
+            s = source_match.group(1).lower()
+            if "user_feedback" in s or "correction" in s: lrn_source = "conversation"
+            elif "conversation" in s: lrn_source = "conversation"
         items.append({"item_type": "error" if eid.startswith("ERR") else "learning",
             "title": title[:200] or f"[{eid}]", "content": block.strip()[:2000],
             "source_file": src, "logged_date": dm[1] if dm else None,
             "area": area, "priority": priority, "status": status, "tags": tags,
+            "source_type": lrn_source,
             "metadata_json": json.dumps({"entry_id": eid})})
     return items
 
 def parse_people(content, src):
     items = []
+    st = _detect_source_type(src)
     for s in re.split(r'\n(?=##[^#]|###[^#])', content):
         m = re.match(r'#{2,3}\s+(.+)', s.strip())
         if m and m[1].strip() not in ("Personal", "Active", "Archived"):
             items.append({"item_type": "person", "title": m[1].strip(),
-                         "content": s.strip()[:1000], "source_file": src, "status": "active"})
+                         "content": s.strip()[:1000], "source_file": src,
+                         "status": "active", "source_type": st})
     return items
 
 def parse_ideas(content, src):
     items = []
+    src_type = _detect_source_type(src)
     for s in re.split(r'\n(?=###[^#])', content):
         m = re.match(r'###\s+(.+)', s.strip())
         if m and m[1].strip() != "Archived Ideas":
@@ -678,11 +942,13 @@ def parse_ideas(content, src):
                 if "park" in t: st = "parked"
                 elif "archiv" in t: st = "archived"
             items.append({"item_type": "idea", "title": m[1][:200],
-                         "content": s.strip()[:1000], "source_file": src, "status": st})
+                         "content": s.strip()[:1000], "source_file": src,
+                         "status": st, "source_type": src_type})
     return items
 
 def parse_table_rows(content, src, item_type):
     items = []
+    st = _detect_source_type(src)
     for line in content.split("\n"):
         parts = [p.strip() for p in line.split("|")]
         if len(parts) >= 5 and parts[1] and not parts[1].startswith("---") and parts[1] not in ("Item", "Date", "—"):
@@ -691,7 +957,7 @@ def parse_table_rows(content, src, item_type):
                     parts[3] if len(parts) > 3 and re.match(r'\d{4}-\d{2}-\d{2}', parts[3]) else None)
                 items.append({"item_type": item_type, "title": parts[1][:200],
                              "content": " | ".join(parts[1:]), "source_file": src,
-                             "status": "active", "logged_date": date})
+                             "status": "active", "logged_date": date, "source_type": st})
     return items
 
 def parse_daily_note(content, src):
@@ -705,6 +971,7 @@ def parse_daily_note(content, src):
                 "title": f"[{date}] {m[1]}" if date else m[1],
                 "content": s.strip()[:2000], "source_file": src,
                 "logged_date": date, "status": "active",
+                "source_type": "daily_log",
                 "metadata_json": json.dumps({"section": m[1].strip()})})
     return items
 
@@ -935,6 +1202,62 @@ def main():
                 if not a.startswith("--"): item_type = a; break
             data = mem.export_items(item_type)
             _format_json(data)
+
+        elif cmd == "context":
+            if json_mode:
+                _format_json(mem.get_session_context())
+            else:
+                print(mem.format_session_context())
+
+        elif cmd == "temporal":
+            if "--stale" in sys.argv:
+                stale = mem.get_stale_items(days=90)
+                if json_mode:
+                    _format_json(stale)
+                elif stale:
+                    print(f"📦 {len(stale)} stale items (>90 days, no access):")
+                    for s in stale:
+                        print(f"  [{s['type']}] {s['title'][:60]}")
+                        print(f"    Date: {s.get('date', '-')} | Accesses: {s['access_count']}")
+                else:
+                    print("✅ No stale items")
+            elif "--hot" in sys.argv:
+                hot = mem.get_hot_items()
+                if json_mode:
+                    _format_json(hot)
+                elif hot:
+                    print(f"🔥 Top {len(hot)} most accessed items:")
+                    for h in hot:
+                        print(f"  [{h['type']}] {h['title'][:60]} ({h['access_count']}× accessed)")
+                else:
+                    print("ℹ️  No items accessed yet")
+            else:
+                # Full temporal report
+                review = mem.get_review_candidates()
+                stale = mem.get_stale_items(days=90)
+                hot = mem.get_hot_items(limit=5)
+                sources = mem.source_distribution()
+                if json_mode:
+                    _format_json({"review_candidates": review, "stale": stale, "hot": hot, "sources": sources})
+                else:
+                    print("⏰ Temporal Intelligence Report")
+                    print(f"\n📊 Source distribution:")
+                    for src, cnt in sources.items():
+                        print(f"  {src}: {cnt}")
+                    if review:
+                        print(f"\n🔍 Decisions to review ({len(review)}):")
+                        for r in review:
+                            print(f"  [{r['date']}] {r['title'][:60]} (accessed {r['access_count']}×)")
+                    if hot:
+                        print(f"\n🔥 Hot items:")
+                        for h in hot:
+                            print(f"  [{h['type']}] {h['title'][:50]} ({h['access_count']}×)")
+                    if stale:
+                        print(f"\n📦 Stale items ({len(stale)}):")
+                        for s in stale[:5]:
+                            print(f"  [{s['type']}] {s['title'][:60]}")
+                    elif not stale:
+                        print(f"\n✅ No stale items")
 
         else:
             print(f"Unknown: {cmd}"); print(__doc__)

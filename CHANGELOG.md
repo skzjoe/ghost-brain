@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.5.0 — 2026-03-16
+
+### Added
+- **Source Tracking** — auto-detects where knowledge came from
+  - Source types: `daily_log`, `second_brain`, `conversation`, `learning_system`, `meeting`, `email`, `markdown`
+  - Auto-detected from file path + content keywords
+  - Query by source: `ghost_memory_db.py temporal` shows distribution
+- **Temporal Intelligence** — knowledge decay awareness
+  - `temporal` — full report (sources, stale items, hot items, review candidates)
+  - `temporal --stale` — items >90 days old with no access
+  - `temporal --hot` — most frequently accessed items
+  - Access tracking: every search/context load records access
+  - Stale decision detection: decisions >30 days flagged for review
+- **Cross-Session Context Bridge** — dynamic session startup
+  - `context` — generates relevant context for new sessions from DB
+  - Replaces static memory files with live, relevant data:
+    recent decisions, active follow-ups, commitments, learnings, hot items, stale alerts
+  - `context --json` for programmatic use
+  - Auto-boosts frequently accessed items in ranking
+- `access_log` table for temporal tracking
+- `source_type`, `access_count`, `last_accessed` columns on items
+
 ## v1.4.0 — 2026-03-16
 
 ### Added
