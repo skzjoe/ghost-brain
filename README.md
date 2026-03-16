@@ -18,9 +18,12 @@
 ⏰ **10 Automated Routines**
 - Morning brief, EOD summary, weekly distillation, commitment alerts, health checks, backups
 
-🔧 **9 System Commands**
-- `/audit` — full system health check with second brain + self-learning scoring
-- `/health` `/projects` `/commitments` `/decisions` `/followups` `/ideas` `/people`
+🔧 **16 System Commands**
+- `/onboard` — guided first-run setup
+- `/capture` — quick-capture to the right brain file
+- `/audit` `/health` `/weekly` `/logs`
+- `/projects` `/project` `/commitments` `/decisions` `/followups` `/ideas` `/people`
+- `/fastlanes` `/conflicts` `/export`
 
 ## Quick Install
 
@@ -43,7 +46,7 @@ That's it. 30 seconds. No dependencies.
 
 | Component | Count | Location |
 |---|---|---|
-| Skills | 9 | `~/.openclaw/workspace/skills/` |
+| Skills | 16 | `~/.openclaw/workspace/skills/` |
 | Knowledge docs | 5 | `~/.openclaw/workspace/memory/reference/` |
 | Memory templates | 6 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
@@ -55,15 +58,22 @@ Won't overwrite existing files. Use `--force` to replace all.
 
 | Command | What it does |
 |---|---|
-| `/logs` | Summarize session → daily note + second brain capture (decisions, people, ideas, commitments, learnings) |
-| `/audit` | Full system audit — runtime, automation, second brain health, self-learning effectiveness |
-| `/health` | Deep security + update check |
+| `/onboard` | Guided first-run setup — asks a few questions, populates your brain files |
+| `/capture` | Quick-capture anything: `/capture idea: ...`, `/capture decision: ...`, etc. |
+| `/logs` | Summarize session → daily note + second brain capture |
+| `/audit` | Full 12-dimension system audit with weighted scoring |
+| `/health` | Quick health check — memory, capture, cron, gateway, security, heartbeat |
+| `/weekly` | Weekly review — synthesize daily notes, surface patterns, suggest housekeeping |
+| `/project` | Initialize or load project memory: `/project init myapp` |
 | `/projects` | Active and dormant workstreams |
 | `/commitments` | Promises and deadline tracking with urgency indicators |
 | `/decisions` | Decision journal with reasoning |
 | `/followups` | Follow-up items with staleness (🟢🟡🔴) |
 | `/ideas` | Idea parking lot with age tracking |
 | `/people` | Key contacts CRM |
+| `/fastlanes` | Show/add/remove domain-specific response templates |
+| `/conflicts` | Scan brain files for contradictions and inconsistencies |
+| `/export` | Export brain state as portable markdown zip |
 
 Plus `self-improving-agent` — automatically captures errors, corrections, and lessons learned.
 
