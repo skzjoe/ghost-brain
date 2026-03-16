@@ -32,7 +32,7 @@ Ghost Brain captures context automatically during normal conversation. Here's wh
 
 ---
 
-All of this happens automatically. No `/capture` command needed — Ghost Brain recognizes commitment language ("รับปาก", "promised", "by end of") and people context from the conversation.
+All of this happens automatically. No `/capture` command needed — Ghost Brain uses LLM understanding to detect commitments, people, and decisions from natural conversation. No special keywords required — just talk normally.
 
 You can also capture manually:
 ```
