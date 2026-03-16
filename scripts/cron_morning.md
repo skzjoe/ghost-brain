@@ -1,11 +1,11 @@
 # Daily Morning Summary — Cron Prompt
 
-Run at 08:00 Bangkok time. Compose a concise morning briefing for {{USER_NAME}}.
+Run at 08:00 local time. Compose a concise morning briefing for {{USER_NAME}}.
 
 ## Steps
 
 1) **Read prior context**
-   - Determine today (Asia/Bangkok); set YESTERDAY = today - 1 day.
+   - Determine today (your configured timezone); set YESTERDAY = today - 1 day.
    - Read `~/.openclaw/workspace/memory/YESTERDAY.md` (skip if missing).
    - Read `ACTIVE_WORK.md` for current workstreams, blockers, and watchlist.
    - Read `memory/commitments.md` — check for any commitments due today or overdue.
@@ -24,7 +24,7 @@ Run at 08:00 Bangkok time. Compose a concise morning briefing for {{USER_NAME}}.
 4) **Check today signals**
    - Calendar (next 24h): `gog calendar events --account {{GOG_ACCOUNT}} --all --days 1 --max 50`, filter to `{{CALENDAR_EMAIL}}`.
    - Unread {{COMPANY}} emails: `gog gmail search "from:{{COMPANY_DOMAIN}} is:unread" --max 10 --account {{GOG_ACCOUNT}}`.
-   - Weather Bangkok: notify only if rain or PM2.5 > 100.
+   - Weather for your location: notify only if rain or severe weather.
 
 5) **Email Triage** (if unread >= 1)
    - One-line summary per email + suggested action (reply/delegate/defer/FYI).

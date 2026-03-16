@@ -1,12 +1,12 @@
 # Daily EOD Summary — Cron Prompt
 
-Run at 23:00 Bangkok time. Consolidate today's daily note, capture second-brain items, and check drift.
+Run at 23:00 local time. Consolidate today's daily note, capture second-brain items, and check drift.
 
 **Do NOT push to Obsidian** — the separate Obsidian Push cron (23:05) handles that after this job finishes.
 
 ## Steps
 
-1) **Determine TODAY** in Asia/Bangkok (YYYY-MM-DD).
+1) **Determine TODAY** in your configured timezone (YYYY-MM-DD).
 
 2) **Open daily note**: `~/.openclaw/workspace/memory/TODAY.md`
    - If missing: create from template at `memory/TEMPLATE.md`.

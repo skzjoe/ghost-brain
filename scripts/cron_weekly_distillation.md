@@ -1,6 +1,6 @@
 # Weekly Distillation — Cron Prompt
 
-Run every Sunday at 21:00 Bangkok time.
+Run every Sunday at 21:00 local time.
 
 ## Steps
 

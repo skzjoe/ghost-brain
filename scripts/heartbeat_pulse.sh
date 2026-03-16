@@ -195,7 +195,7 @@ fi
 # ─── CHECK 4: Weather (only 7-9am or 4-6pm) ───
 HOUR=$((10#$(date +%H)))
 if [[ "$HOUR" -ge 7 && "$HOUR" -le 9 ]] || [[ "$HOUR" -ge 16 && "$HOUR" -le 18 ]]; then
-  WEATHER=$(curl -s --max-time 5 "wttr.in/Bangkok?format=%C+%t+%h+%p" 2>/dev/null || echo "")
+  WEATHER=$(curl -s --max-time 5 "wttr.in/YourCity?format=%C+%t+%h+%p" 2>/dev/null || echo "")
   if [[ -n "$WEATHER" ]]; then
     if echo "$WEATHER" | grep -qiE "rain|thunder|storm|shower"; then
       ALERTS+=("🌧️ Weather: $WEATHER")

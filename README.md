@@ -25,6 +25,12 @@
 - `/projects` `/project` `/commitments` `/decisions` `/followups` `/ideas` `/people`
 - `/fastlanes` `/conflicts` `/export`
 
+## See it in action
+
+📋 [Full audit output](examples/audit-output.md) — 12-dimension scorecard + 4-pillar improvement suggestions
+📝 [Daily note example](examples/daily-note.md) — what EOD auto-summary produces
+🧠 [Auto-capture demo](examples/capture-in-action.md) — how Ghost captures decisions, people, commitments from normal chat
+
 ## Quick Install
 
 ```bash
@@ -61,7 +67,7 @@ Won't overwrite existing files. Use `--force` to replace all.
 | `/onboard` | Guided first-run setup — asks a few questions, populates your brain files |
 | `/capture` | Quick-capture anything: `/capture idea: ...`, `/capture decision: ...`, etc. |
 | `/logs` | Summarize session → daily note + second brain capture |
-| `/audit` | Full 12-dimension system audit with weighted scoring |
+| `/audit` | Full 13-part system audit with scoring + improvement suggestions |
 | `/health` | Quick health check — memory, capture, cron, gateway, security, heartbeat |
 | `/weekly` | Weekly review — synthesize daily notes, surface patterns, suggest housekeeping |
 | `/project` | Initialize or load project memory: `/project init myapp` |
@@ -89,11 +95,11 @@ Plus `self-improving-agent` — automatically captures errors, corrections, and 
 
 ## Automated Routines
 
-Set up all 10 cron jobs in one command:
+Set up all 10 cron jobs interactively:
 ```bash
-# Edit timezone first (default: Asia/Bangkok)
-nano setup-crons.sh
 bash setup-crons.sh
+# Asks: timezone, model, Obsidian (yes/no)
+# Creates all 10 cron jobs in ~30 seconds
 ```
 
 | Schedule | Job |
