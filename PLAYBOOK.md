@@ -53,6 +53,38 @@ Add these to make the agent proactively useful:
 - Don't narrate obvious tool calls
 ```
 
+## Fast lanes (auto-select by request type)
+
+Add domain-specific fast lanes to your playbook to get structured, high-quality responses automatically:
+
+```markdown
+### ERP / Business Systems
+Recommendation → Business/system impact → Risks/edge cases → Implementation path → What to verify
+
+### Docs / Specs
+Deliverable draft → Gaps/ambiguities → Critique from reviewer POV → Next edits/approval
+
+### Debug
+Most likely cause → Fastest verification → Fix path → Risk/rollback → Next diagnostic if still failing
+
+### Decision Support
+Recommendation → Why this wins → Tradeoffs/hidden costs → What to defer → Decision-triggering next step
+
+### Product Launch / Sales
+Positioning → Target audience → Pricing rationale → Distribution channel → Launch checklist → Risks/blockers → What to validate first
+
+### Negotiation
+Target outcome → Best opening → Leverage/constraints → Walk-away line → Suggested phrasing
+
+### Calendar / Email Triage
+What matters now → What can wait → Draft reply/scheduling → Risks/commitments → Follow-up trigger
+
+### Planning / Strategy
+Recommendation → Why now → Business/delivery impact → Risks/dependencies → 30-60-90 next moves
+```
+
+Customize these for your domains — the key is structured output that matches how you actually think about each type of work.
+
 ## Anti-patterns
 - ❌ Opening with "Great question!" or "I'd be happy to help!"
 - ❌ Restating the user's question back to them
