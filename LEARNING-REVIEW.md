@@ -29,22 +29,22 @@ No dependencies. Pure Python + JSON state file.
 
 ```bash
 # Initialize — scan learnings and create state
-python3 scripts/sr_review.py init
+python3 scripts/learning_review.py init
 
 # See what's due today
-python3 scripts/sr_review.py due
+python3 scripts/learning_review.py due
 
 # Mark a learning as applied
-python3 scripts/sr_review.py reinforce LRN-20260315-002
+python3 scripts/learning_review.py reinforce LRN-20260315-002
 
 # Skip this cycle (same level, push next review date)
-python3 scripts/sr_review.py dismiss ERR-20260315-001
+python3 scripts/learning_review.py dismiss ERR-20260315-001
 
 # View stats
-python3 scripts/sr_review.py stats
+python3 scripts/learning_review.py stats
 
 # Re-scan (picks up new learnings, removes deleted ones)
-python3 scripts/sr_review.py scan
+python3 scripts/learning_review.py scan
 ```
 
 ## Cron integration
@@ -54,14 +54,14 @@ Add a cron job that runs after your morning summary:
 ```
 Schedule: 15 minutes after morning summary
 Message:
-  Run: python3 scripts/sr_review.py scan && python3 scripts/sr_review.py due 3
+  Run: python3 scripts/learning_review.py scan && python3 scripts/learning_review.py due 3
   If output is SR_OK → nothing due, stay silent.
   If learnings are due → send a brief review message to the user.
 ```
 
 ## State file
 
-Stored at `.learnings/sr-state.json`:
+Stored at `.learnings/learning-review-state.json`:
 ```json
 {
   "items": {

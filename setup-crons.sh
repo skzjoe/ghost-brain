@@ -102,7 +102,7 @@ create_cron "Morning Briefing" "0 8 * * *" \
 # 2. Morning Learning Review (08:15)
 create_cron "Morning Learning Review" "15 8 * * *" \
   "$(load_prompt "$SCRIPTS/cron_learnings_review.md" \
-  "Run: python3 scripts/sr_review.py scan && python3 scripts/sr_review.py due 3. If nothing due, reply HEARTBEAT_OK. If items due, send a brief review with the key lesson and which area it applies to.")" \
+  "Run: python3 scripts/learning_review.py scan && python3 scripts/learning_review.py due 3. If nothing due, reply HEARTBEAT_OK. If items due, send a brief review with the key lesson and which area it applies to.")" \
   --announce
 
 # 3. Commitment Deadline Alert (08:30)

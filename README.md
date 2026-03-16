@@ -122,7 +122,7 @@ python3 scripts/ghost_memory_db.py pipeline
 | Schedule | Job |
 |---|---|
 | Daily 08:00 | Morning Briefing — priorities, calendar, blockers |
-| Daily 08:15 | Learning Review — resurface 3 learnings (spaced repetition) |
+| Daily 08:15 | Learning Review — resurface 3 learnings |
 | Daily 08:30 | Commitment Deadline Alert |
 | Daily 23:00 | EOD Session Log — consolidate notes + capture + re-index Memory DB |
 | Daily 23:05 | Obsidian Daily Sync (optional) |
@@ -141,7 +141,7 @@ Ghost Brain auto-captures decisions, people, ideas, commitments
          ↓
 EOD cron summarizes → structured daily notes → re-indexes Memory DB
          ↓
-Morning cron resurfaces 3 learnings (spaced repetition)
+Morning cron resurfaces 3 learnings based on review intervals
          ↓
 Memory DB provides SQL + vector search across all your knowledge
          ↓
@@ -199,7 +199,7 @@ Ghost Brain only adds files — doesn't modify OpenClaw config:
 ```bash
 rm -rf ~/.openclaw/workspace/skills/ghost-*
 rm -rf ~/.openclaw/workspace/skills/self-improving-agent
-rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,SPACED-REPETITION}.md
+rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW}.md
 openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job
 # Your data files (decisions.md, people.md, etc.) are yours — keep or delete
 ```

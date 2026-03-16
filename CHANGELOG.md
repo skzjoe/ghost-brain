@@ -42,7 +42,7 @@
 
 ### Knowledge Docs (7)
 - TOKEN-EFFICIENCY.md, SELF-LEARNING.md, PLAYBOOK.md, SECOND-BRAIN.md
-- CRON-PATTERNS.md, MEMORY-DB.md, SPACED-REPETITION.md
+- CRON-PATTERNS.md, MEMORY-DB.md, LEARNING-REVIEW.md
 
 ### Installation
 - `install.sh` — non-destructive, auto-installs deps (sqlite-vec, google-genai), indexes memory, inits SR

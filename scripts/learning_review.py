@@ -5,12 +5,12 @@ Surfaces due learnings based on simplified SM-2 intervals.
 No external DB — uses a JSON state file alongside existing markdown learnings.
 
 Usage:
-  python3 sr_review.py due          # Show items due for review today
-  python3 sr_review.py reinforce ID # Mark a learning as applied/reinforced
-  python3 sr_review.py init         # Scan all learnings and initialize state
-  python3 sr_review.py stats        # Show SR statistics
-  python3 sr_review.py dismiss ID   # Dismiss (skip) a learning for this cycle
-  python3 sr_review.py scan         # Re-scan learnings and sync state
+  python3 learning_review.py due          # Show items due for review today
+  python3 learning_review.py reinforce ID # Mark a learning as applied/reinforced
+  python3 learning_review.py init         # Scan all learnings and initialize state
+  python3 learning_review.py stats        # Show Learning Review statistics
+  python3 learning_review.py dismiss ID   # Dismiss (skip) a learning for this cycle
+  python3 learning_review.py scan         # Re-scan learnings and sync state
 """
 
 import json
@@ -23,7 +23,7 @@ from pathlib import Path
 WORKSPACE = Path(os.environ.get("OPENCLAW_WORKSPACE",
     os.path.expanduser("~/.openclaw/workspace")))
 LEARNINGS_DIR = WORKSPACE / ".learnings"
-STATE_FILE = LEARNINGS_DIR / "sr-state.json"
+STATE_FILE = LEARNINGS_DIR / "learning-review-state.json"
 
 # Interval ladder (days): each successful review advances to next level
 INTERVALS = [1, 3, 7, 14, 30, 60, 120]
@@ -195,7 +195,7 @@ def show_stats(state, items):
             lvl = s["level"]
             levels[lvl] = levels.get(lvl, 0) + 1
 
-    print(f"📊 Spaced Repetition Stats")
+    print(f"📊 Learning Review Stats")
     print(f"   Total tracked: {total}")
     print(f"   Due today: {due}")
     print(f"   Graduated: {graduated}")
@@ -243,13 +243,13 @@ def main():
 
     elif cmd == "reinforce":
         if len(sys.argv) < 3:
-            print("Usage: sr_review.py reinforce <ID>"); return
+            print("Usage: learning_review.py reinforce <ID>"); return
         reinforce(state, sys.argv[2])
         save_state(state)
 
     elif cmd == "dismiss":
         if len(sys.argv) < 3:
-            print("Usage: sr_review.py dismiss <ID>"); return
+            print("Usage: learning_review.py dismiss <ID>"); return
         dismiss(state, sys.argv[2])
         save_state(state)
 

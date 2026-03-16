@@ -56,7 +56,7 @@ done
 echo ""
 echo "📚 Installing knowledge docs..."
 mkdir -p "$WORKSPACE/memory/reference"
-for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md MEMORY-DB.md SPACED-REPETITION.md; do
+for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md MEMORY-DB.md LEARNING-REVIEW.md; do
   [[ -f "$SCRIPT_DIR/$doc" ]] && safe_copy "$SCRIPT_DIR/$doc" "$WORKSPACE/memory/reference/$doc"
 done
 
@@ -105,8 +105,8 @@ for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh; 
   }
 done
 
-# Memory tools (sr_review.py + ghost_memory_db.py)
-for f in sr_review.py ghost_memory_db.py; do
+# Memory tools (learning_review.py + ghost_memory_db.py)
+for f in learning_review.py ghost_memory_db.py; do
   safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
   chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
 done
@@ -154,7 +154,7 @@ fi
 
 echo ""
 echo "🔄 Initializing Learning Review..."
-if python3 "$WORKSPACE/scripts/sr_review.py" init 2>/dev/null; then
+if python3 "$WORKSPACE/scripts/learning_review.py" init 2>/dev/null; then
   echo "   ✅ Learning Review initialized"
 else
   echo "   ⚠️  Learning Review init skipped (will work after you add learnings)"
