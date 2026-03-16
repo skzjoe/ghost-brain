@@ -126,7 +126,7 @@ Ghost Brain includes a structured memory layer powered by SQLite + [sqlite-vec](
 
 ```bash
 # Search semantically
-python3 scripts/ghost_memory_db.py search "ERPNext batch errors"
+python3 scripts/ghost_memory_db.py search "deployment errors last month"
 
 # Query by type
 python3 scripts/ghost_memory_db.py query decision --days 30
