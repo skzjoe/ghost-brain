@@ -79,15 +79,17 @@ bash setup-crons.sh
 Ghost Brain works in the background. Here's the only workflow you need:
 
 ### 1. Just chat
-Talk to your AI like normal. Ghost Brain auto-captures decisions, people, ideas, and commitments from the conversation. No special syntax needed.
+Talk to your AI like normal. Ghost Brain auto-captures decisions, people, ideas, and commitments as they come up in conversation. No special syntax, no commands — just talk.
 
-### 2. `/logs` before `/new`
-When you're done with a session, run `/logs`. This summarizes everything into a daily note and files it to the right brain files. **Always do this before starting a new session** — otherwise the session's context is lost.
+### 2. `/logs` before `/new` — the safety net
+Auto-capture catches most things in real-time, but `/logs` is your safety net. It scans the entire session and catches anything that slipped through — then files everything to the right brain files.
+
+Think of it like **autosave vs Ctrl+S**: autosave works in the background, but you still save before closing. **Always run `/logs` before `/new`.**
 
 ### 3. Correct your AI
-When your AI gets something wrong, just tell it. Ghost Brain logs the correction as a learning and makes sure it doesn't happen again. Over time, your AI gets noticeably better.
+When your AI gets something wrong, tell it. The correction gets logged as a learning and won't happen again. Over time, your AI gets noticeably better at your specific workflows.
 
-### 4. Let cron do the rest
+### 4. Let cron handle the rest
 Morning briefing surfaces your priorities. Learning review resurfaces past lessons. EOD summary catches anything you missed. Weekly distill keeps memory lean. You don't need to manage any of this.
 
 **That's it.** Chat → `/logs` → `/new` → repeat. Everything else is automatic.

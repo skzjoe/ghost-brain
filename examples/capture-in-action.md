@@ -32,7 +32,9 @@ Ghost Brain captures context automatically during normal conversation. Here's wh
 
 ---
 
-All of this happens automatically. No `/capture` command needed — Ghost Brain uses LLM understanding to detect commitments, people, and decisions from natural conversation. No special keywords required — just talk normally.
+Ghost Brain auto-captures context as you chat — no `/capture` command needed. It uses LLM understanding to detect commitments, people, and decisions from natural conversation. No special keywords required.
+
+**`/logs` is your safety net.** Auto-capture catches most things in real-time, but running `/logs` before `/new` scans the full session and picks up anything that slipped through. Think of it like autosave + Ctrl+S before you close.
 
 You can also capture manually:
 ```
