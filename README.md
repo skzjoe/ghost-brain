@@ -12,6 +12,12 @@
 📝 **Self-Learning** — your AI learns from mistakes
 - Errors logged once, never repeated. Patterns promoted to global rules automatically.
 
+🔄 **Spaced Repetition** — learnings resurface automatically
+- SM-2-inspired intervals ensure critical rules stick. Items graduate when mastered.
+
+🗄️ **Memory DB** — SQLite + vector search for long-term memory
+- Full-text search + semantic vector search in a single `.db` file. Zero infrastructure.
+
 💰 **Token Efficiency** — save 30-50% on API costs
 - Rate limiting, context management, output discipline rules
 
@@ -53,10 +59,11 @@ That's it. 30 seconds. No dependencies.
 | Component | Count | Location |
 |---|---|---|
 | Skills | 16 | `~/.openclaw/workspace/skills/` |
-| Knowledge docs | 5 | `~/.openclaw/workspace/memory/reference/` |
+| Knowledge docs | 7 | `~/.openclaw/workspace/memory/reference/` |
 | Memory templates | 6 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 9 | `~/.openclaw/workspace/scripts/` |
+| Memory tools | 2 | `~/.openclaw/workspace/scripts/` |
 
 Won't overwrite existing files. Use `--force` to replace all.
 
@@ -92,6 +99,8 @@ Plus `self-improving-agent` — automatically captures errors, corrections, and 
 | `PLAYBOOK.md` | Response patterns, critique-by-default, proactive triggers |
 | `SECOND-BRAIN.md` | Memory architecture — daily notes + 5 specialized capture files |
 | `CRON-PATTERNS.md` | 10 automation patterns with schedules and prompt templates |
+| `MEMORY-DB.md` | SQLite + sqlite-vec structured memory layer |
+| `SPACED-REPETITION.md` | Auto-resurface learnings with SM-2 intervals |
 
 ## Automated Routines
 
@@ -123,6 +132,10 @@ You chat normally
 Ghost Brain auto-captures decisions, people, ideas, commitments
     ↓
 Daily: EOD summarizes → structured notes
+    ↓
+Daily: Spaced repetition resurfaces 3 learnings
+    ↓
+Memory DB indexes everything → SQL + vector search
     ↓
 Weekly: distillation compacts memory → weekly brief
     ↓
