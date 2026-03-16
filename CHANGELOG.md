@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.4.0 — 2026-03-16
+
+### Added
+- **GhostMemory class API** — import and use programmatically, not just CLI
+- **Knowledge Graph** — auto-links items (documented_in, relates_to, mentioned_in, tracks)
+  - `links --rebuild` builds graph from content analysis
+  - Links people→items, decisions→daily notes, learnings→decisions, follow-ups→context
+- **Deduplication** — find/merge duplicate items using word similarity
+  - `dedup` finds duplicates, `dedup --merge` auto-merges (keeps longer content)
+- **Maintenance Pipeline** — `pipeline` runs index→dedup→links→report in one command
+- **Analytics Dashboard** — `stats` now shows activity timeline, top tags, area distribution, date range
+- **JSON output** — all commands support `--json` for automation
+- **Export** — `export [type] --json` dumps items for external tools
+
+### Changed
+- Refactored from script to class-based architecture (GhostMemory)
+- Stats upgraded from 5-line summary to full analytics dashboard
+- Links table gains `confidence` column for weighted relationships
+- New `duplicates` table tracks detected duplicate pairs
+
 ## v1.3.0 — 2026-03-16
 
 ### Added

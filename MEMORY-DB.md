@@ -37,11 +37,28 @@ python3 scripts/ghost_memory_db.py search "VAT" fts
 # Structured query: decisions about a project in the last 30 days
 python3 scripts/ghost_memory_db.py query decision --project AWC --days 30
 
+# Knowledge graph — auto-link items by content
+python3 scripts/ghost_memory_db.py links --rebuild
+
+# Find duplicates
+python3 scripts/ghost_memory_db.py dedup
+
+# Find and merge duplicates
+python3 scripts/ghost_memory_db.py dedup --merge
+
+# Full maintenance pipeline (index→dedup→links→report)
+python3 scripts/ghost_memory_db.py pipeline
+
+# Analytics dashboard
+python3 scripts/ghost_memory_db.py stats
+
+# Export as JSON (for automation)
+python3 scripts/ghost_memory_db.py search "query" --json
+python3 scripts/ghost_memory_db.py stats --json
+python3 scripts/ghost_memory_db.py export decision --json
+
 # Raw SQL
 python3 scripts/ghost_memory_db.py sql "SELECT item_type, COUNT(*) FROM items GROUP BY item_type"
-
-# Stats
-python3 scripts/ghost_memory_db.py stats
 ```
 
 ## What gets indexed
@@ -60,11 +77,44 @@ python3 scripts/ghost_memory_db.py stats
 | `memory/YYYY-MM-DD.md` | daily_note (per section) |
 | `memory/weekly/*.md` | daily_note |
 
+## Features
+
+### Knowledge Graph
+Auto-links items by analyzing content:
+- **documented_in** — decisions linked to daily notes from the same date
+- **relates_to** — learnings linked to decisions with matching keywords
+- **mentioned_in** — people linked to items that mention their name
+- **tracks** — follow-ups/commitments linked to related decisions and notes
+
+### Deduplication
+Finds potential duplicates using Jaccard word similarity (default threshold: 85%).
+Can auto-merge: keeps the item with more content, removes the other.
+
+### Analytics Dashboard
+- Item counts by type, area, status
+- Activity chart (last 14 days)
+- Top tags
+- Date range
+- Pending duplicates count
+
+### Python API
+```python
+from ghost_memory_db import GhostMemory
+
+mem = GhostMemory()
+item_id = mem.add_item("decision", "Use SQLite", "Reasoning...", "memory/decisions.md")
+results = mem.search_hybrid("database choice")
+links = mem.get_links(item_id)
+stats = mem.get_analytics()
+mem.close()
+```
+
 ## Schema
 
 - **items** — core knowledge items with type, title, content, dates, status
 - **tags** + **item_tags** — many-to-many tag system
-- **links** — bi-directional knowledge graph (relates_to, supports, contradicts, etc.)
+- **links** — bi-directional knowledge graph with confidence scores
+- **duplicates** — detected duplicate pairs with similarity scores
 - **items_fts** — FTS5 full-text search index
 - **items_vec** — sqlite-vec vector embeddings for semantic search
 - **file_index** — tracks file hashes for incremental indexing
