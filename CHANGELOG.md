@@ -1,5 +1,7 @@
 # Changelog
 
+> Ghost Brain has been in daily use since Feb 2026. Version numbers reflect feature milestones, not separate releases.
+
 ## v1.5.0 — 2026-03-16
 
 ### Added

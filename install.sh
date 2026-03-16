@@ -142,7 +142,7 @@ else
     || echo "   ⚠️  Could not install google-genai. Semantic search will use local fallback (still works)."
 fi
 
-# ── 7. Initialize Memory DB + Spaced Repetition ──
+# ── 7. Initialize Memory DB + Learning Review ──
 echo ""
 echo "🗄️ Initializing Memory DB..."
 mkdir -p "$WORKSPACE/.local"
@@ -153,11 +153,11 @@ else
 fi
 
 echo ""
-echo "🔄 Initializing Spaced Repetition..."
+echo "🔄 Initializing Learning Review..."
 if python3 "$WORKSPACE/scripts/sr_review.py" init 2>/dev/null; then
-  echo "   ✅ Spaced Repetition initialized"
+  echo "   ✅ Learning Review initialized"
 else
-  echo "   ⚠️  SR init skipped (will work after you add learnings)"
+  echo "   ⚠️  Learning Review init skipped (will work after you add learnings)"
 fi
 
 # ── 8. Summary ──
@@ -170,7 +170,7 @@ echo "  • $(ls -d "$WORKSPACE"/skills/ghost-* "$WORKSPACE"/skills/self-improvi
 echo "  • Knowledge docs → memory/reference/"
 echo "  • Second brain templates → memory/"
 echo "  • .learnings/ structure"
-echo "  • Memory tools → scripts/ (Memory DB + Spaced Repetition)"
+echo "  • Memory tools → scripts/ (Memory DB + Learning Review)"
 echo "  • $(ls "$WORKSPACE"/scripts/cron_*.md 2>/dev/null | wc -l) cron prompt templates → scripts/"
 echo ""
 
@@ -188,9 +188,10 @@ echo "     1. Create secrets/telegram_bot_token.txt and secrets/telegram_chat_id
 echo "     2. Add to OS crontab: */2 * * * * bash $WORKSPACE/scripts/gateway_watchdog.sh"
 echo ""
 echo "Next steps:"
-echo "  1. Set up cron jobs: bash setup-crons.sh"
-echo "  2. Try /audit to verify everything works"
-echo "  3. Start chatting — Ghost captures decisions, ideas, and learnings automatically"
+echo "  1. Verify install: bash test.sh"
+echo "  2. Set up cron jobs: bash setup-crons.sh"
+echo "  3. Try /audit to verify everything works"
+echo "  4. Start chatting — Ghost captures decisions, ideas, and learnings automatically"
 echo ""
 echo "Docs: read the .md files in memory/reference/ for full details."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

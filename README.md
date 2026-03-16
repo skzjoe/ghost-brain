@@ -2,7 +2,7 @@
 
 **AI Second Brain for OpenClaw** — self-learning, token efficiency, and automated routines that make your AI assistant smarter every day.
 
-> Your AI forgets everything every session. Ghost Brain fixes that in 30 seconds.
+> Your AI forgets everything every session. Ghost Brain fixes that.
 
 ## What it does
 
@@ -26,7 +26,7 @@
 - Rate limiting, context management, output discipline rules
 
 ⏰ **10 Automated Routines**
-- Morning brief, EOD summary, weekly distillation, commitment alerts, health checks, backups
+- Morning briefing, EOD log, learning review, weekly distill, commitment alerts, health checks, backups
 
 🔧 **16 System Commands**
 - `/onboard` — guided first-run setup
@@ -56,7 +56,7 @@ cd ghost-brain
 bash install.sh
 ```
 
-That's it. ~60 seconds. Automatically installs dependencies, indexes your memory, and initializes spaced repetition.
+That's it. Automatically installs dependencies, indexes your memory, and initializes learning review.
 
 **Optional but recommended:** Set `GEMINI_API_KEY` for semantic search (free at [ai.google.dev](https://ai.google.dev)):
 ```bash
@@ -120,7 +120,7 @@ Set up all 10 cron jobs interactively:
 ```bash
 bash setup-crons.sh
 # Asks: timezone, model, Obsidian (yes/no)
-# Creates all 10 cron jobs in ~30 seconds
+# Asks: timezone, model, Obsidian — then creates all cron jobs
 ```
 
 | Schedule | Job |
@@ -214,8 +214,9 @@ openclaw cron delete <id>  # for each Ghost Brain cron
 
 ## Requirements
 
-- [OpenClaw](https://github.com/openclaw/openclaw) installed and configured
+- [OpenClaw](https://github.com/openclaw/openclaw) **2026.3.x or later** (needs `cron add`, `cron edit`)
 - Any LLM provider (Claude, GPT, Gemini, etc.)
+- Python 3.10+
 
 ## Before / After
 
