@@ -1,5 +1,15 @@
-# ERRORS.md — Tool/Command/Integration Failures
+# ERRORS
 
-Log failures here so Ghost doesn't repeat the same mistakes.
+<!-- Log tool/command/integration failures here. Format:
+## [ERR-YYYYMMDD-NNN] short-slug
+**Logged**: ISO date
+**Priority**: low|medium|high
+**Status**: pending|active|resolved
+**Area**: config|ops|coding|docs|...
 
----
+### Summary
+### Error
+### Context
+### Suggested Fix
+### Metadata
+-->

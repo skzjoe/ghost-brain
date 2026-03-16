@@ -12,15 +12,34 @@
 📝 **Self-Learning** — your AI learns from mistakes
 - Errors logged once, never repeated. Patterns promoted to global rules automatically.
 
+🔄 **Spaced Repetition** — learnings resurface automatically
+- SM-2-inspired intervals ensure critical rules stick. Items graduate when mastered.
+
+🗄️ **Memory DB** — SQLite + vector search for long-term memory
+- Full-text + semantic vector search in a single `.db` file. Zero infrastructure.
+- Knowledge graph (auto-links 300+ relationships), dedup, analytics dashboard
+- Cross-session context bridge — dynamic startup context from DB
+- Temporal intelligence — tracks access patterns, flags stale knowledge, surfaces hot items
+- Source tracking — auto-detects where knowledge came from (conversation, meeting, email, etc.)
+
 💰 **Token Efficiency** — save 30-50% on API costs
 - Rate limiting, context management, output discipline rules
 
-⏰ **10 Automated Routines**
+⏰ **12 Automated Routines**
 - Morning brief, EOD summary, weekly distillation, commitment alerts, health checks, backups
 
-🔧 **9 System Commands**
-- `/audit` — full system health check with second brain + self-learning scoring
-- `/health` `/projects` `/commitments` `/decisions` `/followups` `/ideas` `/people`
+🔧 **16 System Commands**
+- `/onboard` — guided first-run setup
+- `/capture` — quick-capture to the right brain file
+- `/audit` `/health` `/weekly` `/logs`
+- `/projects` `/project` `/commitments` `/decisions` `/followups` `/ideas` `/people`
+- `/fastlanes` `/conflicts` `/export`
+
+## See it in action
+
+📋 [Full audit output](examples/audit-output.md) — 12-dimension scorecard + 4-pillar improvement suggestions
+📝 [Daily note example](examples/daily-note.md) — what EOD auto-summary produces
+🧠 [Auto-capture demo](examples/capture-in-action.md) — how Ghost captures decisions, people, commitments from normal chat
 
 ## Quick Install
 
@@ -37,17 +56,26 @@ cd ghost-brain
 bash install.sh
 ```
 
-That's it. 30 seconds. No dependencies.
+That's it. ~60 seconds. Automatically installs dependencies, indexes your memory, and initializes spaced repetition.
+
+**Optional but recommended:** Set `GEMINI_API_KEY` for semantic search (free at [ai.google.dev](https://ai.google.dev)):
+```bash
+export GEMINI_API_KEY=your_key_here
+bash install.sh
+```
+Without it, search still works using local embeddings.
 
 ## What gets installed
 
 | Component | Count | Location |
 |---|---|---|
-| Skills | 9 | `~/.openclaw/workspace/skills/` |
-| Knowledge docs | 5 | `~/.openclaw/workspace/memory/reference/` |
+| Skills | 16 | `~/.openclaw/workspace/skills/` |
+| Knowledge docs | 7 | `~/.openclaw/workspace/memory/reference/` |
 | Memory templates | 6 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 9 | `~/.openclaw/workspace/scripts/` |
+| Memory tools | 2 | `~/.openclaw/workspace/scripts/` |
+| Python deps | 2 | `sqlite-vec` + `google-genai` (auto-installed) |
 
 Won't overwrite existing files. Use `--force` to replace all.
 
@@ -55,15 +83,22 @@ Won't overwrite existing files. Use `--force` to replace all.
 
 | Command | What it does |
 |---|---|
-| `/logs` | Summarize session → daily note + second brain capture (decisions, people, ideas, commitments, learnings) |
-| `/audit` | Full system audit — runtime, automation, second brain health, self-learning effectiveness |
-| `/health` | Deep security + update check |
+| `/onboard` | Guided first-run setup — asks a few questions, populates your brain files |
+| `/capture` | Quick-capture anything: `/capture idea: ...`, `/capture decision: ...`, etc. |
+| `/logs` | Summarize session → daily note + second brain capture |
+| `/audit` | Full 13-part system audit with scoring + improvement suggestions |
+| `/health` | Quick health check — memory, capture, cron, gateway, security, heartbeat |
+| `/weekly` | Weekly review — synthesize daily notes, surface patterns, suggest housekeeping |
+| `/project` | Initialize or load project memory: `/project init myapp` |
 | `/projects` | Active and dormant workstreams |
 | `/commitments` | Promises and deadline tracking with urgency indicators |
 | `/decisions` | Decision journal with reasoning |
 | `/followups` | Follow-up items with staleness (🟢🟡🔴) |
 | `/ideas` | Idea parking lot with age tracking |
 | `/people` | Key contacts CRM |
+| `/fastlanes` | Show/add/remove domain-specific response templates |
+| `/conflicts` | Scan brain files for contradictions and inconsistencies |
+| `/export` | Export brain state as portable markdown zip |
 
 Plus `self-improving-agent` — automatically captures errors, corrections, and lessons learned.
 
@@ -76,14 +111,16 @@ Plus `self-improving-agent` — automatically captures errors, corrections, and 
 | `PLAYBOOK.md` | Response patterns, critique-by-default, proactive triggers |
 | `SECOND-BRAIN.md` | Memory architecture — daily notes + 5 specialized capture files |
 | `CRON-PATTERNS.md` | 10 automation patterns with schedules and prompt templates |
+| `MEMORY-DB.md` | SQLite + sqlite-vec structured memory layer |
+| `SPACED-REPETITION.md` | Auto-resurface learnings with SM-2 intervals |
 
 ## Automated Routines
 
-Set up all 10 cron jobs in one command:
+Set up all 12 cron jobs interactively:
 ```bash
-# Edit timezone first (default: Asia/Bangkok)
-nano setup-crons.sh
 bash setup-crons.sh
+# Asks: timezone, model, Obsidian (yes/no)
+# Creates all 12 cron jobs in ~30 seconds
 ```
 
 | Schedule | Job |
@@ -95,7 +132,9 @@ bash setup-crons.sh
 | Every 6h | Gateway health check |
 | Sunday 20:00 | Weekly backup |
 | Sunday 21:00 | Weekly distillation (memory compaction + weekly brief) |
+| Daily 08:15 | Spaced repetition review (3 learnings/day) |
 | Monday 08:30 | Weekly report |
+| Daily 23:02 | Memory DB incremental index |
 | 1st & 15th 10:00 | Biweekly learnings review |
 | 1st of month 06:00 | Archive old daily notes |
 
@@ -107,6 +146,10 @@ You chat normally
 Ghost Brain auto-captures decisions, people, ideas, commitments
     ↓
 Daily: EOD summarizes → structured notes
+    ↓
+Daily: Spaced repetition resurfaces 3 learnings
+    ↓
+Memory DB indexes everything → SQL + vector search
     ↓
 Weekly: distillation compacts memory → weekly brief
     ↓
@@ -131,6 +174,48 @@ crontab -e
 
 If gateway goes down → you get a Telegram alert within 2 minutes. systemd auto-restarts it in 5 seconds.
 
+## Cron Variables
+
+Cron prompt scripts use `{{USER_NAME}}` as a placeholder. OpenClaw automatically replaces this with your configured agent name at runtime — no manual editing needed.
+
+## Obsidian Integration (optional)
+
+If you use Obsidian for notes, Ghost Brain can push daily and weekly notes to your vault:
+
+1. Edit `scripts/obsidian_push_daily.sh` — set `OBSIDIAN_DAILY_DIR` to your vault's daily notes folder
+2. Edit `scripts/obsidian_push_weekly.sh` — set `OBSIDIAN_WEEKLY_DIR` to your vault's weekly folder
+3. When running `setup-crons.sh`, answer "y" to the Obsidian question
+
+## Customize
+
+| What | Where | How |
+|---|---|---|
+| Fast lanes (response patterns) | `memory/reference/PLAYBOOK.md` | Add/edit domain-specific patterns |
+| Cron schedules | `openclaw cron list` → `openclaw cron update <id>` | Change time/frequency |
+| Capture triggers | Skills: `ghost-capture`, `ghost-logs` | Edit trigger words/patterns |
+| Memory templates | `memory/*.md` | Edit headers/sections |
+| Heartbeat checks | `scripts/heartbeat_pulse.sh` | Enable/disable individual checks |
+| Audit dimensions | `skills/ghost-audit/SKILL.md` | Add checks or adjust scoring |
+
+## Uninstall
+
+Ghost Brain only adds files — it doesn't modify OpenClaw config. To remove:
+
+```bash
+# Remove skills
+rm -rf ~/.openclaw/workspace/skills/ghost-*
+rm -rf ~/.openclaw/workspace/skills/self-improving-agent
+
+# Remove knowledge docs
+rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS}.md
+
+# Remove cron jobs
+openclaw cron list  # note the IDs
+openclaw cron delete <id>  # for each Ghost Brain cron
+
+# Memory files (decisions.md, people.md, etc.) contain YOUR data — keep or delete as you wish
+```
+
 ## Requirements
 
 - [OpenClaw](https://github.com/openclaw/openclaw) installed and configured
@@ -146,6 +231,10 @@ If gateway goes down → you get a Telegram alert within 2 minutes. systemd auto
 | API costs | Uncontrolled | 30-50% reduction |
 | End of day | Nothing saved | Auto-summarized daily note |
 | Weekly review | Manual effort | Auto-generated brief |
+| Learnings | Log once, forget | Resurface until mastered |
+| Search memory | Scroll through files | SQL + semantic vector search |
+| Session startup | Re-read everything | Dynamic context from DB |
+| Knowledge decay | Never reviewed | Stale alerts + access tracking |
 
 ## License
 

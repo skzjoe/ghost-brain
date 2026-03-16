@@ -4,7 +4,7 @@ Check for commitments due within 2 days or overdue.
 
 ## Steps
 1. Read `memory/commitments.md`
-2. Determine today's date (Asia/Bangkok)
+2. Determine today's date (your configured timezone)
 3. For each Active commitment with a deadline:
    - If deadline is today or overdue → 🚨 URGENT alert
    - If deadline is within 2 days → ⚠️ WARNING alert

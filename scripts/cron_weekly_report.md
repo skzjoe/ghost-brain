@@ -4,7 +4,7 @@ Generate a professional weekly summary report every Monday morning for {{USER_NA
 
 ## Steps
 
-1) **Determine date range**: previous Mon–Sun (Asia/Bangkok)
+1) **Determine date range**: previous Mon–Sun (your configured timezone)
 
 2) **Gather data**:
    - Read all daily notes from the week: `memory/YYYY-MM-DD.md` (Mon through Sun)

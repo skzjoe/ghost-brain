@@ -1,5 +1,13 @@
-# LEARNINGS.md — Global Reusable Rules
+# LEARNINGS
 
-Promoted from domain/project-level after 3+ repetitions or 30-day durability.
+<!-- Promoted reusable rules and patterns. Format:
+## [LRN-YYYYMMDD-NNN] type
+**Logged**: ISO date
+**Priority**: low|medium|high|critical
+**Status**: active|archived
+**Area**: ops|docs|coding|...
 
----
+### Summary
+### Rule
+### Metadata
+-->

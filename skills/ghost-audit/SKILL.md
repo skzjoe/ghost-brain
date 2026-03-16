@@ -184,3 +184,60 @@ Are proactive systems actually firing?
 - **Brain score** = weighted avg of 8 brain dims (Boot, Prompt, Capture, Memory, Learning, Proactive, Obligation, Efficiency) — **weight 2x**
 - **Infra score** = weighted avg of 4 infra dims (Runtime, Automation, Resilience, Security) — **weight 1x**
 - **Overall** = (Brain × 2 + Infra × 1) / 3
+
+---
+
+## Part 13 — 🚀 Improvement Suggestions (4 Pillars)
+
+After completing the scorecard, analyze the audit findings and generate **actionable improvement suggestions** mapped to the 4 North Star pillars. This is the most valuable part — the audit exists to drive improvement, not just report status.
+
+### How to generate suggestions
+
+For each pillar, look at:
+- **Scores below 9** — what's dragging it down?
+- **Missing coverage** — what workstreams/domains lack fast lanes, learnings, or project memory?
+- **System gaps** — what proactive/capture/critique behaviors could exist but don't?
+- **Patterns from daily notes** — recurring pain points or manual steps that could be automated?
+- **Comparison to ideal** — if this system were perfect, what would it do that it doesn't today?
+
+### Output format for suggestions
+
+```
+━━━ 🚀 Improvement Suggestions ━━━
+
+### 🏭 Productive — increase output that moves real work forward
+| # | Suggestion | Impact | Effort |
+|---|---|---|---|
+| P1 | {specific suggestion} | High/Med/Low | High/Med/Low |
+...
+
+### ⚡ Efficient — reduce waste, increase value per token
+| # | Suggestion | Impact | Effort |
+|---|---|---|---|
+| E1 | {specific suggestion} | High/Med/Low | High/Med/Low |
+...
+
+### 🔮 Proactive — anticipate needs before the user asks
+| # | Suggestion | Impact | Effort |
+|---|---|---|---|
+| R1 | {specific suggestion} | High/Med/Low | High/Med/Low |
+...
+
+### 🎯 Critique — challenge assumptions, catch gaps
+| # | Suggestion | Impact | Effort |
+|---|---|---|---|
+| C1 | {specific suggestion} | Impact | Effort |
+...
+
+━━━ ⚡ Quick Wins (can do right now) ━━━
+{Top 3-5 suggestions sorted by impact/effort ratio — things that can be done in this session}
+```
+
+### Rules for suggestions
+- **Be specific** — not "improve proactive systems" but "add drift detection check to Morning Summary cron that flags ACTIVE_WORK.md staleness >5 days"
+- **Reference actual findings** — tie each suggestion to a specific audit score, gap, or pattern found
+- **Prioritize by leverage** — fewer high-impact suggestions > long list of small tweaks
+- **Include quick wins** — always end with 3-5 things that can be implemented immediately
+- **Avoid repeating what already works** — focus on gaps and growth areas, not praise
+- **Mix structural + behavioral** — some suggestions improve files/crons, others improve response patterns
+- **2-4 suggestions per pillar** — enough to be useful, not so many they're overwhelming
