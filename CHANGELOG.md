@@ -10,19 +10,26 @@
   - Incremental indexing (hash-based change detection)
   - Knowledge graph tables (tags, links) for future bi-directional relationships
   - Zero infrastructure — single file at `.local/ghost_memory.db`
+- **Gemini embedding support** — auto-detects `GEMINI_API_KEY`
+  - Uses `gemini-embedding-001` (256 dim) for real semantic search
+  - Batch embedding for fast indexing (166 items in ~10s)
+  - Graceful fallback to local hash if no API key (still works, just less semantic)
+  - Cost: ≈$0 on Gemini free tier
 - **Spaced Repetition** (`scripts/sr_review.py`)
   - SM-2-inspired interval ladder: 1 → 3 → 7 → 14 → 30 → 60 → 120 days
   - Priority-weighted resurfacing (critical items appear 2× more often)
   - Graduation system — mastered items stop surfacing
   - Cron integration — surfaces 3 learnings/day after morning summary
   - JSON state file, no external dependencies
-- `MEMORY-DB.md` — documentation for the SQLite memory layer
-- `SPACED-REPETITION.md` — documentation for the SR system
+- `MEMORY-DB.md` + `SPACED-REPETITION.md` documentation
+- **install.sh** now auto-installs `sqlite-vec` + `google-genai`, runs first index + SR init
+- **setup-crons.sh** adds SR Review (08:15) + Memory DB Index (23:02) — now 12 crons total
 
 ### Changed
-- README updated with Memory DB and Spaced Repetition features
-- Knowledge docs count: 5 → 7
-- "How it works" flow diagram updated with SR and Memory DB stages
+- README: updated with all new features, optional Gemini setup, Before/After table expanded
+- Knowledge docs: 5 → 7
+- Cron jobs: 10 → 12
+- Install flow: `git clone → install.sh → setup-crons.sh → done` (fully automated)
 
 ## v1.2.0 — 2026-03-16
 

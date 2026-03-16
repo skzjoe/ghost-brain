@@ -21,7 +21,7 @@
 💰 **Token Efficiency** — save 30-50% on API costs
 - Rate limiting, context management, output discipline rules
 
-⏰ **10 Automated Routines**
+⏰ **12 Automated Routines**
 - Morning brief, EOD summary, weekly distillation, commitment alerts, health checks, backups
 
 🔧 **16 System Commands**
@@ -52,7 +52,14 @@ cd ghost-brain
 bash install.sh
 ```
 
-That's it. 30 seconds. No dependencies.
+That's it. ~60 seconds. Automatically installs dependencies, indexes your memory, and initializes spaced repetition.
+
+**Optional but recommended:** Set `GEMINI_API_KEY` for semantic search (free at [ai.google.dev](https://ai.google.dev)):
+```bash
+export GEMINI_API_KEY=your_key_here
+bash install.sh
+```
+Without it, search still works using local embeddings.
 
 ## What gets installed
 
@@ -64,6 +71,7 @@ That's it. 30 seconds. No dependencies.
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 9 | `~/.openclaw/workspace/scripts/` |
 | Memory tools | 2 | `~/.openclaw/workspace/scripts/` |
+| Python deps | 2 | `sqlite-vec` + `google-genai` (auto-installed) |
 
 Won't overwrite existing files. Use `--force` to replace all.
 
@@ -104,11 +112,11 @@ Plus `self-improving-agent` — automatically captures errors, corrections, and 
 
 ## Automated Routines
 
-Set up all 10 cron jobs interactively:
+Set up all 12 cron jobs interactively:
 ```bash
 bash setup-crons.sh
 # Asks: timezone, model, Obsidian (yes/no)
-# Creates all 10 cron jobs in ~30 seconds
+# Creates all 12 cron jobs in ~30 seconds
 ```
 
 | Schedule | Job |
@@ -120,7 +128,9 @@ bash setup-crons.sh
 | Every 6h | Gateway health check |
 | Sunday 20:00 | Weekly backup |
 | Sunday 21:00 | Weekly distillation (memory compaction + weekly brief) |
+| Daily 08:15 | Spaced repetition review (3 learnings/day) |
 | Monday 08:30 | Weekly report |
+| Daily 23:02 | Memory DB incremental index |
 | 1st & 15th 10:00 | Biweekly learnings review |
 | 1st of month 06:00 | Archive old daily notes |
 
@@ -217,6 +227,8 @@ openclaw cron delete <id>  # for each Ghost Brain cron
 | API costs | Uncontrolled | 30-50% reduction |
 | End of day | Nothing saved | Auto-summarized daily note |
 | Weekly review | Manual effort | Auto-generated brief |
+| Learnings | Log once, forget | Resurface until mastered |
+| Search memory | Scroll through files | SQL + semantic vector search |
 
 ## License
 

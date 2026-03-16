@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # 👻 Ghost Brain — Cron Setup
-# Interactive setup for all 10 automated routines.
+# Interactive setup for all 12 automated routines.
 # Run after install.sh to activate automation.
 
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
@@ -58,7 +58,26 @@ openclaw cron create \
   --model "$MODEL"
 echo "✅ Morning Summary (08:00)"
 
-# ── 2. Commitment Deadline Alerts (08:30) ──
+# ── 2. Spaced Repetition Review (08:15) ──
+openclaw cron create \
+  --name "Spaced Repetition Review" \
+  --schedule "cron 15 8 * * *" \
+  --exact \
+  --prompt "Run: python3 scripts/sr_review.py scan && python3 scripts/sr_review.py due 3
+
+If output is SR_OK → reply SR_OK (nothing due).
+
+If learnings are due:
+1. Read each learning's full entry from the source file
+2. Send a brief message titled '🔄 Learning Review' with:
+   - The key lesson in 1-2 sentences
+   - Which area it applies to
+   - List the IDs for reinforcement
+3. After sending, run: python3 scripts/sr_review.py dismiss <ID> for each surfaced item" \
+  --model "$MODEL"
+echo "✅ Spaced Repetition (08:15)"
+
+# ── 3. Commitment Deadline Alerts (08:30) ──
 openclaw cron create \
   --name "Commitment Deadline Alerts" \
   --schedule "cron 30 8 * * *" \
@@ -128,7 +147,16 @@ openclaw cron create \
   --model "$MODEL"
 echo "✅ Monthly Archive (1st 06:00)"
 
-# ── 10. Monthly Learnings Review (1st of month 10:00) ──
+# ── 11. Memory DB Incremental Index (23:02) ──
+openclaw cron create \
+  --name "Memory DB Index" \
+  --schedule "cron 2 23 * * * @ $TZ" \
+  --exact \
+  --prompt "Run: python3 scripts/ghost_memory_db.py index --incremental — reply HEARTBEAT_OK when done" \
+  --model "$MODEL"
+echo "✅ Memory DB Index (23:02)"
+
+# ── 12. Monthly Learnings Review (1st of month 10:00) ──
 openclaw cron create \
   --name "Monthly Learnings Review" \
   --schedule "cron 0 10 1 * *" \

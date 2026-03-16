@@ -44,8 +44,8 @@ done
 echo ""
 echo "📚 Installing knowledge docs..."
 mkdir -p "$WORKSPACE/memory/reference"
-for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md; do
-  safe_copy "$SCRIPT_DIR/$doc" "$WORKSPACE/memory/reference/$doc"
+for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md MEMORY-DB.md SPACED-REPETITION.md; do
+  [[ -f "$SCRIPT_DIR/$doc" ]] && safe_copy "$SCRIPT_DIR/$doc" "$WORKSPACE/memory/reference/$doc"
 done
 
 # ── 3. Memory structure ──
@@ -70,46 +70,115 @@ for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md; do
   safe_copy "$SCRIPT_DIR/structure/.learnings/$f" "$WORKSPACE/.learnings/$f"
 done
 
-# ── 5. Gateway watchdog ──
+# ── 5. Scripts ──
 echo ""
-echo "🛡️ Installing gateway watchdog..."
-safe_copy "$SCRIPT_DIR/scripts/gateway_watchdog.sh" "$WORKSPACE/scripts/gateway_watchdog.sh"
-chmod +x "$WORKSPACE/scripts/gateway_watchdog.sh" 2>/dev/null
-
-# ── 6. Cron prompts ──
-echo ""
-echo "⏰ Installing cron prompts..."
+echo "🛠️ Installing scripts..."
 mkdir -p "$WORKSPACE/scripts"
-for f in "$SCRIPT_DIR"/scripts/cron_*.md; do
-  safe_copy "$f" "$WORKSPACE/scripts/$(basename "$f")"
+
+# Gateway watchdog
+safe_copy "$SCRIPT_DIR/scripts/gateway_watchdog.sh" "$WORKSPACE/scripts/gateway_watchdog.sh"
+chmod +x "$WORKSPACE/scripts/gateway_watchdog.sh" 2>/dev/null || true
+
+# Heartbeat
+[[ -f "$SCRIPT_DIR/scripts/heartbeat_pulse.sh" ]] && {
+  safe_copy "$SCRIPT_DIR/scripts/heartbeat_pulse.sh" "$WORKSPACE/scripts/heartbeat_pulse.sh"
+  chmod +x "$WORKSPACE/scripts/heartbeat_pulse.sh" 2>/dev/null || true
+}
+
+# Obsidian push scripts
+for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh; do
+  [[ -f "$SCRIPT_DIR/scripts/$f" ]] && {
+    safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
+    chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
+  }
 done
 
-# ── 6. Summary ──
+# Memory tools (sr_review.py + ghost_memory_db.py)
+for f in sr_review.py ghost_memory_db.py; do
+  safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
+  chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
+done
+
+# Cron prompts
+for f in "$SCRIPT_DIR"/scripts/cron_*.md; do
+  [[ -f "$f" ]] && safe_copy "$f" "$WORKSPACE/scripts/$(basename "$f")"
+done
+
+# ── 6. Dependencies ──
+echo ""
+echo "📦 Installing Python dependencies..."
+
+# sqlite-vec (required for Memory DB)
+if python3 -c "import sqlite_vec" 2>/dev/null; then
+  echo "   ✅ sqlite-vec (already installed)"
+else
+  echo "   📥 Installing sqlite-vec..."
+  pip3 install sqlite-vec --quiet --break-system-packages 2>/dev/null \
+    || pip3 install sqlite-vec --quiet 2>/dev/null \
+    || pip install sqlite-vec --quiet 2>/dev/null \
+    || echo "   ⚠️  Could not install sqlite-vec automatically. Run: pip install sqlite-vec"
+fi
+
+# google-genai (optional — for Gemini semantic embeddings)
+if python3 -c "from google import genai" 2>/dev/null; then
+  echo "   ✅ google-genai (already installed)"
+else
+  echo "   📥 Installing google-genai (optional — for semantic search)..."
+  pip3 install google-genai --quiet --break-system-packages 2>/dev/null \
+    || pip3 install google-genai --quiet 2>/dev/null \
+    || pip install google-genai --quiet 2>/dev/null \
+    || echo "   ⚠️  Could not install google-genai. Semantic search will use local fallback (still works)."
+fi
+
+# ── 7. Initialize Memory DB + Spaced Repetition ──
+echo ""
+echo "🗄️ Initializing Memory DB..."
+mkdir -p "$WORKSPACE/.local"
+if python3 "$WORKSPACE/scripts/ghost_memory_db.py" index 2>/dev/null; then
+  echo "   ✅ Memory DB indexed"
+else
+  echo "   ⚠️  Memory DB index failed (will work after you add some notes)"
+fi
+
+echo ""
+echo "🔄 Initializing Spaced Repetition..."
+if python3 "$WORKSPACE/scripts/sr_review.py" init 2>/dev/null; then
+  echo "   ✅ Spaced Repetition initialized"
+else
+  echo "   ⚠️  SR init skipped (will work after you add learnings)"
+fi
+
+# ── 8. Summary ──
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Ghost Brain installed!"
 echo ""
 echo "What was installed:"
-echo "  • $(ls -d "$WORKSPACE"/skills/ghost-* "$WORKSPACE"/skills/self-improving-agent 2>/dev/null | wc -l) skills (ghost-ops + self-improving-agent)"
-echo "  • 5 knowledge docs → memory/reference/"
+echo "  • $(ls -d "$WORKSPACE"/skills/ghost-* "$WORKSPACE"/skills/self-improving-agent 2>/dev/null | wc -l) skills"
+echo "  • Knowledge docs → memory/reference/"
 echo "  • Second brain templates → memory/"
 echo "  • .learnings/ structure"
+echo "  • Memory tools → scripts/ (Memory DB + Spaced Repetition)"
 echo "  • $(ls "$WORKSPACE"/scripts/cron_*.md 2>/dev/null | wc -l) cron prompt templates → scripts/"
 echo ""
+
+# Check for Gemini API key
+if [[ -n "${GEMINI_API_KEY:-}" ]]; then
+  echo "  🔑 GEMINI_API_KEY detected — semantic search enabled (free tier)"
+else
+  echo "  💡 Tip: Set GEMINI_API_KEY for semantic search (free at ai.google.dev)"
+  echo "     Without it, search still works using local embeddings."
+fi
+
 echo ""
 echo "  🛡️ Gateway watchdog (recommended):"
 echo "     1. Create secrets/telegram_bot_token.txt and secrets/telegram_chat_id.txt"
 echo "     2. Add to OS crontab: */2 * * * * bash $WORKSPACE/scripts/gateway_watchdog.sh"
-echo "     This monitors gateway outside OpenClaw — alerts you if it goes down."
 echo ""
 echo "Next steps:"
-echo "  1. Read memory/reference/PLAYBOOK.md and copy patterns you like into AGENTS.md"
-echo "  2. Customize memory templates (decisions.md, people.md, etc.)"
-echo "  3. Set up cron jobs: bash $(basename "$SCRIPT_DIR")/setup-crons.sh"
-echo "     (edit timezone + model in the script first)"
-echo "  4. Add to your AGENTS.md:"
-echo '     Rate limits: 5s between API calls, 10s between searches, max 5/batch then 2min break.'
-echo "  5. Try /audit to verify everything works"
+echo "  1. Set up cron jobs: bash setup-crons.sh"
+echo "  2. Try /audit to verify everything works"
+echo "  3. Start chatting — Ghost captures decisions, ideas, and learnings automatically"
 echo ""
 echo "Docs: read the .md files in memory/reference/ for full details."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
