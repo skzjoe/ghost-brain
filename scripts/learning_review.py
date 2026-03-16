@@ -207,7 +207,7 @@ def show_stats(state, items):
 
 def format_due_for_cron(due_items):
     if not due_items:
-        print("HEARTBEAT_OK")
+        print("LR_OK")
         return
     print(f"🔄 {len(due_items)} learning(s) due for review:")
     print()
