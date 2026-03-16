@@ -1,13 +1,16 @@
-# Commitments
+# Commitments Log
 
-Promises made to clients, stakeholders, or team. Auto-captured by Ghost.
+Track verbal promises, committed timelines, and scope agreements with clients/stakeholders.
+Different from follow-ups (who needs to do what) — this tracks "who knows/believes what".
+
+Auto-captured by Ghost when the user mentions commitments in conversation.
 
 ---
 
-<!-- Format:
-## YYYY-MM-DD — Commitment description
-- **To:** who
-- **Deadline:** when
-- **Status:** active / fulfilled / overdue
-- **Context:** what was promised
--->
+## Active
+
+| Date | To | Commitment | Context |
+|---|---|---|---|
+
+## Fulfilled
+<!-- Move completed commitments here with fulfillment date -->

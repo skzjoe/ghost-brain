@@ -1,13 +1,15 @@
 # Decision Journal
 
-Significant decisions with context and reasoning. Auto-captured by Ghost.
+Important decisions with context and reasoning. Auto-appended by Ghost when significant decisions are made.
+
+Format: `[YYYY-MM-DD] Decision — Reasoning (source)`
+
+**Dedup rule**: before appending, check if the same decision already exists (by content, not date). Skip if duplicate.
 
 ---
 
-<!-- Format:
-## YYYY-MM-DD — Decision title
-- **Context:** why this came up
-- **Decision:** what was decided
-- **Reasoning:** why this option
-- **Alternatives considered:** what else was on the table
--->
+## Architecture / Stack
+
+## Workflow / Operations
+
+## Business / People

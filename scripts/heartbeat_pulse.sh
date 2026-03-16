@@ -193,7 +193,7 @@ with open(f,'w') as fh: json.dump(s, fh, indent=2)
 fi
 
 # ─── CHECK 4: Weather (only 7-9am or 4-6pm) ───
-HOUR=$(date +%H)
+HOUR=$((10#$(date +%H)))
 if [[ "$HOUR" -ge 7 && "$HOUR" -le 9 ]] || [[ "$HOUR" -ge 16 && "$HOUR" -le 18 ]]; then
   WEATHER=$(curl -s --max-time 5 "wttr.in/Bangkok?format=%C+%t+%h+%p" 2>/dev/null || echo "")
   if [[ -n "$WEATHER" ]]; then
@@ -223,6 +223,19 @@ print(len(obj.get('threads',[])))
     fi
   fi
 fi
+
+# ─── Update state on every run ───
+python3 -c "
+import json
+from datetime import datetime
+f = '$STATE_FILE'
+try:
+    with open(f) as fh: s = json.load(fh)
+except: s = {}
+s['lastRunAt'] = datetime.now().isoformat()
+s.setdefault('lastChecks', {})
+with open(f, 'w') as fh: json.dump(s, fh, indent=2)
+" 2>/dev/null || true
 
 # ─── Output ───
 if (( ${#ALERTS[@]} )); then

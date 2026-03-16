@@ -1,7 +1,10 @@
-# Follow-ups
+# Follow-up Tracker
+Items Ghost should nudge the user about. Auto-maintained during /logs and Weekly Distillation.
 
-Items waiting on someone else. Nudged by heartbeat every 7 days.
-
-| Item | Waiting On | Since | Deadline | Status |
+## Active
+| Item | Owner | Since | Deadline | Status |
 |---|---|---|---|---|
-| (example) | Person | YYYY-MM-DD | - | Active |
+
+## Completed
+| Item | Owner | Since | Completed | Status |
+|---|---|---|---|---|

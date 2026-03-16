@@ -1,5 +1,2 @@
-# Errors Log
-
-Command failures, exceptions, and unexpected behaviors.
-
----
+# ERRORS
+<!-- Skill-specific errors logged here -->

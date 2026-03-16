@@ -1,13 +1,11 @@
-# People — Lightweight CRM
+# People Context
 
-Key contacts with context. Auto-updated by Ghost.
+Lightweight CRM for key contacts. Auto-updated by Ghost when people are mentioned in work context.
 
 ---
 
-<!-- Format:
-## Name
-- **Role/Org:** 
-- **Relationship:** client / team / vendor / personal
-- **Context:** key things to remember
-- **Last interaction:** date + topic
--->
+## Team
+
+## Clients / Customers
+
+## Personal

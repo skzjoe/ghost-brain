@@ -1,5 +1,3 @@
-# FEATURE_REQUESTS.md
+# FEATURE REQUESTS
 
-Log user requests for new capabilities or tools here.
-
----
+<!-- Capabilities the user asked for that don't exist yet. -->
