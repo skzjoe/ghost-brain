@@ -74,6 +74,24 @@ bash setup-crons.sh
 
 **Non-destructive** — won't overwrite existing files. Use `--force` to update code files (your data files are always protected).
 
+## Daily Usage
+
+Ghost Brain works in the background. Here's the only workflow you need:
+
+### 1. Just chat
+Talk to your AI like normal. Ghost Brain auto-captures decisions, people, ideas, and commitments from the conversation. No special syntax needed.
+
+### 2. `/logs` before `/new`
+When you're done with a session, run `/logs`. This summarizes everything into a daily note and files it to the right brain files. **Always do this before starting a new session** — otherwise the session's context is lost.
+
+### 3. Correct your AI
+When your AI gets something wrong, just tell it. Ghost Brain logs the correction as a learning and makes sure it doesn't happen again. Over time, your AI gets noticeably better.
+
+### 4. Let cron do the rest
+Morning briefing surfaces your priorities. Learning review resurfaces past lessons. EOD summary catches anything you missed. Weekly distill keeps memory lean. You don't need to manage any of this.
+
+**That's it.** Chat → `/logs` → `/new` → repeat. Everything else is automatic.
+
 ## Commands
 
 | Command | What it does |
