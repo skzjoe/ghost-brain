@@ -147,6 +147,48 @@ crontab -e
 
 If gateway goes down → you get a Telegram alert within 2 minutes. systemd auto-restarts it in 5 seconds.
 
+## Cron Variables
+
+Cron prompt scripts use `{{USER_NAME}}` as a placeholder. OpenClaw automatically replaces this with your configured agent name at runtime — no manual editing needed.
+
+## Obsidian Integration (optional)
+
+If you use Obsidian for notes, Ghost Brain can push daily and weekly notes to your vault:
+
+1. Edit `scripts/obsidian_push_daily.sh` — set `OBSIDIAN_DAILY_DIR` to your vault's daily notes folder
+2. Edit `scripts/obsidian_push_weekly.sh` — set `OBSIDIAN_WEEKLY_DIR` to your vault's weekly folder
+3. When running `setup-crons.sh`, answer "y" to the Obsidian question
+
+## Customize
+
+| What | Where | How |
+|---|---|---|
+| Fast lanes (response patterns) | `memory/reference/PLAYBOOK.md` | Add/edit domain-specific patterns |
+| Cron schedules | `openclaw cron list` → `openclaw cron update <id>` | Change time/frequency |
+| Capture triggers | Skills: `ghost-capture`, `ghost-logs` | Edit trigger words/patterns |
+| Memory templates | `memory/*.md` | Edit headers/sections |
+| Heartbeat checks | `scripts/heartbeat_pulse.sh` | Enable/disable individual checks |
+| Audit dimensions | `skills/ghost-audit/SKILL.md` | Add checks or adjust scoring |
+
+## Uninstall
+
+Ghost Brain only adds files — it doesn't modify OpenClaw config. To remove:
+
+```bash
+# Remove skills
+rm -rf ~/.openclaw/workspace/skills/ghost-*
+rm -rf ~/.openclaw/workspace/skills/self-improving-agent
+
+# Remove knowledge docs
+rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS}.md
+
+# Remove cron jobs
+openclaw cron list  # note the IDs
+openclaw cron delete <id>  # for each Ghost Brain cron
+
+# Memory files (decisions.md, people.md, etc.) contain YOUR data — keep or delete as you wish
+```
+
 ## Requirements
 
 - [OpenClaw](https://github.com/openclaw/openclaw) installed and configured

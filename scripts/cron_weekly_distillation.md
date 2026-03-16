@@ -30,7 +30,7 @@ Run every Sunday at 21:00 local time.
    d) `memory/follow-ups.md` — mark completed items, escalate items stale 14+ days.
    e) `memory/commitments.md` — check for overdue commitments, flag any not fulfilled.
 
-7) **CTO Weekly Brief** for {{USER_NAME}}:
+7) **Weekly Brief** for {{USER_NAME}}:
    - Total active workstreams + status (progressing / stale / blocked).
    - Top 3 wins this week.
    - What is blocked and for how long.
@@ -41,12 +41,12 @@ Run every Sunday at 21:00 local time.
 
 8) **Save Weekly Note**:
    - Compute ISO week: `date +%G-W%V` (e.g. `2026-W11`)
-   - Write the full CTO Weekly Brief + all changes/reviews to `memory/weekly/YYYY-Www.md`
+   - Write the full Weekly Brief + all changes/reviews to `memory/weekly/YYYY-Www.md`
    - Format: frontmatter with `week`, `date_range`, `generated` fields, then sections matching the brief
    - Push to Obsidian: `bash scripts/obsidian_push_weekly.sh YYYY-Www`
 
 9) **Announce** to {{USER_NAME}}:
-   - CTO Weekly Brief (concise version — full version saved to weekly note)
+   - Weekly Brief (concise version — full version saved to weekly note)
    - Key changes to MEMORY.md and ACTIVE_WORK.md
    - Learnings promoted or archived
    - Ideas/follow-ups promoted or archived
