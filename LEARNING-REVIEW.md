@@ -55,7 +55,7 @@ Add a cron job that runs after your morning summary:
 Schedule: 15 minutes after morning summary
 Message:
   Run: python3 scripts/learning_review.py scan && python3 scripts/learning_review.py due 3
-  If output is SR_OK → nothing due, stay silent.
+  If output is HEARTBEAT_OK → nothing due, stay silent.
   If learnings are due → send a brief review message to the user.
 ```
 
