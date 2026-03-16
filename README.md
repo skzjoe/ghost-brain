@@ -16,7 +16,11 @@
 - SM-2-inspired intervals ensure critical rules stick. Items graduate when mastered.
 
 🗄️ **Memory DB** — SQLite + vector search for long-term memory
-- Full-text search + semantic vector search in a single `.db` file. Zero infrastructure.
+- Full-text + semantic vector search in a single `.db` file. Zero infrastructure.
+- Knowledge graph (auto-links 300+ relationships), dedup, analytics dashboard
+- Cross-session context bridge — dynamic startup context from DB
+- Temporal intelligence — tracks access patterns, flags stale knowledge, surfaces hot items
+- Source tracking — auto-detects where knowledge came from (conversation, meeting, email, etc.)
 
 💰 **Token Efficiency** — save 30-50% on API costs
 - Rate limiting, context management, output discipline rules
@@ -229,6 +233,8 @@ openclaw cron delete <id>  # for each Ghost Brain cron
 | Weekly review | Manual effort | Auto-generated brief |
 | Learnings | Log once, forget | Resurface until mastered |
 | Search memory | Scroll through files | SQL + semantic vector search |
+| Session startup | Re-read everything | Dynamic context from DB |
+| Knowledge decay | Never reviewed | Stale alerts + access tracking |
 
 ## License
 
