@@ -33,6 +33,18 @@ safe_copy() {
   echo "   ✅ $(basename "$dst")"
 }
 
+# Like safe_copy but NEVER overwrites — user data is sacred
+safe_copy_data() {
+  local src="$1" dst="$2"
+  if [[ -e "$dst" ]]; then
+    echo "   ⏭️  Skip (user data): $(basename "$dst")"
+    return
+  fi
+  mkdir -p "$(dirname "$dst")"
+  cp -r "$src" "$dst"
+  echo "   ✅ $(basename "$dst")"
+}
+
 # ── 1. Skills ──
 echo "📦 Installing skills..."
 for skill_dir in "$SCRIPT_DIR"/skills/*/; do
@@ -56,7 +68,7 @@ for dir in weekly projects reference; do
 done
 
 for f in decisions.md people.md ideas.md commitments.md follow-ups.md heartbeat-state.json; do
-  safe_copy "$SCRIPT_DIR/structure/memory/$f" "$WORKSPACE/memory/$f"
+  safe_copy_data "$SCRIPT_DIR/structure/memory/$f" "$WORKSPACE/memory/$f"
 done
 
 # ── 4. Learnings structure ──
@@ -67,7 +79,7 @@ for dir in domains projects archive; do
 done
 
 for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md; do
-  safe_copy "$SCRIPT_DIR/structure/.learnings/$f" "$WORKSPACE/.learnings/$f"
+  safe_copy_data "$SCRIPT_DIR/structure/.learnings/$f" "$WORKSPACE/.learnings/$f"
 done
 
 # ── 5. Scripts ──
