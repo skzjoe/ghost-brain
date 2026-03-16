@@ -28,7 +28,7 @@ Most agents only have #1. Adding #2 means the agent stops repeating the same mis
 
 | Trigger | Where | Example |
 |---|---|---|
-| Command/tool fails | `ERRORS.md` | "ERPNext rejects duplicate rows in Stock Reconciliation" |
+| Command/tool fails | `ERRORS.md` | "App rejects duplicate rows in bulk import" |
 | User corrects agent | Domain or project file | "Actually, use `included_in_print_rate=1` for tax-inclusive" |
 | Better approach found | Domain file | "Batch independent API calls instead of serializing" |
 | User asks for missing capability | `FEATURE_REQUESTS.md` | "Wants auto-generated PDF reports" |

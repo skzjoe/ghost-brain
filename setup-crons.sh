@@ -14,63 +14,63 @@ echo "   Workspace: $WORKSPACE"
 echo "   Timezone: $TZ"
 echo ""
 
-# 1. Daily Morning Summary (08:00)
+# 1. Morning Briefing (08:00)
 openclaw cron create \
-  --name "Daily Morning Summary" \
+  --name "Morning Briefing" \
   --schedule "cron 0 8 * * * @ $TZ" \
   --prompt-file "$SCRIPTS/cron_morning.md" \
   --target main \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ Morning Summary"
+echo "✅ Morning Briefing"
 
-# 2. Commitment Deadline Alerts (08:30)
+# 2. Commitment Deadline Alert (08:30)
 openclaw cron create \
-  --name "Commitment Deadline Alerts" \
+  --name "Commitment Deadline Alert" \
   --schedule "cron 30 8 * * *" \
   --prompt-file "$SCRIPTS/cron_commitment_alerts.md" \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ Commitment Alerts"
+echo "✅ Commitment Deadline Alert"
 
-# 3. Weekly Core Backup (Sunday 20:00)
+# 3. Weekly Backup (Sunday 20:00)
 openclaw cron create \
-  --name "Weekly Core Backup" \
+  --name "Weekly Backup" \
   --schedule "cron 0 20 * * 0" \
   --prompt-file "$SCRIPTS/cron_backup.md" \
   --model "anthropic/claude-sonnet-4-6"
 echo "✅ Weekly Backup"
 
-# 4. Weekly Distillation (Sunday 21:00)
+# 4. Weekly Memory Distill (Sunday 21:00)
 openclaw cron create \
-  --name "Weekly Distillation" \
+  --name "Weekly Memory Distill" \
   --schedule "cron 0 21 * * 0 @ $TZ" \
   --prompt-file "$SCRIPTS/cron_weekly_distillation.md" \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ Weekly Distillation"
+echo "✅ Weekly Memory Distill"
 
-# 5. Daily EOD Summary (23:00)
+# 5. EOD Session Log (23:00)
 openclaw cron create \
-  --name "Daily EOD Summary" \
+  --name "EOD Session Log" \
   --schedule "cron 0 23 * * * @ $TZ" \
   --prompt-file "$SCRIPTS/cron_eod.md" \
   --target main \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ EOD Summary"
+echo "✅ EOD Session Log"
 
-# 6. Obsidian Push Daily Note (23:05)
+# 6. Obsidian Daily Sync (23:05)
 openclaw cron create \
-  --name "Obsidian Push Daily Note" \
+  --name "Obsidian Daily Sync" \
   --schedule "cron 5 23 * * * @ $TZ" \
   --prompt "Run: bash scripts/obsidian_push_today.sh — if successful reply HEARTBEAT_OK" \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ Obsidian Push"
+echo "✅ Obsidian Daily Sync"
 
-# 7. Gateway Health Check (every 6h)
+# 7. Gateway Healthcheck (every 6h)
 openclaw cron create \
-  --name "Gateway Health Check" \
+  --name "Gateway Healthcheck" \
   --schedule "cron 0 */6 * * *" \
   --prompt-file "$SCRIPTS/cron_gateway_health.md" \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ Gateway Health"
+echo "✅ Gateway Healthcheck"
 
 # 8. Weekly Report (Monday 08:30)
 openclaw cron create \
@@ -86,15 +86,15 @@ openclaw cron create \
   --schedule "cron 0 6 1 * *" \
   --prompt-file "$SCRIPTS/cron_archive_notes.md" \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ Monthly Archive"
+echo "✅ Monthly Note Archive"
 
-# 10. Monthly Learnings Review (1st of month 10:00)
+# 10. Morning Learning Review (08:15 daily)
 openclaw cron create \
-  --name "Monthly Learnings Review" \
-  --schedule "cron 0 10 1 * *" \
+  --name "Morning Learning Review" \
+  --schedule "cron 15 8 * * * @ $TZ" \
   --prompt-file "$SCRIPTS/cron_learnings_review.md" \
   --model "anthropic/claude-sonnet-4-6"
-echo "✅ Monthly Learnings Review"
+echo "✅ Morning Learning Review"
 
 echo ""
 echo "🎉 All 10 cron jobs created. Verify: openclaw cron list"

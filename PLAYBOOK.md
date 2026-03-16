@@ -53,6 +53,30 @@ Add these to make the agent proactively useful:
 - Don't narrate obvious tool calls
 ```
 
+## Memory DB integration
+
+If you've set up the Memory DB (`ghost_memory_db.py`), use it to supplement your default memory search tool — not replace it.
+
+**Default recall** = your platform's built-in memory/semantic search (e.g. `memory_search` in OpenClaw). Use it first.
+
+**Memory DB** = use when the default tool can't do the job:
+
+| # | Trigger | Command | Why default search isn't enough |
+|---|---|---|---|
+| 1 | "Everything related to X" (graph) | `search "X" --limit 5` + `links` | Follows connections across files |
+| 2 | "What happened this week/month" (temporal) | `query decision --days 7` / `temporal` | Structured date filtering |
+| 3 | "How many times has this come up" (dedup) | `dedup` | Counts recurrences |
+| 4 | "All errors/learnings/decisions" (typed) | `query <type>` | Filters by item_type |
+| 5 | "Learnings about ops/coding" (domain) | `sql "SELECT * FROM items WHERE area='ops'"` | Filters by area tag |
+| 6 | "Critical issues only" (priority) | `sql "SELECT * FROM items WHERE priority='critical'"` | Filters by priority |
+| 7 | Anything that might be in .learnings/ (cross-file) | `search "X"` | Default search only covers memory/*.md — DB indexes .learnings/ too |
+
+Rules:
+- Default search first — if it's enough, don't call DB
+- Trigger #7 is critical: .learnings/ files are invisible to most semantic search tools
+- Cost: ~500ms + ~200 tokens per query
+- On-demand only — don't inject at startup
+
 ## Anti-patterns
 - ❌ Opening with "Great question!" or "I'd be happy to help!"
 - ❌ Restating the user's question back to them
