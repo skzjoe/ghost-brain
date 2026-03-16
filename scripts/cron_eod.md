@@ -35,7 +35,11 @@ Run at 23:00 local time. Consolidate today's daily note, capture second-brain it
    - Update changed statuses/blockers/paths.
    - Add new workstreams that appeared today.
 
-8) **Announce** concise confirmation to {{USER_NAME}}:
+8) **Re-index Memory DB**:
+   - Run: `python3 ~/.openclaw/workspace/scripts/ghost_memory_db.py index`
+   - This is incremental (~1s, 0 tokens) — only indexes changed/new files.
+
+9) **Announce** concise confirmation to {{USER_NAME}}:
    - Summary of what was logged
    - Decisions/people/ideas/commitments captured
    - Learnings captured or promoted
