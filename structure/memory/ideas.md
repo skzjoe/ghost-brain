@@ -2,7 +2,7 @@
 
 Ideas mentioned in passing that aren't actionable yet but worth keeping. Ghost auto-captures future-oriented signals.
 
-Reviewed during Weekly Distillation → promote to ACTIVE_WORK.md or archive.
+Reviewed during Weekly Memory Distill → promote to ACTIVE_WORK.md or archive.
 
 ---
 
@@ -20,4 +20,4 @@ Reviewed during Weekly Distillation → promote to ACTIVE_WORK.md or archive.
 - **Status:** Parking — low priority until team grows past 5
 
 ## Archived Ideas
-<!-- Move ideas here during Weekly Distillation if parked 30+ days with no interest -->
+<!-- Move ideas here during Weekly Memory Distill if parked 30+ days with no interest -->

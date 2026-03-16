@@ -1,4 +1,4 @@
-# Weekly Distillation — Cron Prompt
+# Weekly Memory Distill — Cron Prompt
 
 Run every Sunday at 21:00 local time.
 

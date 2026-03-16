@@ -74,7 +74,7 @@ Are proactive systems actually firing?
 - [ ] Morning Summary cron exists + last run <24h on workdays
 - [ ] EOD Summary cron exists + last run <24h
 - [ ] Follow-up nudge: heartbeat-state.json tracks cooldowns
-- [ ] Weekly Distillation cron exists + status ok/idle
+- [ ] Weekly Memory Distill cron exists + status ok/idle
 
 ### Part 7 — ⏰ Obligation Health
 - [ ] Overdue commitments (deadline < today, not fulfilled) — count
@@ -95,7 +95,7 @@ Are proactive systems actually firing?
 
 ### Part 10 — ⚙️ Automation
 - [ ] `openclaw cron list` — count jobs, flag any status=error/failed
-- [ ] All expected crons present (EOD, Morning, Obsidian, Weekly Backup, Weekly Distillation, Commitment Alert, Gateway Health, Monthly Archive, Biweekly Learnings Review)
+- [ ] All expected crons present (EOD Session Log, Morning Briefing, Morning Learning Review, Obsidian Daily Sync, Weekly Backup, Weekly Memory Distill, Commitment Deadline Alert, Gateway Healthcheck, Weekly Report, Monthly Note Archive)
 - [ ] Heartbeat cron configured
 
 ### Part 11 — 🛡️ Resilience

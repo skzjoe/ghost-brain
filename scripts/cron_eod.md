@@ -1,4 +1,4 @@
-# Daily EOD Summary — Cron Prompt
+# EOD Session Log — Cron Prompt
 
 Run at 23:00 local time. Consolidate today's daily note, capture second-brain items, and check drift.
 

@@ -1,4 +1,4 @@
-# Daily Morning Summary — Cron Prompt
+# Morning Briefing — Cron Prompt
 
 Run at 08:00 local time. Compose a concise morning briefing for {{USER_NAME}}.
 

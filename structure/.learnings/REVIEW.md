@@ -6,4 +6,4 @@ Track review cycles for the self-learning system.
 |---|---|---|---|
 <!-- Add review entries here as the system matures -->
 
-_Next scheduled review: Biweekly cron (1st & 15th of month)_
+_Next scheduled review: Weekly Memory Distill (Sunday)_

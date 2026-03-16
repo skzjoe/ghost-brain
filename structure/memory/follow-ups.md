@@ -1,5 +1,5 @@
 # Follow-up Tracker
-Items Ghost should nudge the user about. Auto-maintained during /logs and Weekly Distillation.
+Items Ghost should nudge the user about. Auto-maintained during /logs and Weekly Memory Distill.
 
 ## Active
 | Item | Owner | Since | Deadline | Status |

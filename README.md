@@ -12,8 +12,8 @@
 📝 **Self-Learning** — your AI learns from mistakes
 - Errors logged once, never repeated. Patterns promoted to global rules automatically.
 
-🔄 **Spaced Repetition** — learnings resurface automatically
-- SM-2-inspired intervals ensure critical rules stick. Items graduate when mastered.
+🔄 **Learning Review** — learnings resurface automatically
+- Interval-based recall ensures critical rules stick. Items graduate when mastered.
 
 🗄️ **Memory DB** — SQLite + vector search for long-term memory
 - Full-text + semantic vector search in a single `.db` file. Zero infrastructure.
@@ -25,7 +25,7 @@
 💰 **Token Efficiency** — save 30-50% on API costs
 - Rate limiting, context management, output discipline rules
 
-⏰ **12 Automated Routines**
+⏰ **10 Automated Routines**
 - Morning brief, EOD summary, weekly distillation, commitment alerts, health checks, backups
 
 🔧 **16 System Commands**
@@ -112,31 +112,29 @@ Plus `self-improving-agent` — automatically captures errors, corrections, and 
 | `SECOND-BRAIN.md` | Memory architecture — daily notes + 5 specialized capture files |
 | `CRON-PATTERNS.md` | 10 automation patterns with schedules and prompt templates |
 | `MEMORY-DB.md` | SQLite + sqlite-vec structured memory layer |
-| `SPACED-REPETITION.md` | Auto-resurface learnings with SM-2 intervals |
+| `SPACED-REPETITION.md` | Auto-resurface learnings with interval-based recall |
 
 ## Automated Routines
 
-Set up all 12 cron jobs interactively:
+Set up all 10 cron jobs interactively:
 ```bash
 bash setup-crons.sh
 # Asks: timezone, model, Obsidian (yes/no)
-# Creates all 12 cron jobs in ~30 seconds
+# Creates all 10 cron jobs in ~30 seconds
 ```
 
 | Schedule | Job |
 |---|---|
-| Daily 08:00 | Morning summary (priorities, calendar, blockers) |
-| Daily 08:30 | Commitment deadline alerts |
-| Daily 23:00 | EOD summary (consolidate daily note + second brain capture) |
-| Daily 23:05 | Push daily note to Obsidian |
-| Every 6h | Gateway health check |
-| Sunday 20:00 | Weekly backup |
-| Sunday 21:00 | Weekly distillation (memory compaction + weekly brief) |
-| Daily 08:15 | Spaced repetition review (3 learnings/day) |
-| Monday 08:30 | Weekly report |
-| Daily 23:02 | Memory DB incremental index |
-| 1st & 15th 10:00 | Biweekly learnings review |
-| 1st of month 06:00 | Archive old daily notes |
+| Daily 08:00 | Morning Briefing (priorities, calendar, blockers) |
+| Daily 08:15 | Morning Learning Review (resurface 3 learnings/day) |
+| Daily 08:30 | Commitment Deadline Alert |
+| Daily 23:00 | EOD Session Log (consolidate daily note + second brain capture) |
+| Daily 23:05 | Obsidian Daily Sync |
+| Every 6h | Gateway Healthcheck |
+| Sunday 20:00 | Weekly Backup |
+| Sunday 21:00 | Weekly Memory Distill (compaction + weekly brief) |
+| Monday 08:30 | Weekly Report |
+| 1st of month 06:00 | Monthly Note Archive |
 
 ## How it works
 
@@ -147,13 +145,11 @@ Ghost Brain auto-captures decisions, people, ideas, commitments
     ↓
 Daily: EOD summarizes → structured notes
     ↓
-Daily: Spaced repetition resurfaces 3 learnings
+Daily: Morning Learning Review resurfaces 3 learnings
     ↓
 Memory DB indexes everything → SQL + vector search
     ↓
-Weekly: distillation compacts memory → weekly brief
-    ↓
-Biweekly: learnings reviewed → patterns promoted
+Weekly: Memory Distill compacts memory → weekly brief
     ↓
 /audit tells you if everything is working
 ```

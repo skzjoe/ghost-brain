@@ -35,7 +35,7 @@ python3 scripts/ghost_memory_db.py search "VAT configuration"
 python3 scripts/ghost_memory_db.py search "VAT" fts
 
 # Structured query: decisions about a project in the last 30 days
-python3 scripts/ghost_memory_db.py query decision --project AWC --days 30
+python3 scripts/ghost_memory_db.py query decision --project myproject --days 30
 
 # Knowledge graph — auto-link items by content
 python3 scripts/ghost_memory_db.py links --rebuild
