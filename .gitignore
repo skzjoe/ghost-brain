@@ -21,3 +21,6 @@ __pycache__/
 # Temp
 *.tmp
 *.log
+
+# Build artifacts
+projects/*/.next/
