@@ -66,7 +66,7 @@ bash setup-crons.sh
 | Component | Count | Location |
 |---|---|---|
 | Skills (commands) | 16 | `~/.openclaw/workspace/skills/` |
-| Knowledge docs | 7 | `~/.openclaw/workspace/memory/reference/` |
+| Knowledge docs | 8 | `~/.openclaw/workspace/memory/reference/` |
 | Memory templates | 6 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 10 | `~/.openclaw/workspace/scripts/` |
@@ -234,6 +234,16 @@ rm -rf ~/.openclaw/workspace/skills/self-improving-agent
 rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW}.md
 openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job
 # Your data files (decisions.md, people.md, etc.) are yours — keep or delete
+```
+
+## License
+
+MIT
+
+## Credits
+
+Built by [Joe](https://github.com/skzjoe) with Ghost 👻
+or delete
 ```
 
 ## License

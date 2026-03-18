@@ -77,6 +77,19 @@ Rules:
 - Cost: ~500ms + ~200 tokens per query
 - On-demand only — don't inject at startup
 
+## Coding workflow (brownfield / non-trivial tasks)
+For non-trivial coding work, especially in older or unfamiliar codebases:
+- Use **Research → Plan → Implement** instead of jumping straight to edits
+- Use subagents to scan/trace/compress repo findings when exploration would pollute the main context
+- Save plans as reviewable artifacts, not just prompts
+- If the thread becomes correction-heavy or noisy, create a compaction handoff and restart clean
+- Use the templates in `skills/assets/`:
+  - `coding-research-template.md`
+  - `coding-plan-template.md`
+  - `coding-compaction-handoff-template.md`
+  - `coding-implementation-summary-template.md`
+- For tiny low-risk edits, skip the heavy workflow and execute directly
+
 ## Anti-patterns
 - ❌ Opening with "Great question!" or "I'd be happy to help!"
 - ❌ Restating the user's question back to them
