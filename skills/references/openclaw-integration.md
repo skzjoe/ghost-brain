@@ -196,6 +196,33 @@ sessions_spawn(task="Research X and report back", label="research")
 | `command:stop` | When `/stop` command issued |
 | `gateway:startup` | When gateway starts |
 
+## Coding workflow integration
+
+For non-trivial coding work in older or unfamiliar repos, combine Ghost Brain with OpenClaw's agent/session features like this:
+
+### Recommended operating model
+1. **Research first**
+   - Use the main session or a sub-agent to locate the real system slice.
+   - Save findings using `memory/reference/CODING-QUICKSTART.md` and the templates in `skills/assets/` as guidance.
+2. **Use sub-agents for context isolation**
+   - Spawn sub-agents for repo scanning, tracing flows, and summarizing read-heavy exploration.
+   - Return only concise, high-signal findings to the parent session.
+3. **Create a plan before major edits**
+   - Treat the plan as a review artifact, not just a prompt.
+4. **Implement from the plan**
+   - Keep validation explicit.
+5. **Compact and restart when the thread degrades**
+   - If the session becomes noisy or correction-heavy, create a compaction handoff and resume from a fresh session.
+
+### Suggested artifact flow
+- Research → `skills/assets/coding-research-template.md`
+- Plan → `skills/assets/coding-plan-template.md`
+- Compaction → `skills/assets/coding-compaction-handoff-template.md`
+- Implementation summary → `skills/assets/coding-implementation-summary-template.md`
+
+### When NOT to use the heavy workflow
+Skip the full process for tiny, obvious, low-risk edits.
+
 ## Detection Triggers
 
 ### Standard Triggers

@@ -234,6 +234,20 @@ Ghost Brain only adds files — doesn't modify OpenClaw config:
 ```bash
 rm -rf ~/.openclaw/workspace/skills/ghost-*
 rm -rf ~/.openclaw/workspace/skills/self-improving-agent
+rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW,CODING-WORKFLOW,CODING-QUICKSTART}.md
+rm -f ~/.openclaw/workspace/skills/assets/coding-*-template.md
+openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job
+# Your data files (decisions.md, people.md, etc.) are yours — keep or delete
+```
+
+## License
+
+MIT
+
+## Credits
+
+Built by [Joe](https://github.com/skzjoe) with Ghost 👻
+g-agent
 rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW,CODING-WORKFLOW}.md
 rm -f ~/.openclaw/workspace/skills/assets/coding-*-template.md
 openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job

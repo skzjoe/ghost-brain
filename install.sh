@@ -52,7 +52,7 @@ done
 echo ""
 echo "📚 Installing knowledge docs..."
 mkdir -p "$WORKSPACE/memory/reference"
-for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md MEMORY-DB.md LEARNING-REVIEW.md CODING-WORKFLOW.md; do
+for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md MEMORY-DB.md LEARNING-REVIEW.md CODING-WORKFLOW.md CODING-QUICKSTART.md; do
   [[ -f "$SCRIPT_DIR/$doc" ]] && safe_copy "$SCRIPT_DIR/$doc" "$WORKSPACE/memory/reference/$doc"
 done
 
