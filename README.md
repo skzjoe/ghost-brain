@@ -125,6 +125,7 @@ Morning briefing surfaces your priorities. Learning review resurfaces past lesso
 | `CRON-PATTERNS.md` | 10 automation patterns with schedules and prompt templates |
 | `MEMORY-DB.md` | SQLite + sqlite-vec structured memory layer |
 | `LEARNING-REVIEW.md` | Auto-resurface learnings with interval-based recall |
+| `CODING-WORKFLOW.md` | Brownfield-safe AI coding workflow with research/plan/implement/compaction |
 
 ## Memory DB
 
@@ -187,6 +188,7 @@ Weekly distill compacts memory → weekly brief
 - 📋 [Full audit output](examples/audit-output.md) — 13-dimension scorecard + improvement suggestions
 - 📝 [Daily note example](examples/daily-note.md) — what EOD auto-summary produces
 - 🧠 [Auto-capture demo](examples/capture-in-action.md) — decisions, people, commitments from normal chat
+- 🛠️ [Coding workflow example](examples/coding-workflow-example.md) — research → plan → implement → compaction for a brownfield bug fix
 
 ## Customization
 
@@ -198,6 +200,7 @@ Weekly distill compacts memory → weekly brief
 | Memory templates | `memory/*.md` — edit sections/headers |
 | Heartbeat checks | `scripts/heartbeat_pulse.sh` |
 | Audit scoring | `skills/ghost-audit/SKILL.md` |
+| Coding workflow | `memory/reference/CODING-WORKFLOW.md` + `skills/assets/coding-*-template.md` |
 
 ## Obsidian Integration (optional)
 
@@ -231,19 +234,10 @@ Ghost Brain only adds files — doesn't modify OpenClaw config:
 ```bash
 rm -rf ~/.openclaw/workspace/skills/ghost-*
 rm -rf ~/.openclaw/workspace/skills/self-improving-agent
-rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW}.md
+rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW,CODING-WORKFLOW}.md
+rm -f ~/.openclaw/workspace/skills/assets/coding-*-template.md
 openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job
 # Your data files (decisions.md, people.md, etc.) are yours — keep or delete
-```
-
-## License
-
-MIT
-
-## Credits
-
-Built by [Joe](https://github.com/skzjoe) with Ghost 👻
-or delete
 ```
 
 ## License
