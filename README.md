@@ -18,9 +18,9 @@ Ghost Brain gives your AI assistant a persistent, self-organizing memory system:
 |---|---|
 | 🧠 **Auto-Capture** | Decisions, people, ideas, commitments, follow-ups — captured from normal conversation |
 | 📚 **Self-Learning** | Errors logged once, patterns promoted to rules. Your AI stops repeating mistakes |
-| 🔁 **Spaced Repetition** | Critical learnings resurface on SM-2 intervals until mastered |
+| 🔄 **Learning Review** | Critical learnings resurface on interval-based review until mastered |
 | 🗄️ **Memory DB** | SQLite + vector search — SQL queries + semantic search in one zero-infra file |
-| 🕸️ **Knowledge Graph** | 300+ auto-linked relationships. Ask "what do I know about X" and get connected context |
+| 🕸️ **Knowledge Graph** | Auto-linked relationships. Ask "what do I know about X" and get connected context |
 | ⏰ **10 Automated Routines** | Morning briefing, EOD summary, commitment alerts, weekly distill, backups |
 | 💰 **Token Efficiency** | Rate limiting, context discipline, lean memory — save 30-50% on API costs |
 | 🔍 **13-Part Audit** | System-wide health check with scoring + actionable improvement suggestions |
@@ -70,7 +70,7 @@ bash setup-crons.sh
 | Memory templates | 6 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 10 | `~/.openclaw/workspace/scripts/` |
-| Memory tools | 2 | `~/.openclaw/workspace/scripts/` |
+| Memory tools | 3 | `~/.openclaw/workspace/scripts/` |
 
 **Non-destructive** — won't overwrite existing files. Use `--force` to update code files (your data files are always protected).
 
@@ -113,6 +113,18 @@ Morning briefing surfaces your priorities. Learning review resurfaces past lesso
 | `/fastlanes` | Domain-specific response templates |
 | `/conflicts` | Scan for contradictions across brain files |
 | `/export` | Portable markdown bundle for backup or migration |
+
+## Knowledge Docs
+
+| Doc | What you learn |
+|---|---|
+| `TOKEN-EFFICIENCY.md` | Context management, rate limiting, output discipline, anti-patterns |
+| `SELF-LEARNING.md` | How to set up `.learnings/` for continuous improvement |
+| `PLAYBOOK.md` | Response patterns, critique-by-default, proactive triggers |
+| `SECOND-BRAIN.md` | Memory architecture — daily notes + 5 specialized capture files |
+| `CRON-PATTERNS.md` | 10 automation patterns with schedules and prompt templates |
+| `MEMORY-DB.md` | SQLite + sqlite-vec structured memory layer |
+| `LEARNING-REVIEW.md` | Auto-resurface learnings with interval-based recall |
 
 ## Memory DB
 

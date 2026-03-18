@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Ghost Brain — Spaced Repetition for Learnings
-Surfaces due learnings based on simplified SM-2 intervals.
+Ghost Brain — Learning Review for Learnings
+Surfaces due learnings using interval-based recall.
 No external DB — uses a JSON state file alongside existing markdown learnings.
 
 Usage:
   python3 learning_review.py due          # Show items due for review today
   python3 learning_review.py reinforce ID # Mark a learning as applied/reinforced
   python3 learning_review.py init         # Scan all learnings and initialize state
-  python3 learning_review.py stats        # Show Learning Review statistics
+  python3 learning_review.py stats        # Show review statistics
   python3 learning_review.py dismiss ID   # Dismiss (skip) a learning for this cycle
   python3 learning_review.py scan         # Re-scan learnings and sync state
 """
@@ -20,21 +20,18 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-WORKSPACE = Path(os.environ.get("OPENCLAW_WORKSPACE",
-    os.path.expanduser("~/.openclaw/workspace")))
+WORKSPACE = Path(os.environ.get("OPENCLAW_WORKSPACE", os.path.expanduser("~/.openclaw/workspace")))
 LEARNINGS_DIR = WORKSPACE / ".learnings"
 STATE_FILE = LEARNINGS_DIR / "learning-review-state.json"
 
-# Interval ladder (days): each successful review advances to next level
 INTERVALS = [1, 3, 7, 14, 30, 60, 120]
 MAX_LEVEL = len(INTERVALS) - 1
 
-# Priority weights — higher priority = more frequent resurfacing
 PRIORITY_WEIGHT = {
-    "critical": 0.5,   # halve intervals
+    "critical": 0.5,
     "high": 0.75,
     "medium": 1.0,
-    "low": 1.5,        # stretch intervals
+    "low": 1.5,
 }
 
 
@@ -53,17 +50,11 @@ def save_state(state):
 
 
 def scan_learnings():
-    """Parse all learning entries from markdown files."""
     items = {}
-    files_to_scan = [
-        LEARNINGS_DIR / "LEARNINGS.md",
-        LEARNINGS_DIR / "ERRORS.md",
-    ]
-    # Add domain files
+    files_to_scan = [LEARNINGS_DIR / "LEARNINGS.md", LEARNINGS_DIR / "ERRORS.md"]
     domains_dir = LEARNINGS_DIR / "domains"
     if domains_dir.exists():
         files_to_scan.extend(domains_dir.glob("*.md"))
-    # Add project files (skip README)
     projects_dir = LEARNINGS_DIR / "projects"
     if projects_dir.exists():
         files_to_scan.extend(p for p in projects_dir.glob("*.md") if p.name != "README.md")
@@ -130,14 +121,14 @@ def init_state(state, items):
 def get_due_items(state, items, limit=5):
     today = datetime.now().strftime("%Y-%m-%d")
     due = []
-    for item_id, sr in state["items"].items():
-        if sr.get("graduated"):
+    for item_id, review_state in state["items"].items():
+        if review_state.get("graduated"):
             continue
-        if sr["next_review"] <= today and item_id in items:
-            due.append({**items[item_id], "sr": sr})
+        if review_state["next_review"] <= today and item_id in items:
+            due.append({**items[item_id], "review": review_state})
 
     priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
-    due.sort(key=lambda x: (priority_order.get(x["priority"], 2), x["sr"]["next_review"]))
+    due.sort(key=lambda x: (priority_order.get(x["priority"], 2), x["review"]["next_review"]))
     return due[:limit]
 
 
@@ -146,23 +137,23 @@ def reinforce(state, item_id):
         print(f"❌ Unknown item: {item_id}")
         return False
 
-    sr = state["items"][item_id]
+    review_state = state["items"][item_id]
     today = datetime.now().strftime("%Y-%m-%d")
-    sr["last_reviewed"] = today
-    sr["times_reinforced"] = sr.get("times_reinforced", 0) + 1
+    review_state["last_reviewed"] = today
+    review_state["times_reinforced"] = review_state.get("times_reinforced", 0) + 1
 
-    if sr["level"] < MAX_LEVEL:
-        sr["level"] += 1
+    if review_state["level"] < MAX_LEVEL:
+        review_state["level"] += 1
     else:
-        sr["graduated"] = True
-        sr["next_review"] = "9999-12-31"
-        print(f"🎓 {item_id} graduated! (reviewed {sr['times_reinforced']} times)")
+        review_state["graduated"] = True
+        review_state["next_review"] = "9999-12-31"
+        print(f"🎓 {item_id} graduated! (reviewed {review_state['times_reinforced']} times)")
         return True
 
-    interval = INTERVALS[sr["level"]]
+    interval = INTERVALS[review_state["level"]]
     next_date = datetime.now() + timedelta(days=interval)
-    sr["next_review"] = next_date.strftime("%Y-%m-%d")
-    print(f"✅ {item_id} reinforced → level {sr['level']}, next review: {sr['next_review']}")
+    review_state["next_review"] = next_date.strftime("%Y-%m-%d")
+    print(f"✅ {item_id} reinforced → level {review_state['level']}, next review: {review_state['next_review']}")
     return True
 
 
@@ -171,35 +162,35 @@ def dismiss(state, item_id):
         print(f"❌ Unknown item: {item_id}")
         return False
 
-    sr = state["items"][item_id]
+    review_state = state["items"][item_id]
     today = datetime.now().strftime("%Y-%m-%d")
-    sr["last_reviewed"] = today
-    sr["times_surfaced"] = sr.get("times_surfaced", 0) + 1
+    review_state["last_reviewed"] = today
+    review_state["times_surfaced"] = review_state.get("times_surfaced", 0) + 1
 
-    interval = INTERVALS[min(sr["level"], MAX_LEVEL)]
+    interval = INTERVALS[min(review_state["level"], MAX_LEVEL)]
     next_date = datetime.now() + timedelta(days=interval)
-    sr["next_review"] = next_date.strftime("%Y-%m-%d")
-    print(f"⏭️ {item_id} dismissed → same level {sr['level']}, next review: {sr['next_review']}")
+    review_state["next_review"] = next_date.strftime("%Y-%m-%d")
+    print(f"⏭️ {item_id} dismissed → same level {review_state['level']}, next review: {review_state['next_review']}")
     return True
 
 
-def show_stats(state, items):
+def show_stats(state):
     total = len(state["items"])
     graduated = sum(1 for s in state["items"].values() if s.get("graduated"))
     today = datetime.now().strftime("%Y-%m-%d")
     due = sum(1 for s in state["items"].values() if not s.get("graduated") and s["next_review"] <= today)
 
     levels = {}
-    for s in state["items"].values():
-        if not s.get("graduated"):
-            lvl = s["level"]
+    for review_state in state["items"].values():
+        if not review_state.get("graduated"):
+            lvl = review_state["level"]
             levels[lvl] = levels.get(lvl, 0) + 1
 
-    print(f"📊 Learning Review Stats")
+    print("📊 Learning Review Stats")
     print(f"   Total tracked: {total}")
     print(f"   Due today: {due}")
     print(f"   Graduated: {graduated}")
-    print(f"   Level distribution:")
+    print("   Level distribution:")
     for lvl in sorted(levels.keys()):
         bar = "█" * levels[lvl]
         print(f"     L{lvl} ({INTERVALS[lvl]}d): {levels[lvl]} {bar}")
@@ -212,10 +203,10 @@ def format_due_for_cron(due_items):
     print(f"🔄 {len(due_items)} learning(s) due for review:")
     print()
     for item in due_items:
-        sr = item["sr"]
+        review_state = item["review"]
         emoji = "🔴" if item["priority"] == "critical" else "🟡" if item["priority"] == "high" else "⚪"
         print(f"{emoji} [{item['id']}] {item['summary']}")
-        print(f"   Area: {item['area']} | Level: {sr['level']}/{MAX_LEVEL} | Source: {item['source']}")
+        print(f"   Area: {item['area']} | Level: {review_state['level']}/{MAX_LEVEL} | Source: {item['source']}")
         print()
 
 
@@ -232,7 +223,6 @@ def main():
         new, stale = init_state(state, items)
         save_state(state)
         print(f"✅ Initialized: {new} new, {stale} removed, {len(state['items'])} total")
-
     elif cmd == "due":
         if not state["items"]:
             init_state(state, items)
@@ -240,30 +230,27 @@ def main():
         limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
         due = get_due_items(state, items, limit=limit)
         format_due_for_cron(due)
-
     elif cmd == "reinforce":
         if len(sys.argv) < 3:
-            print("Usage: learning_review.py reinforce <ID>"); return
+            print("Usage: learning_review.py reinforce <ID>")
+            return
         reinforce(state, sys.argv[2])
         save_state(state)
-
     elif cmd == "dismiss":
         if len(sys.argv) < 3:
-            print("Usage: learning_review.py dismiss <ID>"); return
+            print("Usage: learning_review.py dismiss <ID>")
+            return
         dismiss(state, sys.argv[2])
         save_state(state)
-
     elif cmd == "stats":
         if not state["items"]:
             init_state(state, items)
             save_state(state)
-        show_stats(state, items)
-
+        show_stats(state)
     elif cmd == "scan":
         new, stale = init_state(state, items)
         save_state(state)
         print(f"🔍 Scanned: {new} new, {stale} removed, {len(state['items'])} total")
-
     else:
         print(f"Unknown command: {cmd}")
         print(__doc__)

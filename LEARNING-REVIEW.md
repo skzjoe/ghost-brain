@@ -1,10 +1,10 @@
-# Spaced Repetition — Resurface Learnings Automatically
+# Learning Review — Resurface Learnings Automatically
 
-A lightweight spaced repetition system that ensures learnings from `.learnings/` actually get used, not just stored.
+A lightweight interval-based review system that ensures learnings from `.learnings/` actually get used, not just stored.
 
 ## Why
 
-Without resurfacing, your learnings file becomes a graveyard — you log mistakes and corrections but never revisit them. Spaced repetition ensures:
+Without resurfacing, your learnings file becomes a graveyard — you log mistakes and corrections but never revisit them. Learning review ensures:
 - **Critical rules** surface frequently until they're second nature
 - **Domain lessons** come back at increasing intervals as you prove recall
 - **Graduated items** stop surfacing — no noise from mastered knowledge
@@ -49,10 +49,10 @@ python3 scripts/learning_review.py scan
 
 ## Cron integration
 
-Add a cron job that runs after your morning summary:
+Add a cron job that runs after your morning briefing:
 
 ```
-Schedule: 15 minutes after morning summary
+Schedule: 15 minutes after morning briefing
 Message:
   Run: python3 scripts/learning_review.py scan && python3 scripts/learning_review.py due 3
   If output is LR_OK → nothing due, stay silent.

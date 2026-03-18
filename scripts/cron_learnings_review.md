@@ -1,22 +1,22 @@
-# Monthly Learnings Review — Cron Prompt
+# Morning Learning Review — Cron Prompt
 
-Scan `.learnings/` for promotion candidates and stale entries.
+Run after the morning briefing. Surface a few due learnings from `.learnings/` using interval-based recall.
 
 ## Steps
-1. Read `.learnings/LEARNINGS.md` (global)
-2. Read all files in `.learnings/domains/` and `.learnings/projects/`
-3. Read `.learnings/ERRORS.md` and `.learnings/FEATURE_REQUESTS.md`
+1. Run:
+   - `python3 scripts/learning_review.py scan`
+   - `python3 scripts/learning_review.py due 3`
+2. If output is `LR_OK` → reply `LR_OK` and stay silent.
+3. If items are due:
+   - Read each surfaced learning's full entry from the source file.
+   - Compose a brief message titled `🔄 Learning Review` with, for each item:
+     - the key lesson in 1-2 sentences
+     - which area it applies to
+     - the learning ID
+4. Do **not** call `message.send` directly from the prompt. Return the text normally so cron delivery/announce can send it.
+5. Do **not** auto-reinforce. Wait for the user's later response before reinforcing anything.
+6. After surfacing items, run `python3 scripts/learning_review.py dismiss <ID>` for each surfaced item so it does not repeat tomorrow unchanged.
 
-## Analysis
-- **Promotion candidates**: Find patterns that appear 3+ times across domain/project files → recommend promoting to `LEARNINGS.md` (global)
-- **Stale entries**: Flag learnings older than 90 days with no recent recurrence → recommend archiving to `.learnings/archive/`
-- **Cross-pollination**: If a project-scoped learning applies broadly → recommend copying to the relevant domain file
-
-## Output
-- Compose a summary:
-  - Promotion candidates (what + where → where)
-  - Stale entries to archive
-  - Cross-pollination suggestions
-- Update `.learnings/REVIEW.md` with today's date and findings
-- If nothing actionable, reply HEARTBEAT_OK
-- If changes are recommended, list them but do NOT auto-apply — present for {{USER_NAME}}'s approval in the next session
+## Output rules
+- No items due → `LR_OK`
+- Items due → concise review message only

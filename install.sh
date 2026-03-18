@@ -15,7 +15,6 @@ echo "👻 Ghost Brain Installer"
 echo "   Target: $WORKSPACE"
 echo ""
 
-# Check workspace exists
 if [[ ! -d "$WORKSPACE" ]]; then
   echo "❌ Workspace not found: $WORKSPACE"
   echo "   Set OPENCLAW_WORKSPACE or run 'openclaw setup' first."
@@ -33,7 +32,6 @@ safe_copy() {
   echo "   ✅ $(basename "$dst")"
 }
 
-# Like safe_copy but NEVER overwrites — user data is sacred
 safe_copy_data() {
   local src="$1" dst="$2"
   if [[ -e "$dst" ]]; then
@@ -45,14 +43,12 @@ safe_copy_data() {
   echo "   ✅ $(basename "$dst")"
 }
 
-# ── 1. Skills ──
 echo "📦 Installing skills..."
 for skill_dir in "$SCRIPT_DIR"/skills/*/; do
   skill_name=$(basename "$skill_dir")
   safe_copy "$skill_dir" "$WORKSPACE/skills/$skill_name"
 done
 
-# ── 2. Knowledge docs (into memory/reference/) ──
 echo ""
 echo "📚 Installing knowledge docs..."
 mkdir -p "$WORKSPACE/memory/reference"
@@ -60,7 +56,6 @@ for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON
   [[ -f "$SCRIPT_DIR/$doc" ]] && safe_copy "$SCRIPT_DIR/$doc" "$WORKSPACE/memory/reference/$doc"
 done
 
-# ── 3. Memory structure ──
 echo ""
 echo "🧠 Setting up memory structure..."
 for dir in weekly projects reference; do
@@ -71,7 +66,6 @@ for f in decisions.md people.md ideas.md commitments.md follow-ups.md heartbeat-
   safe_copy_data "$SCRIPT_DIR/structure/memory/$f" "$WORKSPACE/memory/$f"
 done
 
-# ── 4. Learnings structure ──
 echo ""
 echo "📝 Setting up .learnings/..."
 for dir in domains projects archive; do
@@ -82,22 +76,18 @@ for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md; do
   safe_copy_data "$SCRIPT_DIR/structure/.learnings/$f" "$WORKSPACE/.learnings/$f"
 done
 
-# ── 5. Scripts ──
 echo ""
 echo "🛠️ Installing scripts..."
 mkdir -p "$WORKSPACE/scripts"
 
-# Gateway watchdog
 safe_copy "$SCRIPT_DIR/scripts/gateway_watchdog.sh" "$WORKSPACE/scripts/gateway_watchdog.sh"
 chmod +x "$WORKSPACE/scripts/gateway_watchdog.sh" 2>/dev/null || true
 
-# Heartbeat
 [[ -f "$SCRIPT_DIR/scripts/heartbeat_pulse.sh" ]] && {
   safe_copy "$SCRIPT_DIR/scripts/heartbeat_pulse.sh" "$WORKSPACE/scripts/heartbeat_pulse.sh"
   chmod +x "$WORKSPACE/scripts/heartbeat_pulse.sh" 2>/dev/null || true
 }
 
-# Obsidian push scripts
 for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh; do
   [[ -f "$SCRIPT_DIR/scripts/$f" ]] && {
     safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
@@ -105,22 +95,19 @@ for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh; 
   }
 done
 
-# Memory tools (learning_review.py + ghost_memory_db.py)
-for f in learning_review.py ghost_memory_db.py; do
+# Memory tools (canonical + compatibility shim)
+for f in learning_review.py sr_review.py ghost_memory_db.py; do
   safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
   chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
 done
 
-# Cron prompts
 for f in "$SCRIPT_DIR"/scripts/cron_*.md; do
   [[ -f "$f" ]] && safe_copy "$f" "$WORKSPACE/scripts/$(basename "$f")"
 done
 
-# ── 6. Dependencies ──
 echo ""
 echo "📦 Installing Python dependencies..."
 
-# sqlite-vec (required for Memory DB)
 if python3 -c "import sqlite_vec" 2>/dev/null; then
   echo "   ✅ sqlite-vec (already installed)"
 else
@@ -131,7 +118,6 @@ else
     || echo "   ⚠️  Could not install sqlite-vec automatically. Run: pip install sqlite-vec"
 fi
 
-# google-genai (optional — for Gemini semantic embeddings)
 if python3 -c "from google import genai" 2>/dev/null; then
   echo "   ✅ google-genai (already installed)"
 else
@@ -142,7 +128,6 @@ else
     || echo "   ⚠️  Could not install google-genai. Semantic search will use local fallback (still works)."
 fi
 
-# ── 7. Initialize Memory DB + Learning Review ──
 echo ""
 echo "🗄️ Initializing Memory DB..."
 mkdir -p "$WORKSPACE/.local"
@@ -160,7 +145,6 @@ else
   echo "   ⚠️  Learning Review init skipped (will work after you add learnings)"
 fi
 
-# ── 8. Summary ──
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Ghost Brain installed!"
@@ -174,7 +158,6 @@ echo "  • Memory tools → scripts/ (Memory DB + Learning Review)"
 echo "  • $(ls "$WORKSPACE"/scripts/cron_*.md 2>/dev/null | wc -l) cron prompt templates → scripts/"
 echo ""
 
-# Check for Gemini API key
 if [[ -n "${GEMINI_API_KEY:-}" ]]; then
   echo "  🔑 GEMINI_API_KEY detected — semantic search enabled (free tier)"
 else

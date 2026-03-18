@@ -12,17 +12,16 @@ check() {
   local desc="$1" cmd="$2"
   if eval "$cmd" &>/dev/null; then
     echo "  ✅ $desc"
-    ((PASS++))
+    PASS=$((PASS + 1))
   else
     echo "  ❌ $desc"
-    ((FAIL++))
+    FAIL=$((FAIL + 1))
   fi
 }
 
 echo "👻 Ghost Brain — Smoke Test"
 echo ""
 
-# Skills
 echo "📦 Skills:"
 for skill in ghost-audit ghost-capture ghost-commitments ghost-conflicts ghost-decisions \
              ghost-export ghost-fastlanes ghost-followups ghost-health ghost-ideas \
@@ -31,47 +30,41 @@ for skill in ghost-audit ghost-capture ghost-commitments ghost-conflicts ghost-d
 done
 check "self-improving-agent" "[[ -f '$WORKSPACE/skills/self-improving-agent/SKILL.md' ]]"
 
-# Memory structure
 echo ""
 echo "🧠 Memory:"
 for f in decisions.md people.md ideas.md commitments.md follow-ups.md; do
   check "memory/$f" "[[ -f '$WORKSPACE/memory/$f' ]]"
 done
 
-# Learnings
 echo ""
 echo "📝 Learnings:"
 for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md; do
   check ".learnings/$f" "[[ -f '$WORKSPACE/.learnings/$f' ]]"
 done
 
-# Scripts
 echo ""
 echo "🛠️ Scripts:"
 check "ghost_memory_db.py" "[[ -f '$WORKSPACE/scripts/ghost_memory_db.py' ]]"
 check "learning_review.py" "[[ -f '$WORKSPACE/scripts/learning_review.py' ]]"
+check "sr_review.py shim" "[[ -f '$WORKSPACE/scripts/sr_review.py' ]]"
 check "heartbeat_pulse.sh" "[[ -f '$WORKSPACE/scripts/heartbeat_pulse.sh' ]]"
 
-# Dependencies
 echo ""
 echo "📦 Dependencies:"
 check "sqlite-vec" "python3 -c 'import sqlite_vec'"
 check "google-genai (optional)" "python3 -c 'from google import genai'" || true
 
-# Memory DB
 echo ""
 echo "🗄️ Memory DB:"
 check "DB exists" "[[ -f '$WORKSPACE/.local/ghost_memory.db' ]]"
 check "DB queryable" "python3 '$WORKSPACE/scripts/ghost_memory_db.py' stats"
 
-# Knowledge docs
 echo ""
 echo "📚 Knowledge docs:"
-for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md; do
+for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md LEARNING-REVIEW.md; do
   check "memory/reference/$doc" "[[ -f '$WORKSPACE/memory/reference/$doc' ]]"
 done
 
-# Summary
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  ✅ Passed: $PASS"

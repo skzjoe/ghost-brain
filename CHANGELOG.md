@@ -7,9 +7,9 @@
 ### Core Systems
 - **5 Auto-Capture Systems** — decisions, people, ideas, commitments, follow-ups captured from normal conversation
 - **Self-Learning Lifecycle** — errors → scoped learnings → domain patterns → global rules → archive
-- **Spaced Repetition** — SM-2 intervals (1→3→7→14→30→60→120d), 3 learnings/day, priority-weighted
+- **Learning Review** — interval ladder (1→3→7→14→30→60→120d), 3 learnings/day, priority-weighted
 - **Memory DB** — SQLite + sqlite-vec, full-text + semantic vector search, zero infrastructure
-- **Knowledge Graph** — 300+ auto-linked relationships (documented_in, relates_to, mentioned_in, tracks)
+- **Knowledge Graph** — auto-linked relationships (documented_in, relates_to, mentioned_in, tracks)
 
 ### Memory DB Features
 - Gemini embedding-001 (256d) with auto-fallback to local hash
@@ -45,9 +45,10 @@
 - CRON-PATTERNS.md, MEMORY-DB.md, LEARNING-REVIEW.md
 
 ### Installation
-- `install.sh` — non-destructive, auto-installs deps (sqlite-vec, google-genai), indexes memory, inits SR
+- `install.sh` — non-destructive, auto-installs deps (sqlite-vec, google-genai), indexes memory, inits Learning Review
 - `install.sh --force` — updates code files, never overwrites user data (`safe_copy_data()`)
 - `setup-crons.sh` — interactive setup (timezone, model, Obsidian preference)
+- Compatibility shim retained: `scripts/sr_review.py` forwards to `scripts/learning_review.py`
 - Gateway watchdog script for OS-level monitoring
 
 ### Infrastructure
