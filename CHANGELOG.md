@@ -48,7 +48,6 @@
 - `install.sh` — non-destructive, auto-installs deps (sqlite-vec, google-genai), indexes memory, inits Learning Review
 - `install.sh --force` — updates code files, never overwrites user data (`safe_copy_data()`)
 - `setup-crons.sh` — interactive setup (timezone, model, Obsidian preference)
-- Compatibility shim retained: `scripts/sr_review.py` forwards to `scripts/learning_review.py`
 - Gateway watchdog script for OS-level monitoring
 
 ### Infrastructure

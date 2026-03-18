@@ -46,7 +46,6 @@ echo ""
 echo "🛠️ Scripts:"
 check "ghost_memory_db.py" "[[ -f '$WORKSPACE/scripts/ghost_memory_db.py' ]]"
 check "learning_review.py" "[[ -f '$WORKSPACE/scripts/learning_review.py' ]]"
-check "sr_review.py shim" "[[ -f '$WORKSPACE/scripts/sr_review.py' ]]"
 check "heartbeat_pulse.sh" "[[ -f '$WORKSPACE/scripts/heartbeat_pulse.sh' ]]"
 
 echo ""
