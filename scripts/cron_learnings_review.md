@@ -1,22 +1,25 @@
 # Morning Learning Review — Cron Prompt
 
-Run after the morning briefing. Surface a few due learnings from `.learnings/` using interval-based recall.
+Daily learning review: surface due items, auto-reinforce, and scan for promotions.
 
 ## Steps
-1. Run:
-   - `python3 scripts/learning_review.py scan`
-   - `python3 scripts/learning_review.py due 3`
-2. If output is `LR_OK` → reply `LR_OK` and stay silent.
-3. If items are due:
-   - Read each surfaced learning's full entry from the source file.
-   - Compose a brief message titled `🔄 Learning Review` with, for each item:
-     - the key lesson in 1-2 sentences
-     - which area it applies to
-     - the learning ID
-4. Do **not** call `message.send` directly from the prompt. Return the text normally so cron delivery/announce can send it.
-5. Do **not** auto-reinforce. Wait for the user's later response before reinforcing anything.
-6. After surfacing items, run `python3 scripts/learning_review.py dismiss <ID>` for each surfaced item so it does not repeat tomorrow unchanged.
 
-## Output rules
-- No items due → `LR_OK`
-- Items due → concise review message only
+1. **Surface due learnings**: Run `python3 scripts/learning_review.py due 3` to get up to 3 due items.
+   - If output is `LR_OK` → skip to step 3.
+   - Otherwise, present the due items to the user as a quick reminder.
+
+2. **Auto-reinforce**: Run `python3 scripts/learning_review.py reinforce-due 3` to advance presented items in the spaced repetition ladder.
+   - This is critical — without reinforcement, items stay at L0 forever.
+
+3. **Scan for new learnings**: Run `python3 scripts/learning_review.py scan` to pick up any newly captured items in `.learnings/`.
+
+4. **Promotion check** (weekly, on Mondays only):
+   - Read `.learnings/LEARNINGS.md`, `domains/*.md`, `projects/*.md`
+   - Find patterns that appear 3+ times across files → recommend promoting to `LEARNINGS.md`
+   - Flag entries older than 90 days with no recurrence → recommend archiving
+   - Update `.learnings/REVIEW.md` with today's date and findings
+
+## Output
+- If items were surfaced: present them as concise reminders, then confirm reinforcement.
+- If promotion candidates found: list them but do NOT auto-apply — present for user approval.
+- If nothing actionable: reply HEARTBEAT_OK

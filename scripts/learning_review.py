@@ -297,6 +297,22 @@ def main():
             save_state(state)
         show_stats(state, items)
     
+    elif cmd == "reinforce-due":
+        # Auto-reinforce all due items — for cron use after presenting them
+        if not state["items"]:
+            init_state(state, items)
+        limit = int(sys.argv[2]) if len(sys.argv) > 2 else 3
+        due = get_due_items(state, items, limit=limit)
+        if not due:
+            print("LR_OK")
+        else:
+            count = 0
+            for item in due:
+                reinforce(state, item["id"])
+                count += 1
+            save_state(state)
+            print(f"\n📈 Auto-reinforced {count} items")
+
     elif cmd == "scan":
         new, stale = init_state(state, items)
         save_state(state)
