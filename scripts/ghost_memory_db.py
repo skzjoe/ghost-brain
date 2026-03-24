@@ -51,7 +51,7 @@ WORKSPACE = Path(os.environ.get("OPENCLAW_WORKSPACE",
     os.path.expanduser("~/.openclaw/workspace")))
 DB_PATH = WORKSPACE / ".local" / "ghost_memory.db"
 
-_has_gemini = bool(os.environ.get("GEMINI_API_KEY"))
+_has_gemini = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
 EMBEDDING_PROVIDER = os.environ.get("GHOST_EMBEDDING_PROVIDER",
     "gemini" if _has_gemini else "local")
 EMBEDDING_DIM = int(os.environ.get("GHOST_EMBEDDING_DIM",
@@ -792,7 +792,7 @@ def _get_gemini_client():
     if _gemini_client is None:
         try:
             from google import genai
-            key = os.environ.get("GEMINI_API_KEY")
+            key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
             if not key: return None
             _gemini_client = genai.Client(api_key=key)
         except (ImportError, Exception):
