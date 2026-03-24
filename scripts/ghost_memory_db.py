@@ -542,10 +542,79 @@ class GhostMemory:
         link_count = self.rebuild_links()
         report["steps"].append({"step": "links", "duration_s": round(time.time() - t0, 1), "links": link_count})
 
-        # Step 4: Stats
+        # Step 4: Sync LR tags
+        t0 = time.time()
+        lr_count = self.sync_lr_tags(workspace)
+        report["steps"].append({"step": "lr_sync", "duration_s": round(time.time() - t0, 1), "tagged": lr_count})
+
+        # Step 5: Stats
         report["stats"] = self.get_stats()
         report["finished_at"] = datetime.now().isoformat()
         return report
+
+    # --- Learning Review Integration ---
+
+    def sync_lr_tags(self, workspace: Path) -> int:
+        """Sync learning review SR state as tags on matching DB items.
+        Reads learning-review-state.json + scans learnings for summaries,
+        then tags matching DB items with sr:L0..L6 or sr:graduated.
+        Returns count of items tagged."""
+        lr_state_path = workspace / ".learnings" / "learning-review-state.json"
+        if not lr_state_path.exists():
+            return 0
+
+        import json as _json
+        state = _json.load(open(lr_state_path))
+        sr_items = state.get("items", {})
+        if not sr_items:
+            return 0
+
+        # Try to get summaries from learning_review scanner
+        lr_summaries = {}
+        try:
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("lr", workspace / "scripts" / "learning_review.py")
+            lr_mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(lr_mod)
+            scanned = lr_mod.scan_learnings()
+            lr_summaries = {k: v.get("summary", "")[:50] for k, v in scanned.items()}
+        except Exception:
+            pass
+
+        # Remove old sr: tags
+        self.db.execute("""
+            DELETE FROM item_tags WHERE tag_id IN (
+                SELECT id FROM tags WHERE name LIKE 'sr:%'
+            )
+        """)
+
+        count = 0
+        for lr_id, sr in sr_items.items():
+            # Strategy 1: match by LR ID in title/content
+            row = self.db.execute(
+                "SELECT id FROM items WHERE title LIKE ? OR content LIKE ? LIMIT 1",
+                (f"%{lr_id}%", f"%{lr_id}%")).fetchone()
+
+            # Strategy 2: match by summary text against learning/error items
+            if not row and lr_id in lr_summaries and lr_summaries[lr_id]:
+                summary = lr_summaries[lr_id]
+                row = self.db.execute(
+                    "SELECT id FROM items WHERE item_type IN ('learning','error') AND title LIKE ? LIMIT 1",
+                    (f"%{summary}%",)).fetchone()
+
+            if not row:
+                continue
+
+            item_id = row[0]
+            tag_name = "sr:graduated" if sr.get("graduated") else f"sr:L{sr.get('level', 0)}"
+
+            self.db.execute("INSERT OR IGNORE INTO tags (name) VALUES (?)", (tag_name,))
+            tid = self.db.execute("SELECT id FROM tags WHERE name=?", (tag_name,)).fetchone()[0]
+            self.db.execute("INSERT OR IGNORE INTO item_tags (item_id, tag_id) VALUES (?,?)", (item_id, tid))
+            count += 1
+
+        self.db.commit()
+        return count
 
     # --- Export ---
 

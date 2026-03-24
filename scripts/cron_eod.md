@@ -46,12 +46,17 @@ Run at 23:00 Bangkok time. Consolidate today's daily note, capture second-brain 
    - This re-indexes all memory files (Gemini 256d embeddings), rebuilds knowledge graph links, and deduplicates.
    - Takes ~5s, 0 LLM tokens. If it fails, log the error but continue to step 10.
 
-10) **Generate context bridge**:
+10) **Detect active fast lanes**:
+   - Run: `python3 scripts/detect_active_lanes.py`
+   - Generates `.local/active_lanes.txt` — top 5 fast lanes based on this week's work patterns.
+   - Pure keyword matching, 0 tokens, <1s. If it fails, skip.
+
+11) **Generate context bridge**:
    - Run: `bash scripts/generate_context_bridge.sh`
    - This creates `.local/session_context.md` — a compact context summary (~500 tokens) for the next session.
    - If it fails, skip (non-critical).
 
-11) **Announce** concise confirmation to {{USER_NAME}}:
+12) **Announce** concise confirmation to {{USER_NAME}}:
    - Summary of what was logged
    - Decisions/people/ideas/commitments captured
    - Learnings captured or promoted
