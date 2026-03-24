@@ -78,3 +78,22 @@ It auto-triggers on errors, corrections, and discoveries.
 - Promote only after real repetition, not speculation
 - Archive is better than delete — you might need it later
 - Review monthly, not daily — let patterns emerge naturally
+
+## Common Error Patterns (reference examples)
+
+These are patterns many Ghost Brain users encounter. Include them in your `.learnings/ERRORS.md` as starting points.
+
+### PDF emoji rendering
+**Error:** ✅ emoji renders in browser but shows as empty box in PDF viewers
+**Fix:** Replace emoji checkmarks with ✓ (U+2713) Unicode character; set font-family to 'DejaVu Sans' or similar system font
+**Prevention:** For PDF export, always use plain Unicode characters + system fonts instead of emoji
+
+### HTML/PDF page count mismatch
+**Error:** HTML layout shows correct page structure, but exported PDF merges/splits pages differently
+**Fix:** Force explicit CSS page breaks, then verify with `pdfinfo` before delivering
+**Prevention:** Never trust browser preview alone for page structure; always confirm `Pages:` from `pdfinfo` on the final file
+
+### Follow-up capture miss during /logs
+**Error:** Tasks completed during a session but not marked ✅ in follow-ups.md because completion was implicit (done as part of work, not explicitly stated)
+**Fix:** During /logs, cross-reference active follow-ups against session work — if work touched a follow-up item, mark it or ask the user
+**Prevention:** Pull follow-ups.md at /logs time and compare against session activity, don't rely on user explicitly saying "done"

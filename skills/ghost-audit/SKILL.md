@@ -72,7 +72,7 @@ Are proactive systems actually firing?
 - [ ] heartbeat-state.json exists + valid
 - [ ] Commitment Deadline Alert cron exists + status ok/idle (not errored)
 - [ ] Morning Summary cron exists + last run <24h on workdays
-- [ ] EOD Summary cron exists + last run <24h
+- [ ] EOD Session Log cron exists + last run <24h
 - [ ] Follow-up nudge: heartbeat-state.json tracks cooldowns
 - [ ] Weekly Memory Distill cron exists + status ok/idle
 
