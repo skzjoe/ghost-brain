@@ -189,7 +189,7 @@ Are proactive systems actually firing?
 
 ## Part 13 — 🚀 Improvement Suggestions (4 Pillars)
 
-After completing the scorecard, analyze the audit findings and generate **actionable improvement suggestions** mapped to the 4 North Star pillars. This is the most valuable part — the audit exists to drive improvement, not just report status.
+After completing the scorecard, analyze the audit findings and generate **actionable improvement suggestions** mapped to the 4 North Star pillars. This is the most important part — the audit exists to drive improvement, not just report status.
 
 ### How to generate suggestions
 
@@ -239,5 +239,5 @@ For each pillar, look at:
 - **Prioritize by leverage** — fewer high-impact suggestions > long list of small tweaks
 - **Include quick wins** — always end with 3-5 things that can be implemented immediately
 - **Avoid repeating what already works** — focus on gaps and growth areas, not praise
-- **Mix structural + behavioral** — some suggestions improve files/crons, others improve response patterns
+- **Mix structural + behavioral** — some suggestions improve files/crons, others improve Ghost's response patterns
 - **2-4 suggestions per pillar** — enough to be useful, not so many they're overwhelming

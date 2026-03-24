@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: {{BACKGROUND}};
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: {{BODY_PADDING}};
+  }
+
+  .diagram-header {
+    text-align: center;
+    margin-bottom: 32px;
+    max-width: 800px;
+  }
+
+  .diagram-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: {{HEADER_COLOR}};
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+
+  .diagram-header p {
+    font-size: 14px;
+    font-weight: 400;
+    color: {{SUBTITLE_COLOR}};
+    line-height: 1.5;
+  }
+
+  .diagram-container {
+    {{CARD_STYLES}}
+    max-width: 1200px;
+    width: 100%;
+  }
+
+  .mermaid {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .mermaid .node rect,
+  .mermaid .node circle,
+  .mermaid .node polygon {
+    stroke-width: 1.5px !important;
+  }
+
+  .mermaid .edgeLabel {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+  }
+
+  .mermaid .label {
+    font-weight: 500 !important;
+  }
+
+  .diagram-footer {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: {{FOOTER_COLOR}};
+    font-weight: 400;
+  }
+</style>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'base',
+    themeVariables: {
+      fontFamily: "'Inter', sans-serif",
+      fontSize: '14px',
+      primaryColor: '{{PRIMARY_COLOR}}',
+      primaryTextColor: '{{PRIMARY_TEXT}}',
+      primaryBorderColor: '{{PRIMARY_BORDER}}',
+      secondaryColor: '{{SECONDARY_COLOR}}',
+      secondaryTextColor: '{{SECONDARY_TEXT}}',
+      secondaryBorderColor: '{{SECONDARY_BORDER}}',
+      tertiaryColor: '{{TERTIARY_COLOR}}',
+      tertiaryTextColor: '#1e293b',
+      tertiaryBorderColor: '#cbd5e1',
+      lineColor: '#94a3b8',
+      edgeLabelBackground: '{{EDGE_LABEL_BG}}',
+      clusterBkg: '#f8fafc',
+      clusterBorder: '#e2e8f0',
+      nodeBorder: '{{PRIMARY_BORDER}}',
+      mainBkg: '{{PRIMARY_COLOR}}',
+      nodeTextColor: '{{PRIMARY_TEXT}}',
+      actorBkg: '{{PRIMARY_COLOR}}',
+      actorBorder: '{{PRIMARY_BORDER}}',
+      actorTextColor: '{{PRIMARY_TEXT}}',
+      signalColor: '#475569',
+      signalTextColor: '#1e293b',
+      noteBkgColor: '#fefce8',
+      noteBorderColor: '#fde68a',
+      sectionBkgColor: '#f1f5f9',
+      taskBkgColor: '{{PRIMARY_COLOR}}',
+      taskBorderColor: '{{PRIMARY_BORDER}}',
+      taskTextColor: '{{PRIMARY_TEXT}}',
+      doneTaskBkgColor: '#d1fae5',
+      activeTaskBkgColor: '{{SECONDARY_COLOR}}'
+    },
+    flowchart: {
+      htmlLabels: true,
+      curve: 'basis',
+      padding: 16,
+      nodeSpacing: 50,
+      rankSpacing: 60,
+      useMaxWidth: true
+    },
+    sequence: {
+      actorMargin: 80,
+      messageMargin: 40,
+      useMaxWidth: true
+    }
+  });
+</script>
+</head>
+<body>
+{{HEADER_HTML}}
+<div class="diagram-container">
+  <div class="mermaid">
+{{MERMAID_CODE}}
+  </div>
+</div>
+{{FOOTER_HTML}}
+</body>
+</html>
