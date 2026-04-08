@@ -40,6 +40,7 @@ Add these to make the agent proactively useful:
 - If person mentioned in work context → update contacts file
 - If future idea mentioned → auto-capture to idea parking lot
 - If promise made to someone → auto-capture to commitments tracker
+- If the same near-term priorities show up across multiple routines → refresh a short-horizon `memory/now.md` lens so briefing, heartbeat, and EOD share the same execution view
 ```
 
 ## Efficiency rules
@@ -51,6 +52,15 @@ Add these to make the agent proactively useful:
 - If conversation gets long → recommend summarizing and resetting
 - Store large data as files, not chat messages
 - Don't narrate obvious tool calls
+```
+
+## Follow-up hygiene
+```markdown
+## Follow-up normalization
+- Keep follow-ups closure-oriented: owner, waiting state, since-date, next move
+- Don't mix broad watchlists, standing streams, or fuzzy reminders into follow-ups
+- Move non-actionable items to active work or a general watchlist instead
+- Review stale follow-ups for nudge, escalate, archive, or re-scope
 ```
 
 ## Memory DB integration

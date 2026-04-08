@@ -62,7 +62,7 @@ for dir in weekly projects reference; do
   mkdir -p "$WORKSPACE/memory/$dir"
 done
 
-for f in decisions.md people.md ideas.md commitments.md follow-ups.md heartbeat-state.json; do
+for f in decisions.md people.md ideas.md commitments.md follow-ups.md now.md heartbeat-state.json; do
   safe_copy_data "$SCRIPT_DIR/structure/memory/$f" "$WORKSPACE/memory/$f"
 done
 
@@ -88,7 +88,7 @@ chmod +x "$WORKSPACE/scripts/gateway_watchdog.sh" 2>/dev/null || true
   chmod +x "$WORKSPACE/scripts/heartbeat_pulse.sh" 2>/dev/null || true
 }
 
-for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh; do
+for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh run_memory_pipeline.sh; do
   [[ -f "$SCRIPT_DIR/scripts/$f" ]] && {
     safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
     chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
@@ -96,10 +96,15 @@ for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh; 
 done
 
 # Memory tools
-for f in learning_review.py ghost_memory_db.py; do
+for f in learning_review.py ghost_memory_db.py detect_active_lanes.py; do
   safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
   chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
 done
+
+[[ -f "$SCRIPT_DIR/scripts/generate_context_bridge.sh" ]] && {
+  safe_copy "$SCRIPT_DIR/scripts/generate_context_bridge.sh" "$WORKSPACE/scripts/generate_context_bridge.sh"
+  chmod +x "$WORKSPACE/scripts/generate_context_bridge.sh" 2>/dev/null || true
+}
 
 for f in "$SCRIPT_DIR"/scripts/cron_*.md; do
   [[ -f "$f" ]] && safe_copy "$f" "$WORKSPACE/scripts/$(basename "$f")"
@@ -131,7 +136,7 @@ fi
 echo ""
 echo "🗄️ Initializing Memory DB..."
 mkdir -p "$WORKSPACE/.local"
-if python3 "$WORKSPACE/scripts/ghost_memory_db.py" index 2>/dev/null; then
+if bash "$WORKSPACE/scripts/run_memory_pipeline.sh" pipeline 2>/dev/null; then
   echo "   ✅ Memory DB indexed"
 else
   echo "   ⚠️  Memory DB index failed (will work after you add some notes)"

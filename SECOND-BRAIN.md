@@ -7,6 +7,23 @@ AI agents wake up fresh every session. Without structured memory, users repeat c
 
 ## Solution: 5 specialized files + daily notes
 
+Add one more lightweight layer for execution focus:
+
+### NOW layer (`memory/now.md`)
+A compact 24–72 hour execution lens. This is not long-term memory, and it should never become another dumping ground. It exists so morning briefing, EOD, weekly distill, and heartbeat can all look at the same short list of what matters now.
+
+Suggested sections:
+```markdown
+## Top 3 Priorities
+## Due Soon
+## Active Blockers / Risks
+## Waiting on Others
+## Closure Recommendations
+## Watchlist / Don't Forget
+```
+
+Think of it as the bridge between your large memory system and today's actual work.
+
 ### Daily notes (`memory/YYYY-MM-DD.md`)
 One per day. Sections:
 ```markdown
@@ -65,6 +82,8 @@ Items waiting on someone else. Table format with staleness tracking.
 | API credentials | DevOps team | 2026-03-10 | 2026-03-17 | Active |
 ```
 
+**Normalization rule:** only keep concrete, closure-oriented follow-ups here. Avoid mixing in broad watchlists, standing streams, or vague reminders. If an item does not have a clear owner, waiting state, or next closure action, it belongs in active work or a general watchlist, not in `follow-ups.md`.
+
 ## How to activate
 Add to your `AGENTS.md`:
 ```markdown
@@ -77,6 +96,7 @@ After conversations, auto-capture:
 - Items waiting on others → memory/follow-ups.md
 
 At end of day, consolidate into memory/YYYY-MM-DD.md daily note.
+- Refresh `memory/now.md` from the daily note, commitments, follow-ups, and active work so every routine shares the same short-horizon focus.
 ```
 
 ## Weekly distillation
@@ -84,9 +104,10 @@ Once a week (cron or manual):
 1. Read all daily notes for the week
 2. Update MEMORY.md (add new, remove stale)
 3. Review ideas — promote or archive
-4. Review follow-ups — mark completed, escalate stale
-5. Review commitments — flag overdue
-6. Save weekly summary to `memory/weekly/YYYY-Www.md`
+4. Review follow-ups — mark completed, escalate stale, archive vague/non-actionable entries
+5. Refresh `memory/now.md` so the next week starts with a clean short-horizon lens
+6. Review commitments — flag overdue
+7. Save weekly summary to `memory/weekly/YYYY-Www.md`
 
 ## Tips
 - Keep MEMORY.md lean — it's loaded every message

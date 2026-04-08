@@ -21,6 +21,8 @@ That's it. SQLite is built into Python. No Docker, no servers.
 
 ## Usage
 
+For interactive local experiments, calling the script directly is fine.
+
 ```bash
 # Full index (first time or after major changes)
 python3 scripts/ghost_memory_db.py index
@@ -59,6 +61,15 @@ python3 scripts/ghost_memory_db.py export decision --json
 
 # Raw SQL
 python3 scripts/ghost_memory_db.py sql "SELECT item_type, COUNT(*) FROM items GROUP BY item_type"
+```
+
+For automation and cron, prefer the wrapper so the runtime picks a Python interpreter that actually has `sqlite-vec` installed:
+
+```bash
+bash scripts/run_memory_pipeline.sh pipeline
+bash scripts/run_memory_pipeline.sh check
+bash scripts/run_memory_pipeline.sh smoke
+bash scripts/run_memory_pipeline.sh stats
 ```
 
 ## What gets indexed
@@ -132,12 +143,12 @@ export GHOST_EMBEDDING_API_KEY=sk-...
 
 ## Cron integration
 
-Add to your EOD or morning summary cron:
+For scheduled jobs, use the wrapper instead of raw `python3`:
 ```bash
-python3 scripts/ghost_memory_db.py index --incremental
+bash scripts/run_memory_pipeline.sh pipeline
 ```
 
-This keeps the DB in sync with your markdown files automatically.
+This keeps the DB in sync with your markdown files while avoiding interpreter drift across environments.
 
 ## Architecture decisions
 

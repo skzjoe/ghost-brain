@@ -1,5 +1,19 @@
 # Changelog
 
+## Unreleased
+
+### Added
+- `memory/now.md` template for a shared 24–72 hour execution lens across briefing, heartbeat, EOD, and weekly review
+- `scripts/run_memory_pipeline.sh` wrapper for automation-safe Memory DB maintenance
+
+### Changed
+- Memory DB docs now distinguish interactive direct script use from cron/automation wrapper use
+- Second Brain docs now document NOW layer usage and stricter follow-up normalization rules
+- Playbook now includes follow-up hygiene guidance and short-horizon refresh behavior
+- Cron docs and prompts now prefer wrapper-based Memory DB runs and acknowledge fully-qualified messaging targets in automation
+- Install flow now ships `now.md`, `run_memory_pipeline.sh`, `detect_active_lanes.py`, and `generate_context_bridge.sh`
+- Follow-up skill guidance now suggests re-scoping vague or non-closure-oriented items
+
 ## v1.0.0 — 2026-03-17
 
 **First stable release.** Ghost Brain has been in daily production use since February 2026. This release consolidates all features into a single installable package ready for distribution.

@@ -23,4 +23,5 @@ Goal: catch urgent signals between cron runs. Bash-first, 0 tokens when nothing 
 ## Rules
 - Never spam the user with routine OK messages.
 - Dedup follow-up nudges via `memory/heartbeat-state.json` (3-day cooldown).
+- When available, treat `memory/now.md` as the short-horizon source of truth for what matters in the next 24–72 hours.
 - If heartbeat_pulse.sh is missing or errors → reply HEARTBEAT_OK (fail silent).

@@ -21,6 +21,7 @@ Ghost Brain gives your AI assistant a persistent, self-organizing memory system:
 | 🔄 **Learning Review** | Critical learnings resurface on interval-based review until mastered |
 | 🗄️ **Memory DB** | SQLite + vector search — SQL queries + semantic search in one zero-infra file |
 | 🕸️ **Knowledge Graph** | Auto-linked relationships. Ask "what do I know about X" and get connected context |
+| 🎯 **NOW Layer** | One compact 24–72h execution lens shared by briefing, heartbeat, EOD, and weekly review |
 | ⏰ **10 Automated Routines** | Morning briefing, EOD summary, commitment alerts, weekly distill, backups |
 | 💰 **Token Efficiency** | Rate limiting, context discipline, lean memory — save 30-50% on API costs |
 | 🔍 **13-Part Audit** | System-wide health check with scoring + actionable improvement suggestions |
@@ -67,10 +68,10 @@ bash setup-crons.sh
 |---|---|---|
 | Skills (commands) | 16 | `~/.openclaw/workspace/skills/` |
 | Knowledge docs | 8 | `~/.openclaw/workspace/memory/reference/` |
-| Memory templates | 6 | `~/.openclaw/workspace/memory/` |
+| Memory templates | 7 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 10 | `~/.openclaw/workspace/scripts/` |
-| Memory tools | 3 | `~/.openclaw/workspace/scripts/` |
+| Memory tools | 5 | `~/.openclaw/workspace/scripts/` |
 
 **Non-destructive** — won't overwrite existing files. Use `--force` to update code files (your data files are always protected).
 
@@ -146,9 +147,26 @@ python3 scripts/ghost_memory_db.py search "deployment errors last month"
 # Query by type
 python3 scripts/ghost_memory_db.py query decision --days 30
 
-# Full maintenance pipeline
+# Full maintenance pipeline (interactive use)
 python3 scripts/ghost_memory_db.py pipeline
+
+# Cron / automation-safe wrapper
+bash scripts/run_memory_pipeline.sh pipeline
 ```
+
+Use the wrapper for cron and automation so Ghost Brain can pick a Python interpreter that actually has `sqlite-vec` available.
+
+## NOW Layer
+
+Ghost Brain includes `memory/now.md`, a compact short-horizon execution layer for the next 24–72 hours.
+
+Use it to keep these routines aligned:
+- Morning briefing
+- Heartbeat / nudge systems
+- EOD summary
+- Weekly distill
+
+This prevents different routines from drifting into different versions of "what matters now".
 
 ## Automated Routines
 
@@ -208,6 +226,12 @@ Push daily and weekly notes to your Obsidian vault:
 
 1. Set `OBSIDIAN_DAILY_DIR` in `scripts/obsidian_push_daily.sh`
 2. Answer "y" to Obsidian during `setup-crons.sh`
+
+## Automation hygiene
+
+- In automation, prefer fully-qualified channel targets such as `telegram:<chat_id>` instead of bare ids.
+- For Memory DB maintenance in scheduled jobs, use `bash scripts/run_memory_pipeline.sh ...` instead of raw `python3`.
+- Keep `memory/follow-ups.md` limited to concrete, closure-oriented items. Broad watchlists belong elsewhere.
 
 ## Gateway Watchdog
 

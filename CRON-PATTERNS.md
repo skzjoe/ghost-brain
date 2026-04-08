@@ -88,3 +88,5 @@ Prompt: Check gateway status + RPC probe. Alert only if down. Silent on success.
 - Omit `--target` for silent/housekeeping jobs
 - Use `--prompt-file` to load prompt from a file (easier to maintain)
 - All prompts should end with "reply HEARTBEAT_OK if nothing to report" for silent jobs
+- In automation, prefer fully-qualified messaging targets (`telegram:<chat_id>`, not bare ids) so announce delivery stays unambiguous across channels
+- If a cron prompt runs Memory DB maintenance, prefer `bash scripts/run_memory_pipeline.sh ...` over raw `python3 scripts/ghost_memory_db.py ...`

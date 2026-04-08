@@ -16,5 +16,6 @@ Show follow-ups with staleness tracking.
    - 🟢 Fresh (<7 days)
    - 🟡 Getting stale (7-14 days)
    - 🔴 Stale (>14 days) — suggest action
-4. For stale items, suggest: nudge, escalate, or archive
-5. If empty, say "ไม่มี follow-up ค้างครับ"
+4. For stale items, suggest: nudge, escalate, archive, or re-scope
+5. If an item is vague or not closure-oriented, suggest moving it out of follow-ups into a general watchlist or active work register
+6. If empty, say "ไม่มี follow-up ค้างครับ"
