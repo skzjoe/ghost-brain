@@ -28,6 +28,11 @@ Usage:
   ghost_memory_db.py temporal           # Temporal intelligence report
   ghost_memory_db.py temporal --stale   # Show stale items needing review
   ghost_memory_db.py temporal --hot     # Show most accessed items
+
+Best practice:
+  - For automation and cron, prefer `bash scripts/run_memory_pipeline.sh`
+    instead of calling `python3 scripts/ghost_memory_db.py pipeline` directly.
+  - The wrapper selects a Python runtime that actually has `sqlite-vec` installed.
 """
 
 import hashlib
@@ -50,6 +55,19 @@ from typing import Optional
 WORKSPACE = Path(os.environ.get("OPENCLAW_WORKSPACE",
     os.path.expanduser("~/.openclaw/workspace")))
 DB_PATH = WORKSPACE / ".local" / "ghost_memory.db"
+
+def _load_embedding_key_from_secrets():
+    if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
+        return
+    for name, env_var in (("gemini_api_key.txt", "GEMINI_API_KEY"), ("google_api_key.txt", "GOOGLE_API_KEY")):
+        secrets_path = WORKSPACE / "secrets" / name
+        if secrets_path.exists():
+            key = secrets_path.read_text().strip()
+            if key:
+                os.environ[env_var] = key
+                return
+
+_load_embedding_key_from_secrets()
 
 _has_gemini = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
 EMBEDDING_PROVIDER = os.environ.get("GHOST_EMBEDDING_PROVIDER",
@@ -811,10 +829,19 @@ class GhostMemory:
             lines.append("")
 
         if ctx.get("active_commitments"):
-            lines.append(f"**Commitments ({len(ctx['active_commitments'])}):**")
-            for c in ctx["active_commitments"]:
-                lines.append(f"- {c['title']}")
-            lines.append("")
+            real_commitments = [c for c in ctx["active_commitments"] if c["title"] != "Fulfilled Date"]
+            if real_commitments:
+                lines.append(f"**Commitments ({len(real_commitments)}):**")
+                for c in real_commitments:
+                    content = c.get("content", "")
+                    parts = [p.strip() for p in content.split("|") if p.strip()]
+                    if len(parts) >= 3:
+                        counterpart = parts[1]
+                        commitment_text = parts[2]
+                        lines.append(f"- [{c['title']}] {counterpart} - {commitment_text}")
+                    else:
+                        lines.append(f"- {content[:120] or c['title']}")
+                lines.append("")
 
         if ctx.get("recent_learnings"):
             lines.append(f"**Recent learnings:**")
