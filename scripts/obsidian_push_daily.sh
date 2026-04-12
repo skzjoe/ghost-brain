@@ -1,66 +1,69 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Push one or more daily notes to an Obsidian vault.
-# Usage:
-#   bash scripts/obsidian_push_daily.sh YYYY-MM-DD [YYYY-MM-DD ...]
+# Push daily note(s) to an Obsidian vault.
+# Policy: MERGE, never overwrite. Uses shared obsidian_merge.py.
 #
 # Configure with env vars or by editing defaults below.
 # Examples:
 #   macOS:  ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/MyVault/10_Daily
-#   Linux:  ~/obsidian-vault/10_Daily
-#   WSL:    /mnt/c/Users/YOU/iCloudDrive/iCloud~md~obsidian/MyVault/10_Daily
+#   Linux:  /mnt/c/Users/YOU/iCloudDrive/iCloud~md~obsidian/MyVault/10_Daily
+#   Direct: ~/ObsidianVault/10_Daily
+#
+# Usage:
+#   bash scripts/obsidian_push_daily.sh YYYY-MM-DD [YYYY-MM-DD ...]
 
-WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
-SRC_DIR="${OPENCLAW_MEMORY_DIR:-$WORKSPACE/memory}"
-OBSIDIAN_DAILY_DIR="${OBSIDIAN_DAILY_DIR:-}"
-OBSIDIAN_VAULT_DIR="${OBSIDIAN_VAULT_DIR:-}"
-OBSIDIAN_AUTO_COMMIT="${OBSIDIAN_AUTO_COMMIT:-0}"
+# --- Config (edit these or set env vars) ---
+GHOST_WORKSPACE="${GHOST_WORKSPACE:-$(cd "$(dirname "$0")/.." && pwd)}"
+SRC_DIR="${GHOST_SRC_DAILY:-$GHOST_WORKSPACE/memory}"
+DEST_DIR="${GHOST_DEST_DAILY:-}"     # Must be set! e.g. ~/ObsidianVault/10_Daily
+VAULT_DIR="${GHOST_VAULT:-}"          # Vault root for git ops (optional)
+MERGE_SCRIPT="$GHOST_WORKSPACE/scripts/obsidian_merge.py"
+# ---
 
-if [[ -z "$OBSIDIAN_DAILY_DIR" ]]; then
-  echo "❌ OBSIDIAN_DAILY_DIR not configured."
-  echo "   Export OBSIDIAN_DAILY_DIR or edit: $0"
+if [[ -z "$DEST_DIR" ]]; then
+  echo "⚠️ Set GHOST_DEST_DAILY to your Obsidian daily notes folder." >&2
+  echo "   Example: export GHOST_DEST_DAILY=~/ObsidianVault/10_Daily" >&2
   exit 1
 fi
 
-if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 YYYY-MM-DD [YYYY-MM-DD ...]" >&2
-  exit 2
-fi
+[[ ! -d "$DEST_DIR" ]] && echo "⚠️ Dest not found: $DEST_DIR" >&2 && exit 1
+[[ $# -lt 1 ]] && echo "Usage: $0 YYYY-MM-DD [YYYY-MM-DD ...]" >&2 && exit 2
 
-mkdir -p "$OBSIDIAN_DAILY_DIR"
+mkdir -p "$DEST_DIR"
 
 declare -a pushed_dates=()
-declare -a pushed_rel_paths=()
+declare -a pushed_rels=()
 
 for d in "$@"; do
   src="$SRC_DIR/$d.md"
-  dst="$OBSIDIAN_DAILY_DIR/$d.md"
+  dest="$DEST_DIR/$d.md"
 
-  if [[ ! -f "$src" ]]; then
-    echo "Missing source: $src" >&2
-    exit 3
+  [[ ! -f "$src" ]] && echo "Missing source: $src" >&2 && exit 3
+
+  # Git safety snapshot
+  if [[ -n "${VAULT_DIR:-}" ]] && [[ -f "$dest" ]] && git -C "$VAULT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    rel="${DEST_DIR#$VAULT_DIR/}/$d.md"
+    git -C "$VAULT_DIR" add -- "$rel" 2>/dev/null || true
+    pushed_rels+=("$rel")
   fi
 
-  cp -f "$src" "$dst"
+  python3 "$MERGE_SCRIPT" "$src" "$dest" || {
+    echo "❌ Merge failed for $d — original preserved." >&2
+    rm -f "$dest.tmp"; exit $?
+  }
+
   pushed_dates+=("$d")
-  echo "✅ Pushed $d → $dst"
-
-  if [[ -n "$OBSIDIAN_VAULT_DIR" && "$dst" == "$OBSIDIAN_VAULT_DIR"/* ]]; then
-    pushed_rel_paths+=("${dst#"$OBSIDIAN_VAULT_DIR"/}")
-  fi
 done
 
-if [[ "$OBSIDIAN_AUTO_COMMIT" == "1" && -n "$OBSIDIAN_VAULT_DIR" ]] \
-  && git -C "$OBSIDIAN_VAULT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1 \
-  && [[ ${#pushed_rel_paths[@]} -gt 0 ]]; then
-  git -C "$OBSIDIAN_VAULT_DIR" add -- "${pushed_rel_paths[@]}"
-
-  if ! git -C "$OBSIDIAN_VAULT_DIR" diff --cached --quiet -- "${pushed_rel_paths[@]}"; then
-    commit_message="docs(daily): sync ${pushed_dates[*]} from ghost-brain"
-    git -C "$OBSIDIAN_VAULT_DIR" commit -m "$commit_message"
-    echo "Committed to Obsidian git: $commit_message"
+# Git commit if vault is a repo
+if [[ -n "${VAULT_DIR:-}" ]] && [[ ${#pushed_rels[@]} -gt 0 ]] && git -C "$VAULT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  rm -f "$VAULT_DIR/.git/index.lock"
+  git -C "$VAULT_DIR" add -- "${pushed_rels[@]}"
+  if ! git -C "$VAULT_DIR" diff --cached --quiet -- "${pushed_rels[@]}"; then
+    git -C "$VAULT_DIR" commit -m "docs(daily): sync ${pushed_dates[*]} from Ghost"
+    echo "Committed: ${pushed_dates[*]}"
   else
-    echo "No git changes to commit for pushed daily note(s)."
+    echo "No changes to commit."
   fi
 fi
