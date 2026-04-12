@@ -3,16 +3,29 @@
 ## Unreleased
 
 ### Added
+- `scripts/ghost_error_classifier.py` — 12-category structured error taxonomy with retryable flags + recovery hints. Logs `[ERR-YYYYMMDD-NNN]` format entries to `.learnings/ERRORS.md`
+- `scripts/ghost_todos.py` — intra-session todo store (JSON-backed, survives context compression). Commands: add, done, list, status, clear
+- `scripts/obsidian_merge.py` — shared section-aware merge engine with source attribution (`*(Ghost)*` markers) and data-loss protection (85% size sanity check, atomic writes)
+- `BEHAVIORAL-RULES.md` — on-demand behavioral rules (model routing, error handling, todos, vault writes). Read only when relevant, not at startup
 - `memory/now.md` template for a shared 24–72 hour execution lens across briefing, heartbeat, EOD, and weekly review
 - `scripts/run_memory_pipeline.sh` wrapper for automation-safe Memory DB maintenance
 
 ### Changed
+- `scripts/obsidian_push_daily.sh` — refactored to use `obsidian_merge.py` (merge-not-overwrite policy). Configurable via env vars (`GHOST_DEST_DAILY`, `GHOST_VAULT`)
+- Heartbeat pulse — deadline-aware follow-up threshold (5d if deadline ≤7d, else 7d) + urgent alert format
+- Playbook trimmed (~19KB → ~17KB) by splitting behavioral rules into separate on-demand file
 - Memory DB docs now distinguish interactive direct script use from cron/automation wrapper use
 - Second Brain docs now document NOW layer usage and stricter follow-up normalization rules
 - Playbook now includes follow-up hygiene guidance and short-horizon refresh behavior
 - Cron docs and prompts now prefer wrapper-based Memory DB runs and acknowledge fully-qualified messaging targets in automation
 - Install flow now ships `now.md`, `run_memory_pipeline.sh`, `detect_active_lanes.py`, and `generate_context_bridge.sh`
 - Follow-up skill guidance now suggests re-scoping vague or non-closure-oriented items
+
+### Vault Safety
+- Merge-everywhere policy: all Obsidian vault writes must be merge/append, never blind overwrite
+- Git safety snapshots before every write (recoverable via `git checkout`)
+- Source attribution on appended content (HTML comments) for multi-agent traceability
+- Size sanity check aborts if merged result < 85% of original (prevents silent data loss)
 
 ## v1.0.0 — 2026-03-17
 
