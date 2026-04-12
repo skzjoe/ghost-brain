@@ -1,6 +1,6 @@
 ---
 name: audit
-description: "Full chain audit — verify Ghost Brain works end-to-end across 12 dimensions: prompt coherence, capture, learning, proactive systems, token efficiency, obligations, infrastructure, and resilience."
+description: "Full chain audit — verify Ghost Brain works end-to-end across 13 dimensions: prompt coherence, capture, learning, proactive systems, token efficiency, obligations, infrastructure, resilience, and product health."
 user-invocable: true
 ---
 
@@ -151,6 +151,7 @@ Are proactive systems actually firing?
 | ⚙️ Automation | X/10 | {1-line} |
 | 🛡️ Resilience | X/10 | {1-line} |
 | 🔒 Security | X/10 | {1-line} |
+| 🏗️ Product Health | X/10 | {1-line} |
 | | | |
 | 🧠 **Brain** | **X/10** | weighted avg (brain dims × 2) |
 | 🏗️ **Infra** | **X/10** | weighted avg (infra dims × 1) |
@@ -179,11 +180,65 @@ Are proactive systems actually firing?
 | ⚙️ Automation | All ok/idle | 1 failure | Multiple failures | Broken |
 | 🛡️ Resilience | All fresh (<24h backup, <7d git, Obsidian synced) | 1 stale | 2 stale | No backups |
 | 🔒 Security | 0 critical + 0 warn | Warns only | Critical findings | Unpatched critical |
+| 🏗️ Product Health | All docs + 9/9 scripts + 18/18 skills + tests pass | 1 minor gap | Multiple gaps | Not formalized |
 
 ### Overall Calculation
 - **Brain score** = weighted avg of 8 brain dims (Boot, Prompt, Capture, Memory, Learning, Proactive, Obligation, Efficiency) — **weight 2x**
-- **Infra score** = weighted avg of 4 infra dims (Runtime, Automation, Resilience, Security) — **weight 1x**
+- **Infra score** = weighted avg of 5 infra dims (Runtime, Automation, Resilience, Security, Product Health) — **weight 1x**
 - **Overall** = (Brain × 2 + Infra × 1) / 3
+
+---
+
+## Part 14 — 🏗️ Product Health
+
+Ghost as a product layer — is the product boundary clear, scripts functional, and packaging possible?
+
+### Checks
+
+1. **Product boundary clarity**
+   - [ ] `GHOST_PRODUCT_PLAN.md` exists and non-empty
+   - [ ] Subsystem docs exist: `GHOST_PLAYBOOK.md`, `GHOST_BEHAVIORAL_RULES.md`, `SOUL.md`, `IDENTITY.md`
+   - [ ] Three-layer architecture is documented (Ghost / OpenClaw / Adapters boundary)
+
+2. **Workflow coverage**
+   - [ ] Check all 18 Ghost commands from the workflow map in `GHOST_PRODUCT_PLAN.md`:
+     `/recall`, `/remember`, `/capture`, `/learnings`, `/projects`, `/commitments`, `/followups`, `/ideas`, `/logs`, `/weekly`, `/health`, `/audit`, `/new`, `/summary`, `/people`, `/decisions`, `/onboard`, docs-toolkit
+   - [ ] For each: does a matching skill directory exist under `skills/`?
+   - [ ] Report: X/18 available as skills
+
+3. **Script consolidation**
+   - [ ] Check that these core Ghost scripts exist and are non-empty:
+     - `scripts/ghost_learning_loop.py`
+     - `scripts/ghost_unified_recall.py`
+     - `scripts/ghost_memory_db.py`
+     - `scripts/ghost_error_classifier.py`
+     - `scripts/ghost_todos.py`
+     - `scripts/memory_content_scanner.py`
+     - `scripts/learning_review.py`
+     - `scripts/model_router.py`
+     - `scripts/heartbeat_pulse.sh`
+   - [ ] For each: file exists? non-empty? executable (for .sh)?
+   - [ ] Report: X/9 scripts present and functional
+
+4. **Starter readiness**
+   - [ ] Template files exist (`.template` variants or clearly separable config)?
+   - [ ] Joe-specific content is separated from generic product files?
+   - [ ] Could the workspace be packaged by copying the starter file list from `GHOST_PRODUCT_PLAN.md`?
+   - [ ] Rate readiness: ready / partially ready / not ready
+
+5. **Test health**
+   - [ ] Run: `python3 -m pytest tests/ -q 2>/dev/null`
+   - [ ] Report pass/fail count
+   - [ ] If no tests or pytest not available, report "no tests configured"
+
+### Scoring Guide — 🏗️ Product Health
+
+| Score | Criteria |
+|---|---|
+| 10 | All product docs exist, all 9 scripts functional, 18/18 workflow commands have skills, tests pass, starter-ready |
+| 8 | Minor gaps — 1 missing doc or script, or 1-2 workflow commands without skills |
+| 6 | Multiple gaps — several missing scripts, <15/18 workflow coverage, tests failing |
+| 4 | Product layer not formalized — no GHOST_PRODUCT_PLAN.md or most scripts missing |
 
 ---
 
@@ -205,31 +260,31 @@ For each pillar, look at:
 ```
 ━━━ 🚀 Improvement Suggestions ━━━
 
-### 🏭 Productive — increase output that moves real work forward
+### 🏭 Productive — เพิ่ม output ที่ขับเคลื่อนงานจริง
 | # | Suggestion | Impact | Effort |
 |---|---|---|---|
 | P1 | {specific suggestion} | High/Med/Low | High/Med/Low |
 ...
 
-### ⚡ Efficient — reduce waste, increase value per token
+### ⚡ Efficient — ลด waste, เพิ่ม value per token
 | # | Suggestion | Impact | Effort |
 |---|---|---|---|
 | E1 | {specific suggestion} | High/Med/Low | High/Med/Low |
 ...
 
-### 🔮 Proactive — anticipate needs before the user asks
+### 🔮 Proactive — คาดการณ์ก่อน Joe ถาม
 | # | Suggestion | Impact | Effort |
 |---|---|---|---|
 | R1 | {specific suggestion} | High/Med/Low | High/Med/Low |
 ...
 
-### 🎯 Critique — challenge assumptions, catch gaps
+### 🎯 Critique — ท้าทาย assumption, จับ gap
 | # | Suggestion | Impact | Effort |
 |---|---|---|---|
 | C1 | {specific suggestion} | Impact | Effort |
 ...
 
-━━━ ⚡ Quick Wins (can do right now) ━━━
+━━━ ⚡ Quick Wins (ทำได้เลย) ━━━
 {Top 3-5 suggestions sorted by impact/effort ratio — things that can be done in this session}
 ```
 

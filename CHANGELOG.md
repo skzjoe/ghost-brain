@@ -81,3 +81,24 @@
 - MIT License
 - Example outputs (audit, daily note, auto-capture)
 - All cron scripts timezone/city-generic with `{{USER_NAME}}` placeholder
+
+## [1.1.0] — 2026-04-12
+
+### Added
+- GHOST_PRODUCT_PLAN.md — Ghost Product Master Plan v1 (3-layer architecture)
+- starter/ — complete starter distribution with templates, install.sh, and bootstrap checklist
+- /health skill — consolidated Ghost product health view (memory, learning, execution state, proactive, capture)
+- /audit Part 14 — Product Health dimension (13 dimensions total)
+- /recall skill — unified memory search
+- /remember skill — smart capture routing
+- /learnings skill — learning loop status
+- ghost_learning_loop.py — reflect, promote, detect skill candidates
+- ghost_unified_recall.py — unified search + smart capture + user model
+- ghost_usage_insights.py — session/activity analytics
+- model_router.py — advisory model routing (cheap/strong/heavy)
+
+### Changed
+- /health now reports Ghost-layer concerns only (no overlap with openclaw status/doctor)
+- /audit scoring updated for 13 dimensions including Product Health
+- README.md in starter/ has full command reference and architecture diagram
+
