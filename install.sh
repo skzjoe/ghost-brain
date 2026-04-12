@@ -96,7 +96,7 @@ for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh r
 done
 
 # Memory tools
-for f in learning_review.py ghost_memory_db.py detect_active_lanes.py; do
+for f in learning_review.py ghost_memory_db.py detect_active_lanes.py ghost_auto_skill.py; do
   safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
   chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
 done

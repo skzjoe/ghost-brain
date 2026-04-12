@@ -21,6 +21,7 @@ Ghost Brain gives your AI assistant a persistent, self-organizing memory system:
 | 🔄 **Learning Review** | Critical learnings resurface on interval-based review until mastered |
 | 🗄️ **Memory DB** | SQLite + vector search — SQL queries + semantic search in one zero-infra file |
 | 🕸️ **Knowledge Graph** | Auto-linked relationships. Ask "what do I know about X" and get connected context |
+| 🧬 **Auto Skill Pipeline** | Skills born from experience, validated through real usage, self-improving, auto-retiring failures |
 | 🎯 **NOW Layer** | One compact 24–72h execution lens shared by briefing, heartbeat, EOD, and weekly review |
 | ⏰ **10 Automated Routines** | Morning briefing, EOD summary, commitment alerts, weekly distill, backups |
 | 💰 **Token Efficiency** | Rate limiting, context discipline, lean memory — save 30-50% on API costs |

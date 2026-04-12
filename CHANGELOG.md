@@ -3,6 +3,8 @@
 ## Unreleased
 
 ### Added
+- **Auto Skill Pipeline** (`scripts/ghost_auto_skill.py`) — immune-system skill lifecycle: detect → create → match → record → improve → auto-promote/retire. Zero human review needed. Skills earn active status through real usage (3+ successes ≥90%) and auto-retire when failing (<50% after 3 uses). See `AUTO-SKILL.md`
+- `AUTO-SKILL.md` — documentation for the auto skill pipeline
 - `scripts/ghost_error_classifier.py` — 12-category structured error taxonomy with retryable flags + recovery hints. Logs `[ERR-YYYYMMDD-NNN]` format entries to `.learnings/ERRORS.md`
 - `scripts/ghost_todos.py` — intra-session todo store (JSON-backed, survives context compression). Commands: add, done, list, status, clear
 - `scripts/obsidian_merge.py` — shared section-aware merge engine with source attribution (`*(Ghost)*` markers) and data-loss protection (85% size sanity check, atomic writes)
