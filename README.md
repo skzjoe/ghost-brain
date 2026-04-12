@@ -72,7 +72,7 @@ bash setup-crons.sh
 | Memory templates | 7 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 10 | `~/.openclaw/workspace/scripts/` |
-| Memory tools | 5 | `~/.openclaw/workspace/scripts/` |
+| Memory tools | 6 | `~/.openclaw/workspace/scripts/` |
 
 **Non-destructive** — won't overwrite existing files. Use `--force` to update code files (your data files are always protected).
 
@@ -114,6 +114,7 @@ Morning briefing surfaces your priorities. Learning review resurfaces past lesso
 | `/people` | Lightweight contact CRM |
 | `/fastlanes` | Domain-specific response templates |
 | `/conflicts` | Scan for contradictions across brain files |
+| `/auto-skills` | Auto-skill pipeline dashboard — what's been created, used, promoted, retired |
 | `/export` | Portable markdown bundle for backup or migration |
 
 ## Knowledge Docs
@@ -157,6 +158,41 @@ bash scripts/run_memory_pipeline.sh pipeline
 
 Use the wrapper for cron and automation so Ghost Brain can pick a Python interpreter that actually has `sqlite-vec` available.
 
+## Auto Skill Pipeline
+
+Ghost Brain creates skills from experience — no human review needed.
+
+```
+Task completed → detect (skill-worthy?)
+  → create draft in skills/.auto/
+    → match similar task later → use the skill
+      → record success/failure
+        → 3 successes ≥90% → auto-promote ✅
+        → <50% after 3 uses → auto-retire 💀
+        → failure → improve and retry
+```
+
+Unlike simple auto-creation (create and forget), this pipeline **validates through real usage** and **kills what doesn't work**. Bad skills die automatically. Good skills earn their way to active status.
+
+```bash
+# After completing a complex task
+python3 scripts/ghost_auto_skill.py detect 'Step 1: read config. Step 2: parse API keys. Step 3: test endpoints.'
+
+# Create skill from successful task
+python3 scripts/ghost_auto_skill.py create 'API Endpoint Tester' 'procedure here...'
+
+# Before starting a task — check for matching skills
+python3 scripts/ghost_auto_skill.py match 'test API endpoints'
+
+# Record outcome after using a skill
+python3 scripts/ghost_auto_skill.py record api-endpoint-tester success
+
+# Dashboard
+python3 scripts/ghost_auto_skill.py status
+```
+
+See [AUTO-SKILL.md](AUTO-SKILL.md) for full documentation.
+
 ## NOW Layer
 
 Ghost Brain includes `memory/now.md`, a compact short-horizon execution layer for the next 24–72 hours.
@@ -198,6 +234,8 @@ Morning cron resurfaces 3 learnings based on review intervals
 Memory DB provides SQL + vector search across all your knowledge
          ↓
 Weekly distill compacts memory → weekly brief
+         ↓
+Complex tasks auto-generate skills → validated by real usage → promote or retire
          ↓
 /audit scores your system health across 13 dimensions
 ```
@@ -260,20 +298,6 @@ Ghost Brain only adds files — doesn't modify OpenClaw config:
 rm -rf ~/.openclaw/workspace/skills/ghost-*
 rm -rf ~/.openclaw/workspace/skills/self-improving-agent
 rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW,CODING-WORKFLOW,CODING-QUICKSTART}.md
-rm -f ~/.openclaw/workspace/skills/assets/coding-*-template.md
-openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job
-# Your data files (decisions.md, people.md, etc.) are yours — keep or delete
-```
-
-## License
-
-MIT
-
-## Credits
-
-Built by [Joe](https://github.com/skzjoe) with Ghost 👻
-g-agent
-rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW,CODING-WORKFLOW}.md
 rm -f ~/.openclaw/workspace/skills/assets/coding-*-template.md
 openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job
 # Your data files (decisions.md, people.md, etc.) are yours — keep or delete
