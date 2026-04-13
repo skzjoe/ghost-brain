@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## [1.3.0] — 2026-04-13
+
 ### Added
 - `scripts/ghost_conversation_memory.py`, `scripts/ghost_guardrails.py`, and `scripts/ghost_memory_sync.py` plus matching `ghost_cli.py` commands for transcript recall, uncaptured-work guardrails, and markdown↔SQLite drift checks
 - Public pytest coverage for conversation recall, guardrails, memory sync, and the updated context/working-memory surfaces

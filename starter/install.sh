@@ -4,7 +4,7 @@ set -euo pipefail
 # Ghost Brain Installer
 # Installs Ghost Brain product layer into an existing OpenClaw workspace.
 
-GHOST_VERSION="1.2.0"
+GHOST_VERSION="1.3.0"
 REPO_URL="https://github.com/skzjoe/ghost-brain"
 
 echo "👻 Ghost Brain Installer v${GHOST_VERSION}"
