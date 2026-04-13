@@ -69,7 +69,7 @@ bash setup-crons.sh
 
 | Component | Count | Location |
 |---|---|---|
-| Skills (commands) | 16 | `~/.openclaw/workspace/skills/` |
+| Skills (commands) | 20 | `~/.openclaw/workspace/skills/` |
 | Knowledge docs | 8 | `~/.openclaw/workspace/memory/reference/` |
 | Memory templates | 7 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
@@ -105,7 +105,7 @@ Morning briefing surfaces your priorities. Learning review resurfaces past lesso
 | `/onboard` | Guided first-run setup — populates your brain files from a few questions |
 | `/capture` | Quick-capture: `/capture idea: ...`, `/capture decision: ...` |
 | `/logs` | Summarize session → daily note + auto-capture to all brain files |
-| `/audit` | 13-part system audit with scorecard + 4-pillar improvement suggestions |
+| `/audit` | 13-dimension system audit with scorecard + 4-pillar improvement suggestions |
 | `/health` | Quick health check — memory, capture, cron, security |
 | `/weekly` | Weekly review — synthesize patterns, suggest housekeeping |
 | `/projects` | Active and dormant workstreams at a glance |
@@ -116,7 +116,9 @@ Morning briefing surfaces your priorities. Learning review resurfaces past lesso
 | `/people` | Lightweight contact CRM |
 | `/fastlanes` | Domain-specific response templates |
 | `/conflicts` | Scan for contradictions across brain files |
-| `/auto-skills` | Auto-skill pipeline dashboard — what's been created, used, promoted, retired |
+| `/recall` | Search unified memory across files, learnings, and indexed recall sources |
+| `/remember` | Smart-capture a note into the right memory layer |
+| `/learnings` | Show review state, overdue learnings, and promotion status |
 | `/export` | Portable markdown bundle for backup or migration |
 
 ## Product CLIs
@@ -129,6 +131,13 @@ python3 scripts/ghost_cli.py followups due --json
 python3 scripts/ghost_cli.py context show --json
 python3 scripts/ghost_cli.py research dashboard --json
 python3 scripts/ghost_cli.py research focus --json
+```
+
+Auto-skill pipeline operations are exposed as product CLIs rather than slash commands:
+
+```bash
+python3 scripts/ghost_auto_skill.py status
+python3 scripts/ghost_auto_skill.py match "summarize a customer escalation and propose next steps"
 ```
 
 ## Knowledge Docs

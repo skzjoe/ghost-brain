@@ -44,10 +44,13 @@ safe_copy_data() {
 }
 
 echo "📦 Installing skills..."
-for skill_dir in "$SCRIPT_DIR"/skills/*/; do
+shopt -s nullglob
+for skill_dir in "$SCRIPT_DIR"/skills/ghost-*/ "$SCRIPT_DIR"/skills/self-improving-agent/; do
+  [[ -d "$skill_dir" ]] || continue
   skill_name=$(basename "$skill_dir")
   safe_copy "$skill_dir" "$WORKSPACE/skills/$skill_name"
 done
+shopt -u nullglob
 
 echo ""
 echo "📚 Installing knowledge docs..."
@@ -75,6 +78,8 @@ done
 for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md; do
   safe_copy_data "$SCRIPT_DIR/structure/.learnings/$f" "$WORKSPACE/.learnings/$f"
 done
+
+[[ -f "$SCRIPT_DIR/starter/BOOTSTRAP.md" ]] && safe_copy_data "$SCRIPT_DIR/starter/BOOTSTRAP.md" "$WORKSPACE/BOOTSTRAP.md"
 
 echo ""
 echo "🛠️ Installing scripts..."

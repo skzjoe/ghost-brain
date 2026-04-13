@@ -189,7 +189,7 @@ Are proactive systems actually firing?
 
 ---
 
-## Part 14 — 🏗️ Product Health
+## Dimension 13 — 🏗️ Product Health
 
 Ghost as a product layer — is the product boundary clear, scripts functional, and packaging possible?
 

@@ -2,7 +2,10 @@
 
 ## Unreleased
 
-- No unreleased changes yet.
+### Fixed
+- Root and starter installers now copy `BOOTSTRAP.md` into the workspace and align starter packaging with repo-root layouts
+- Public install/docs now match the actually shipped command surface (`/recall`, `/remember`, `/learnings`) and no longer advertise `/auto-skills` as a slash command
+- Product docs no longer carry stale skill-count, audit-numbering, or old test-count references
 
 ## [1.2.0] — 2026-04-13
 
@@ -47,7 +50,7 @@
 - `GHOST_PRODUCT_PLAN.md` — Ghost Product Master Plan v1 (3-layer architecture)
 - `starter/` — complete starter distribution with templates, install.sh, and bootstrap checklist
 - `/health` skill — consolidated Ghost product health view (memory, learning, execution state, proactive, capture)
-- `/audit` Part 14 — Product Health dimension (13 dimensions total)
+- `/audit` Product Health dimension added to the 13-dimension audit
 - `/recall` skill — unified memory search
 - `/remember` skill — smart capture routing
 - `/learnings` skill — learning loop status

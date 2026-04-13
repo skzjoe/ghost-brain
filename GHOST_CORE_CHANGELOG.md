@@ -41,4 +41,4 @@
 
 ### Tested
 - targeted contract/adapter/recall/learning suites passing
-- full test suite passing: 271 tests
+- public test suite passing at release time

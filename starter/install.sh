@@ -72,6 +72,10 @@ echo "  ✅ Directories created"
 echo "Installing template files..."
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$SCRIPT_DIR"
+if [[ ! -d "$PACKAGE_ROOT/scripts" ]] && [[ -d "$SCRIPT_DIR/../scripts" ]]; then
+  PACKAGE_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+fi
 
 copy_if_missing() {
   local src="$1"
@@ -110,13 +114,15 @@ for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md REVIEW.md; do
   fi
 done
 
+[[ -f "$SCRIPT_DIR/BOOTSTRAP.md" ]] && copy_if_missing "$SCRIPT_DIR/BOOTSTRAP.md" "$WORKSPACE/BOOTSTRAP.md"
+
 echo ""
 
 # ─── Copy scripts ───
 echo "Installing Ghost scripts..."
 
-if [[ -d "${SCRIPT_DIR}/scripts" ]]; then
-  for script in "${SCRIPT_DIR}/scripts/"*; do
+if [[ -d "${PACKAGE_ROOT}/scripts" ]]; then
+  for script in "${PACKAGE_ROOT}/scripts/"*; do
     base="$(basename "$script")"
     cp "$script" "$WORKSPACE/scripts/$base"
   done
@@ -129,8 +135,10 @@ fi
 # ─── Copy skills ───
 echo "Installing Ghost skills..."
 
-if [[ -d "${SCRIPT_DIR}/skills" ]]; then
-  for skill_dir in "${SCRIPT_DIR}/skills/"ghost-*/; do
+if [[ -d "${PACKAGE_ROOT}/skills" ]]; then
+  shopt -s nullglob
+  for skill_dir in "${PACKAGE_ROOT}/skills/"ghost-*/ "${PACKAGE_ROOT}/skills/self-improving-agent/"; do
+    [[ -d "$skill_dir" ]] || continue
     base="$(basename "$skill_dir")"
     if [[ ! -d "$WORKSPACE/skills/$base" ]]; then
       cp -r "$skill_dir" "$WORKSPACE/skills/$base"
@@ -139,14 +147,15 @@ if [[ -d "${SCRIPT_DIR}/skills" ]]; then
       echo "  ⏭️  Exists: $base"
     fi
   done
+  shopt -u nullglob
 else
   echo "  ⚠️  No skills directory found in package"
 fi
 
 # ─── Copy tests ───
-if [[ -d "${SCRIPT_DIR}/tests" ]]; then
+if [[ -d "${PACKAGE_ROOT}/tests" ]]; then
   echo "Installing tests..."
-  cp -r "${SCRIPT_DIR}/tests/"* "$WORKSPACE/tests/" 2>/dev/null || true
+  cp -r "${PACKAGE_ROOT}/tests/"* "$WORKSPACE/tests/" 2>/dev/null || true
   echo "  ✅ Tests installed"
 fi
 
@@ -171,6 +180,6 @@ echo "  1. Edit SOUL.md, IDENTITY.md, USER.md in $WORKSPACE"
 echo "  2. Seed MEMORY.md with your initial context"
 echo "  3. Run /health to verify Ghost layer"
 echo "  4. Run /onboard for interactive guided setup"
-echo "  5. See BOOTSTRAP.md for the full checklist"
+echo "  5. See BOOTSTRAP.md in your workspace for the full checklist"
 echo ""
 echo "Happy haunting! 👻"
