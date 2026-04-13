@@ -45,6 +45,13 @@ done
 echo ""
 echo "🛠️ Scripts:"
 check "ghost_memory_db.py" "[[ -f '$WORKSPACE/scripts/ghost_memory_db.py' ]]"
+check "ghost_unified_recall.py" "[[ -f '$WORKSPACE/scripts/ghost_unified_recall.py' ]]"
+check "ghost_cli.py" "[[ -f '$WORKSPACE/scripts/ghost_cli.py' ]]"
+check "ghost_session_context.py" "[[ -f '$WORKSPACE/scripts/ghost_session_context.py' ]]"
+check "ghost_working_memory.py" "[[ -f '$WORKSPACE/scripts/ghost_working_memory.py' ]]"
+check "ghost_research.py" "[[ -f '$WORKSPACE/scripts/ghost_research.py' ]]"
+check "ghost_core/contracts.py" "[[ -f '$WORKSPACE/scripts/ghost_core/contracts.py' ]]"
+check "memory_content_scanner.py" "[[ -f '$WORKSPACE/scripts/memory_content_scanner.py' ]]"
 check "learning_review.py" "[[ -f '$WORKSPACE/scripts/learning_review.py' ]]"
 check "heartbeat_pulse.sh" "[[ -f '$WORKSPACE/scripts/heartbeat_pulse.sh' ]]"
 

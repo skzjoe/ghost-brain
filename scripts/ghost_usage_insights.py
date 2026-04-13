@@ -12,6 +12,7 @@ Usage:
 """
 
 import json
+import os
 import re
 import sys
 import argparse
@@ -19,9 +20,12 @@ from pathlib import Path
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict, Counter
 
-WORKSPACE = Path(__file__).parent.parent
-COMMANDS_LOG = Path.home() / ".openclaw/logs/commands.log"
-MEMORY_DIR = WORKSPACE / "memory"
+from ghost_core.workspace import get_workspace_paths
+
+_paths = get_workspace_paths(os.environ.get("OPENCLAW_WORKSPACE"))
+WORKSPACE = _paths.workspace
+COMMANDS_LOG = Path(os.environ.get("OPENCLAW_COMMANDS_LOG", str(Path.home() / ".openclaw/logs/commands.log")))
+MEMORY_DIR = _paths.memory_dir
 
 MODEL_ALIASES = {
     "sonnet": "claude-sonnet",
@@ -40,8 +44,8 @@ AGENT_LABELS = {
     "agent:lab": "Lab agent",
     "agent:general": "General agent",
     "agent:team": "Team agent",
-    "agent:phantom": "Phantom",
-    "agent:phantom-fam": "Fam Fund",
+    "agent:phantom": "Personal agent",
+    "agent:phantom-fam": "Family agent",
 }
 
 def label_agent(key: str) -> str:
@@ -99,14 +103,14 @@ def parse_daily_notes(since: datetime) -> dict:
 
         # Theme keywords
         keywords = {
-            "ERPNext/Frappe": ["erpnext", "frappe", "doctype", "erp"],
-            "Meta Ads": ["meta ads", "facebook", "campaign", "ads manager"],
+            "Business Systems": ["erpnext", "frappe", "doctype", "erp", "crm"],
+            "Marketing Ops": ["meta ads", "facebook", "campaign", "ads manager", "advertising"],
             "Ghost Brain": ["ghost brain", "ghost", "memory", "heartbeat", "learning"],
-            "Piyapodok": ["piyapodok", "piyapodok"],
-            "Phantom": ["phantom", "fam fund"],
+            "Client Delivery": ["project atlas", "client delivery", "migration", "handoff"],
+            "LifeOps": ["phantom", "fam fund"],
             "Coding": ["claude code", "codex", "script", "python", "deploy"],
             "Docs": ["document", "pdf", "manual", "เอกสาร"],
-            "AWC": ["awc", "aw client"],
+            "Northstar": ["awc", "aw client"],
         }
         for theme, kws in keywords.items():
             for kw in kws:

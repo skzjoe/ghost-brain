@@ -30,7 +30,7 @@ Usage:
   ghost_memory_db.py temporal --hot     # Show most accessed items
 
 Best practice:
-  - For automation and cron, prefer `bash scripts/run_memory_pipeline.sh`
+  - For automation/cron, prefer `bash scripts/run_memory_pipeline.sh`
     instead of calling `python3 scripts/ghost_memory_db.py pipeline` directly.
   - The wrapper selects a Python runtime that actually has `sqlite-vec` installed.
 """
@@ -48,26 +48,24 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 
+from ghost_core.workspace import get_workspace_paths
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
 
-WORKSPACE = Path(os.environ.get("OPENCLAW_WORKSPACE",
-    os.path.expanduser("~/.openclaw/workspace")))
-DB_PATH = WORKSPACE / ".local" / "ghost_memory.db"
+_paths = get_workspace_paths(os.environ.get("OPENCLAW_WORKSPACE"))
+WORKSPACE = _paths.workspace
+DB_PATH = _paths.local_dir / "ghost_memory.db"
 
-def _load_embedding_key_from_secrets():
-    if os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"):
-        return
-    for name, env_var in (("gemini_api_key.txt", "GEMINI_API_KEY"), ("google_api_key.txt", "GOOGLE_API_KEY")):
-        secrets_path = WORKSPACE / "secrets" / name
-        if secrets_path.exists():
-            key = secrets_path.read_text().strip()
-            if key:
-                os.environ[env_var] = key
-                return
-
-_load_embedding_key_from_secrets()
+# Auto-load Gemini API key from secrets file if not already in env
+def _load_gemini_key_from_secrets():
+    secrets_path = WORKSPACE / "secrets" / "gemini_api_key.txt"
+    if secrets_path.exists() and not os.environ.get("GEMINI_API_KEY"):
+        key = secrets_path.read_text().strip()
+        if key:
+            os.environ["GEMINI_API_KEY"] = key
+_load_gemini_key_from_secrets()
 
 _has_gemini = bool(os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY"))
 EMBEDDING_PROVIDER = os.environ.get("GHOST_EMBEDDING_PROVIDER",
@@ -833,14 +831,16 @@ class GhostMemory:
             if real_commitments:
                 lines.append(f"**Commitments ({len(real_commitments)}):**")
                 for c in real_commitments:
+                    # title is a date; extract meaningful summary from content
                     content = c.get("content", "")
                     parts = [p.strip() for p in content.split("|") if p.strip()]
+                    # format: date | to | commitment | context
                     if len(parts) >= 3:
-                        counterpart = parts[1]
-                        commitment_text = parts[2]
-                        lines.append(f"- [{c['title']}] {counterpart} - {commitment_text}")
+                        to = parts[1] if len(parts) > 1 else ""
+                        commitment_text = parts[2] if len(parts) > 2 else parts[-1]
+                        lines.append(f"- [{c['title']}] {to} — {commitment_text}")
                     else:
-                        lines.append(f"- {content[:120] or c['title']}")
+                        lines.append(f"- {content[:120]}")
                 lines.append("")
 
         if ctx.get("recent_learnings"):
@@ -975,7 +975,7 @@ def parse_decisions(content, src):
                 decision_source = "meeting"
             elif any(kw in reasoning.lower() for kw in ("email", "mail")):
                 decision_source = "email"
-            elif any(kw in reasoning.lower() for kw in ("user", "feedback", "correction")):
+            elif any(kw in reasoning.lower() for kw in ("joe", "user", "feedback", "correction")):
                 decision_source = "conversation"
             items.append({"item_type": "decision", "title": m[2][:200],
                 "content": f"{m[2]}\n\nReasoning: {reasoning}" if reasoning else m[2],

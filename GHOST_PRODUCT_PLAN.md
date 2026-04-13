@@ -200,7 +200,7 @@ Learning Loop
 
 Execution State
   Active workstreams   : 7
-  Commitments due ≤7d  : 1 (PIYAPODOK)
+  Commitments due ≤7d  : 1 (Project Atlas)
   Stale follow-ups     : 2
   Focus layer          : generated 18h ago
 

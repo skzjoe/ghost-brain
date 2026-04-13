@@ -95,11 +95,15 @@ for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh r
   }
 done
 
-# Memory tools
-for f in learning_review.py ghost_memory_db.py detect_active_lanes.py ghost_auto_skill.py; do
-  safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
-  chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
+# Memory, CLI, and research surfaces
+for f in learning_review.py ghost_memory_db.py detect_active_lanes.py ghost_auto_skill.py          ghost_unified_recall.py ghost_learning_loop.py ghost_error_classifier.py          ghost_todos.py model_router.py memory_content_scanner.py ghost_usage_insights.py          ghost_cli.py ghost_session_context.py ghost_working_memory.py          ghost_research.py ghost_research_lib.py ghost_eval.py ghost_regression.py          ghost_safety_benchmark.py ghost_trajectory_log.py ghost_continuity_benchmark.py          ghost_dashboard.py ghost_experiments.py ghost_core_contracts.py; do
+  [[ -f "$SCRIPT_DIR/scripts/$f" ]] && {
+    safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
+    chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
+  }
 done
+
+[[ -d "$SCRIPT_DIR/scripts/ghost_core" ]] && safe_copy "$SCRIPT_DIR/scripts/ghost_core" "$WORKSPACE/scripts/ghost_core"
 
 [[ -f "$SCRIPT_DIR/scripts/generate_context_bridge.sh" ]] && {
   safe_copy "$SCRIPT_DIR/scripts/generate_context_bridge.sh" "$WORKSPACE/scripts/generate_context_bridge.sh"
@@ -159,7 +163,7 @@ echo "  • $(ls -d "$WORKSPACE"/skills/ghost-* "$WORKSPACE"/skills/self-improvi
 echo "  • Knowledge docs → memory/reference/"
 echo "  • Second brain templates → memory/"
 echo "  • .learnings/ structure"
-echo "  • Memory tools → scripts/ (Memory DB + Learning Review)"
+echo "  • Core + research scripts → scripts/ (recall, learning, context, working-memory, eval)"
 echo "  • $(ls "$WORKSPACE"/scripts/cron_*.md 2>/dev/null | wc -l) cron prompt templates → scripts/"
 echo ""
 

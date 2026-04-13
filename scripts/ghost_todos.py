@@ -3,8 +3,8 @@
 ghost_todos.py — Intra-session todo store for Ghost Brain.
 
 Lightweight JSON-backed todo list that persists within a session and survives
-context compression. Use for multi-step tasks (3+ steps) to avoid losing
-track of pending sub-tasks.
+context compression. Ghost uses this for multi-step tasks (3+ steps) to avoid
+losing track of pending sub-tasks.
 
 Backed by: .local/todos.json (cleared on /new or explicit --clear)
 
@@ -13,8 +13,8 @@ Usage:
     python3 scripts/ghost_todos.py add "Run tests" --tag testing
     python3 scripts/ghost_todos.py list
     python3 scripts/ghost_todos.py done 1
-    python3 scripts/ghost_todos.py status
-    python3 scripts/ghost_todos.py clear
+    python3 scripts/ghost_todos.py status          # compact summary for context
+    python3 scripts/ghost_todos.py clear           # wipe all (use on /new)
 
 From Python:
     from ghost_todos import TodoStore
@@ -24,13 +24,16 @@ From Python:
     print(store.status())
 """
 
-import sys, json, argparse, os
+import os, sys, json, argparse
 from datetime import datetime
 from pathlib import Path
 from dataclasses import dataclass, asdict, field
 
-WORKSPACE = Path(os.environ.get("GHOST_WORKSPACE", Path(__file__).parent.parent))
-TODOS_FILE = WORKSPACE / ".local/todos.json"
+from ghost_core.workspace import get_workspace_paths
+
+_paths = get_workspace_paths(os.environ.get("OPENCLAW_WORKSPACE"))
+WORKSPACE = _paths.workspace
+TODOS_FILE = _paths.local_dir / "todos.json"
 
 
 @dataclass
@@ -104,9 +107,9 @@ class TodoStore:
         return list(self._items)
 
     def status(self) -> str:
-        """Compact one-line summary for embedding in context."""
+        """Compact one-line summary for embedding in Ghost context."""
         p = self.pending()
-        done_items = [i for i in self._items if i.done]
+        done = [i for i in self._items if i.done]
         if not self._items:
             return "todos: empty"
         parts = []
@@ -115,8 +118,8 @@ class TodoStore:
             if len(p) > 5:
                 pending_labels += f" (+{len(p)-5} more)"
             parts.append(f"pending: {pending_labels}")
-        if done_items:
-            parts.append(f"done: {len(done_items)}")
+        if done:
+            parts.append(f"done: {len(done)}")
         return "todos → " + " | ".join(parts)
 
     def format_list(self) -> str:
@@ -134,21 +137,21 @@ def main():
     parser = argparse.ArgumentParser(description="Ghost session todo store")
     sub = parser.add_subparsers(dest="cmd")
 
-    p_add = sub.add_parser("add")
+    p_add = sub.add_parser("add", help="Add a todo item")
     p_add.add_argument("text")
     p_add.add_argument("--tag", default="")
 
-    p_done = sub.add_parser("done")
+    p_done = sub.add_parser("done", help="Mark item done by ID")
     p_done.add_argument("id", type=int)
 
-    p_rm = sub.add_parser("remove")
+    p_rm = sub.add_parser("remove", help="Remove item by ID")
     p_rm.add_argument("id", type=int)
 
-    sub.add_parser("list")
-    sub.add_parser("status")
+    sub.add_parser("list", help="List all todos")
+    sub.add_parser("status", help="Compact status summary")
 
-    p_clear = sub.add_parser("clear")
-    p_clear.add_argument("--done-only", action="store_true")
+    p_clear = sub.add_parser("clear", help="Clear todos")
+    p_clear.add_argument("--done-only", action="store_true", help="Clear only completed items")
 
     args = parser.parse_args()
     store = TodoStore()
@@ -156,20 +159,33 @@ def main():
     if args.cmd == "add":
         item = store.add(args.text, args.tag)
         print(f"  ⬜ Added [{item.id}] {item.text}")
+
     elif args.cmd == "done":
         item = store.done(args.id)
-        print(f"  ✅ Done [{item.id}] {item.text}" if item else f"  Not found: {args.id}")
+        if item:
+            print(f"  ✅ Done [{item.id}] {item.text}")
+        else:
+            print(f"  Item {args.id} not found or already done.", file=sys.stderr)
+            sys.exit(1)
+
     elif args.cmd == "remove":
-        print(f"  {'Removed' if store.remove(args.id) else 'Not found'}: {args.id}")
+        ok = store.remove(args.id)
+        print(f"  {'Removed' if ok else 'Not found'}: {args.id}")
+
     elif args.cmd == "list":
-        print(f"\n📋 Todos ({len(store.pending())} pending / {len(store.all_items())} total)\n")
+        pending = store.pending()
+        print(f"\n📋 Todos ({len(pending)} pending / {len(store.all_items())} total)\n")
         print(store.format_list())
         print()
+
     elif args.cmd == "status":
         print(store.status())
+
     elif args.cmd == "clear":
         store.clear(done_only=args.done_only)
-        print(f"  Cleared {'completed' if args.done_only else 'all'} todos.")
+        label = "completed" if args.done_only else "all"
+        print(f"  Cleared {label} todos.")
+
     else:
         parser.print_help()
 

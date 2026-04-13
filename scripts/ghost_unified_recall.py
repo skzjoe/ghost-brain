@@ -8,11 +8,13 @@ into one ranked result set. Importable AND CLI-usable.
 Usage:
   ghost_unified_recall.py recall 'query' [--limit 10] [--sources all]
   ghost_unified_recall.py summary 'query'
+  ghost_unified_recall.py report 'query' [--limit 10] [--sources all] [--json]
   ghost_unified_recall.py capture 'content' [--context 'optional context']
   ghost_unified_recall.py user-model [--update type 'data'] [--show]
 """
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -21,10 +23,21 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-WORKSPACE = Path(os.environ.get(
-    "OPENCLAW_WORKSPACE", os.path.expanduser("~/.openclaw/workspace")))
+from ghost_core_contracts import (
+    RecallEvidence,
+    RecallReport,
+    SOURCE_LABELS,
+    build_citation,
+    confidence_from_score,
+)
+from ghost_core.contracts import CaptureRequest, RecallQuery, UserModelSignal
+from ghost_core.defaults import build_default_runtime
+from ghost_core.workspace import get_workspace_paths
 
-USER_MODEL_PATH = WORKSPACE / "memory" / "user-model.md"
+_paths = get_workspace_paths(os.environ.get("OPENCLAW_WORKSPACE"))
+WORKSPACE = _paths.workspace
+
+USER_MODEL_PATH = _paths.user_model_path
 
 STRUCTURED_FILES = {
     "decision": WORKSPACE / "memory" / "decisions.md",
@@ -34,8 +47,12 @@ STRUCTURED_FILES = {
     "person": WORKSPACE / "memory" / "people.md",
 }
 
-DAILY_NOTE_DIR = WORKSPACE / "memory"
-LEARNINGS_DIR = WORKSPACE / ".learnings"
+DAILY_NOTE_DIR = _paths.memory_dir
+LEARNINGS_DIR = _paths.learnings_dir
+
+
+def _runtime():
+    return build_default_runtime(str(WORKSPACE))
 
 # Source filter sets
 SOURCE_FILTERS = {
@@ -57,7 +74,6 @@ def _get_ghost_memory():
     if _ghost_memory_cls is not None:
         return _ghost_memory_cls
     try:
-        sys.path.insert(0, str(WORKSPACE / "scripts"))
         from ghost_memory_db import GhostMemory
         _ghost_memory_cls = GhostMemory
         return GhostMemory
@@ -68,7 +84,6 @@ def _get_ghost_memory():
 
 def _get_scanner():
     try:
-        sys.path.insert(0, str(WORKSPACE / "scripts"))
         from memory_content_scanner import scan_content, check_duplicate, check_file_size
         return scan_content, check_duplicate, check_file_size
     except ImportError:
@@ -90,6 +105,7 @@ def unified_recall(
     for s in (sources or ["all"]):
         allowed |= SOURCE_FILTERS.get(s, {"memory", "learnings", "daily"})
 
+    query_terms = _normalize_query_terms(query)
     results_by_key: dict[str, dict] = {}
     futures = {}
 
@@ -102,17 +118,19 @@ def unified_recall(
         for future in as_completed(futures):
             try:
                 for item in future.result():
-                    key = _dedup_key(item)
+                    key = _candidate_key(item)
                     existing = results_by_key.get(key)
-                    if existing is None or item.get("score", 0) > existing.get("score", 0):
+                    if existing is None:
                         results_by_key[key] = item
+                    else:
+                        results_by_key[key] = _merge_result(existing, item)
             except Exception:
                 pass
 
     results = list(results_by_key.values())
     results = _filter_by_source(results, allowed)
     results.sort(key=lambda r: r.get("score", 0), reverse=True)
-    return results[:limit]
+    return [_finalize_result(query, item, query_terms) for item in results[:limit]]
 
 
 def _classify_source(file_path: str) -> str:
@@ -134,6 +152,55 @@ def _dedup_key(item: dict) -> str:
     return f"{file_val}:{line_val}:{snippet}"
 
 
+def _normalize_query_terms(query: str) -> list[str]:
+    return [term for term in re.findall(r"[\w-]+", query.lower()) if term]
+
+
+def _normalize_snippet(text: str) -> str:
+    return re.sub(r"\s+", " ", (text or "").strip().lower())[:160]
+
+
+def _candidate_key(item: dict) -> str:
+    item_id = item.get("id")
+    if item_id:
+        return f"id:{item_id}"
+    return f"{item.get('file', '')}:{_normalize_snippet(item.get('snippet') or item.get('title', ''))}"
+
+
+def _merge_result(existing: dict, incoming: dict) -> dict:
+    merged = dict(existing)
+    merged["score"] = max(existing.get("score", 0), incoming.get("score", 0))
+    merged["source_labels"] = sorted(set(existing.get("source_labels", []) + incoming.get("source_labels", [])))
+    merged["evidence"] = existing.get("evidence", []) + incoming.get("evidence", [])
+    if len(merged["source_labels"]) > len(existing.get("source_labels", [])):
+        merged["score"] = min(1.0, merged["score"] + 0.05)
+    if not merged.get("snippet") and incoming.get("snippet"):
+        merged["snippet"] = incoming["snippet"]
+    if not merged.get("line") and incoming.get("line"):
+        merged["line"] = incoming["line"]
+    return merged
+
+
+def _finalize_result(query: str, item: dict, query_terms: list[str]) -> dict:
+    enriched = _enrich_result(query, item)
+    matched_terms = sorted({
+        term for evidence in enriched.get("evidence", [])
+        for term in evidence.get("matched_terms", [])
+    })
+    if not matched_terms:
+        snippet_text = _normalize_snippet(enriched.get("snippet", ""))
+        matched_terms = [term for term in query_terms if term in snippet_text]
+    if len(enriched.get("source_labels", [])) > 1:
+        enriched["explanation"] = (
+            f"Corroborated by {', '.join(enriched['source_labels'])}; matched terms: {', '.join(matched_terms[:4]) or 'n/a'}."
+        )
+    else:
+        enriched["explanation"] = (
+            f"Best signal from {enriched['source_label']}; matched terms: {', '.join(matched_terms[:4]) or 'n/a'}."
+        )
+    return enriched
+
+
 def _search_db(query: str, limit: int) -> list[dict]:
     GhostMemory = _get_ghost_memory()
     if not GhostMemory:
@@ -148,6 +215,7 @@ def _search_db(query: str, limit: int) -> list[dict]:
             gm.close()
 
         out = []
+        query_terms = _normalize_query_terms(query)
         for r in results:
             match_type = r.get("match", "fts")
             if match_type == "both":
@@ -158,12 +226,25 @@ def _search_db(query: str, limit: int) -> list[dict]:
                 score = 0.6
             out.append({
                 "source": f"db:{match_type}",
+                "id": r.get("id"),
+                "title": r.get("title", ""),
+                "status": r.get("status", ""),
+                "match": match_type,
+                "distance": r.get("distance"),
                 "file": r.get("source", ""),
                 "line": 0,
                 "snippet": r.get("snippet", r.get("title", "")),
                 "score": score,
                 "item_type": r.get("type", "unknown"),
                 "date": r.get("date", ""),
+                "source_labels": ["Structured Memory"],
+                "evidence": [{
+                    "kind": "db",
+                    "label": f"DB {match_type} match",
+                    "matched_terms": [term for term in query_terms if term in _normalize_snippet(r.get("snippet", r.get("title", "")))],
+                    "file": r.get("source", ""),
+                    "line": 0,
+                }],
             })
         return out
     except Exception:
@@ -172,7 +253,7 @@ def _search_db(query: str, limit: int) -> list[dict]:
 
 def _search_grep(query: str, limit: int) -> list[dict]:
     out = []
-    search_terms = query.lower().split()
+    search_terms = _normalize_query_terms(query)
     if not search_terms:
         return out
 
@@ -182,6 +263,8 @@ def _search_grep(query: str, limit: int) -> list[dict]:
     for structured in STRUCTURED_FILES.values():
         if structured.exists():
             scan_paths.append(structured)
+    if LEARNINGS_DIR.exists():
+        scan_paths.extend(sorted(LEARNINGS_DIR.rglob("*.md")))
 
     for fpath in scan_paths:
         try:
@@ -205,9 +288,15 @@ def _search_grep(query: str, limit: int) -> list[dict]:
                 "score": score,
                 "item_type": item_type,
                 "date": date,
+                "source_labels": [SOURCE_LABELS.get(_classify_source(rel), _classify_source(rel).title())],
+                "evidence": [{
+                    "kind": "grep",
+                    "label": "File text match",
+                    "matched_terms": [t for t in search_terms if t in lower_line],
+                    "file": rel,
+                    "line": i,
+                }],
             })
-        if len(out) >= limit:
-            break
 
     out.sort(key=lambda r: r["score"], reverse=True)
     return out[:limit]
@@ -237,40 +326,189 @@ def _extract_date_from_path(rel_path: str) -> str:
     return m.group(1) if m else ""
 
 
+def _enrich_result(query: str, item: dict) -> dict:
+    """Normalize recall results into a stable evidence contract."""
+    file_path = item.get("file", "")
+    line = int(item.get("line", 0) or 0)
+    source_bucket = _classify_source(file_path)
+    source_label = SOURCE_LABELS.get(source_bucket, source_bucket.title())
+    score = float(item.get("score", 0) or 0)
+
+    evidence = RecallEvidence(
+        query=query,
+        item_type=item.get("item_type", "unknown"),
+        source_bucket=source_bucket,
+        source_label=source_label,
+        source_detail=item.get("source", ""),
+        file=file_path,
+        line=line,
+        citation=build_citation(file_path, line if line > 0 else None),
+        score=score,
+        confidence=confidence_from_score(score),
+        snippet=item.get("snippet", ""),
+        date=item.get("date", ""),
+        id=str(item.get("id", "") or ""),
+        title=item.get("title", ""),
+        status=item.get("status", ""),
+        match=item.get("match", ""),
+        distance=item.get("distance"),
+    )
+    payload = evidence.to_dict()
+    payload["source_labels"] = item.get("source_labels", [source_label])
+    payload["evidence"] = item.get("evidence", [])
+    return payload
+
+
+def build_recall_report(
+    query: str, limit: int = 10, sources: Optional[list] = None,
+) -> dict:
+    """Return a structured, evidence-first recall report."""
+    raw_results = unified_recall(query, limit=limit, sources=sources)
+    results = [
+        item if "source_bucket" in item and "confidence" in item and "citation" in item
+        else _enrich_result(query, item)
+        for item in raw_results
+    ]
+    grouped_counts = {key: 0 for key in SOURCE_LABELS}
+    for item in results:
+        grouped_counts[item["source_bucket"]] = grouped_counts.get(item["source_bucket"], 0) + 1
+
+    strongest_signal = results[0]["source_label"] if results else "none"
+    recommendations = _build_recall_recommendations(results)
+
+    report = RecallReport(
+        query=query,
+        generated_at=datetime.now().isoformat(),
+        total_results=len(results),
+        grouped_counts=grouped_counts,
+        strongest_signal=strongest_signal,
+        recommendations=recommendations,
+        results=results,
+    )
+    return report.to_dict()
+
+
+def _build_recall_recommendations(results: list[dict]) -> list[str]:
+    if not results:
+        return [
+            "Broaden the query or try a project/person name.",
+            "Escalate to Ghost Memory DB graph or temporal queries if you need cross-file recall.",
+        ]
+
+    recs = []
+    top = results[0]
+    if top["source_bucket"] == "daily":
+        recs.append("Top evidence is still in daily notes, promote durable facts into structured memory if this will matter again.")
+    if all(r["confidence"] == "low" for r in results[:3]):
+        recs.append("Evidence is weak, refine the query with a specific project, person, or date.")
+    if any(r["source_bucket"] == "learnings" for r in results):
+        recs.append("A prior learning matches this topic, reuse the proven workflow before improvising.")
+    if not recs:
+        recs.append("Use the top cited evidence first, it already points to the most relevant durable context.")
+    return recs
+
+
+def build_related_recall(query: str, limit: int = 10, sources: Optional[list] = None, per_group: int = 2) -> dict:
+    report = build_recall_report(query, limit=limit, sources=sources)
+    results = report.get("results", [])
+    top_hits = results[: min(3, len(results))]
+    grouped: dict[str, list[dict]] = {}
+    for item in results:
+        item_type = item.get("item_type", "note")
+        grouped.setdefault(item_type, [])
+        if len(grouped[item_type]) < per_group:
+            grouped[item_type].append(item)
+
+    ordered_types = ["decision", "commitment", "follow-up", "person", "idea", "learning", "daily_note", "note"]
+    related = [
+        {"item_type": item_type, "count": len(grouped[item_type]), "items": grouped[item_type]}
+        for item_type in ordered_types if grouped.get(item_type)
+    ]
+    seen_types = set(ordered_types)
+    related.extend(
+        {"item_type": item_type, "count": len(items), "items": items}
+        for item_type, items in grouped.items() if item_type not in seen_types
+    )
+
+    report["mode"] = "related"
+    report["top_hits"] = top_hits
+    report["related"] = related
+    report["cross_file_signals"] = len({item.get("item_type", "note") for item in results})
+    if report["cross_file_signals"] > 1:
+        report.setdefault("recommendations", []).append("Cross-file signals found, use the linked decision/follow-up/person entries together instead of only the top hit.")
+    return report
+
+
 # ---------------------------------------------------------------------------
 # 1b. recall_summary
 # ---------------------------------------------------------------------------
 
-def recall_summary(query: str, limit: int = 5) -> str:
+def related_recall_summary(query: str, limit: int = 8) -> str:
+    report = build_related_recall(query, limit=limit)
+    if not report.get("results"):
+        return f"No related memory found for: **{query}**"
+
+    parts = [
+        f"## Related Recall: {query}\n",
+        f"Top signal: **{report.get('strongest_signal', 'none')}** across **{report.get('cross_file_signals', 0)}** memory type(s).\n",
+    ]
+
+    if report.get("top_hits"):
+        parts.append("### Top hits")
+        for item in report["top_hits"][:3]:
+            parts.append(f"- {item.get('snippet', '').strip()}  \n  _Source: `{item.get('citation', item.get('file', '?'))}` · {item.get('item_type', 'note')}_")
+        parts.append("")
+
+    for group in report.get("related", []):
+        label = group.get("item_type", "note").replace("_", " ").title()
+        parts.append(f"### Related {label} ({group.get('count', 0)})")
+        for item in group.get("items", [])[:2]:
+            parts.append(f"- {item.get('snippet', '').strip()}  \n  _Source: `{item.get('citation', item.get('file', '?'))}`_")
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+def recall_summary(
+    query: str, limit: int = 5, *, show_confidence: bool = True, show_evidence: bool = False,
+) -> str:
     """Format unified_recall results as a clean markdown summary."""
-    results = unified_recall(query, limit=limit)
+    report = build_recall_report(query, limit=limit)
+    results = report["results"]
     if not results:
         return f"No results found for: **{query}**"
 
     grouped: dict[str, list[dict]] = {}
     for r in results:
-        src = _classify_source(r.get("file", ""))
+        src = r.get("source_bucket", _classify_source(r.get("file", "")))
         grouped.setdefault(src, []).append(r)
 
-    label_map = {
-        "memory": "Structured Memory",
-        "learnings": "Learnings",
-        "daily": "Daily Notes",
-    }
-
-    parts = [f"## Recall: {query}\n"]
+    parts = [
+        f"## Recall: {query}\n",
+        f"Found **{report['total_results']}** result(s). Strongest signal: **{report['strongest_signal']}**.\n",
+    ]
     for src_key in ("memory", "daily", "learnings"):
         items = grouped.get(src_key, [])
         if not items:
             continue
-        parts.append(f"### {label_map.get(src_key, src_key)}")
+        parts.append(f"### {SOURCE_LABELS.get(src_key, src_key)} ({len(items)})")
         for item in items:
-            file_ref = item.get("file", "?")
+            file_ref = item.get("citation", item.get("file", "?"))
             snippet = item.get("snippet", "").strip()
             date = item.get("date", "")
             date_str = f" ({date})" if date else ""
-            parts.append(f"- {snippet}{date_str}  \n  _Source: `{file_ref}`_")
+            confidence = item.get("confidence", "low")
+            prefix = f"[{confidence}] " if show_confidence else ""
+            parts.append(f"- {prefix}{snippet}{date_str}  \n  _Source: `{file_ref}` · {item.get('item_type', 'note')}_")
+            if show_evidence:
+                for ev in item.get("evidence", [])[:2]:
+                    parts.append(f"  - evidence: {ev.get('label', 'match')} @ {ev.get('file', '?')}:{ev.get('line', 0)}")
         parts.append("")
+
+    if report["recommendations"]:
+        parts.append("### Next")
+        for rec in report["recommendations"][:2]:
+            parts.append(f"- {rec}")
 
     return "\n".join(parts)
 
@@ -308,21 +546,40 @@ _TARGET_FILES = {
 def smart_capture(content: str, context: str = "") -> dict:
     """Auto-detect content type and route to the correct memory file."""
     if not content or not content.strip():
-        return {"type": "error", "file": "", "entry_text": "",
-                "duplicate_warning": "Empty content"}
+        return {
+            "type": "error",
+            "file": "",
+            "path": "",
+            "entry_text": "",
+            "duplicate_warning": "Empty content",
+            "added": False,
+            "duplicate": False,
+            "message": "Empty content",
+            "tags": [],
+        }
 
     detected_type = _detect_content_type(content)
     target_file = _resolve_target_file(detected_type)
-    entry_text = _format_entry(detected_type, content, context)
+    tags = _extract_tags(content, context=context)
+    entry_text = _format_entry(detected_type, content, context, tags=tags)
 
     scan_content_fn, check_dup_fn, check_size_fn = _get_scanner()
 
     if scan_content_fn:
         scan_result = scan_content_fn(entry_text)
         if not scan_result.safe:
-            return {"type": detected_type, "file": target_file,
-                    "entry_text": entry_text,
-                    "duplicate_warning": f"BLOCKED: {scan_result.reason}"}
+            warning = f"BLOCKED: {scan_result.reason}"
+            return {
+                "type": detected_type,
+                "file": target_file,
+                "path": target_file,
+                "entry_text": entry_text,
+                "duplicate_warning": warning,
+                "added": False,
+                "duplicate": False,
+                "message": warning,
+                "tags": tags,
+            }
 
     duplicate_warning = ""
     if check_dup_fn:
@@ -337,8 +594,13 @@ def smart_capture(content: str, context: str = "") -> dict:
     return {
         "type": detected_type,
         "file": target_file,
+        "path": target_file,
         "entry_text": entry_text,
         "duplicate_warning": duplicate_warning,
+        "added": not bool(duplicate_warning),
+        "duplicate": bool(duplicate_warning),
+        "message": duplicate_warning or "captured",
+        "tags": tags,
     }
 
 
@@ -357,12 +619,50 @@ def _resolve_target_file(content_type: str) -> str:
     return f"memory/{today}.md"
 
 
-def _format_entry(content_type: str, content: str, context: str) -> str:
+_TAG_STOPWORDS = {
+    "the", "and", "for", "with", "from", "that", "this", "have", "will", "would", "should", "could",
+    "waiting", "check", "review", "follow", "decided", "decision", "build", "use", "using", "keep",
+    "had", "normal", "note", "notes", "context", "meeting", "brainstorm", "perf", "next", "first",
+}
+
+
+def _extract_tags(content: str, context: str = "", max_tags: int = 5) -> list[str]:
+    combined = f"{content} {context}".strip()
+    tags: list[str] = []
+
+    def add(tag: str) -> None:
+        cleaned = tag.strip(" ,.;:()[]{}")
+        if not cleaned:
+            return
+        lowered = cleaned.lower()
+        if lowered in _TAG_STOPWORDS:
+            return
+        if cleaned not in tags:
+            tags.append(cleaned)
+
+    for tag in re.findall(r"คุณ[\wก-๙-]+", combined):
+        add(tag)
+    for tag in re.findall(r"\b[A-Z][A-Z0-9-]{2,}\b", combined):
+        add(tag)
+    for tag in re.findall(r"\b[A-Z][a-zA-Z0-9-]{2,}\b", combined):
+        add(tag)
+    for tag in re.findall(r"\b[A-Za-z][A-Za-z0-9-]*[A-Z][A-Za-z0-9-]*\b", combined):
+        add(tag)
+    for tag in re.findall(r"\b[a-z]+(?:-[a-z0-9]+)+\b", combined):
+        add(tag)
+
+    return tags[:max_tags]
+
+
+def _format_entry(content_type: str, content: str, context: str, tags: list[str] | None = None) -> str:
     today = datetime.now().strftime("%Y-%m-%d")
     ctx = f" — {context}" if context else ""
+    tag_line = f"Tags: [{', '.join(tags or [])}]\n" if tags else ""
     if content_type == "daily-log":
+        if tag_line:
+            return f"\n- {content}{ctx}\n  {tag_line}"
         return f"\n- {content}{ctx}\n"
-    return f"\n## [{today}] {content}{ctx}\n"
+    return f"\n## [{today}] {content}{ctx}\n{tag_line}"
 
 
 def _append_to_file(rel_path: str, entry_text: str) -> None:
@@ -455,7 +755,7 @@ def _update_timestamp(model: str) -> str:
 
 def _default_user_model() -> str:
     today = datetime.now().strftime("%Y-%m-%d")
-    return f"""# User Model
+    return f"""# User Model — User
 
 ## Communication Preferences
 - Concise, accurate, direct
@@ -464,22 +764,22 @@ def _default_user_model() -> str:
 - Prefers actionable output over explanations
 
 ## Technical Preferences
-- ERPNext/Frappe ecosystem
+- Databases, automation tools, and knowledge systems
 - Prisma v6 (avoid v7)
 - Python for scripts, Node.js for apps
 - WSL2 development environment
 
 ## Work Patterns
-- (your role here)
+- Technical lead, operator, or founder
 - Multiple concurrent projects
 - Prefers reactive support over proactive micromanagement on stable projects
 - Values critique-by-default
 
 ## Recurring Topics
-- ERPNext customization
+- Workflow automation
 - Client project delivery
 - Ghost Brain system improvement
-- Meta Ads automation
+- Campaign or operations automation
 
 ## Corrections & Pet Peeves
 - Don't promote notes to commitments without explicit signal
@@ -564,17 +864,32 @@ def _build_parser() -> argparse.ArgumentParser:
     p_recall.add_argument("query", help="Search query")
     p_recall.add_argument("--limit", type=int, default=10)
     p_recall.add_argument("--sources", default="all")
+    p_recall.add_argument("--json", action="store_true", help="Return structured JSON")
 
     p_summary = sub.add_parser("summary", help="Formatted recall summary")
     p_summary.add_argument("query", help="Search query")
     p_summary.add_argument("--limit", type=int, default=5)
 
+    p_report = sub.add_parser("report", help="Structured recall report")
+    p_report.add_argument("query", help="Search query")
+    p_report.add_argument("--limit", type=int, default=10)
+    p_report.add_argument("--sources", default="all")
+    p_report.add_argument("--json", action="store_true", help="Return JSON report")
+
+    p_related = sub.add_parser("related", help="Show linked memory around a query")
+    p_related.add_argument("query", help="Search query")
+    p_related.add_argument("--limit", type=int, default=8)
+    p_related.add_argument("--sources", default="all")
+    p_related.add_argument("--json", action="store_true", help="Return JSON report")
+
     p_capture = sub.add_parser("capture", help="Smart capture content")
     p_capture.add_argument("content", help="Content to capture")
     p_capture.add_argument("--context", default="")
+    p_capture.add_argument("--json", action="store_true", help="Return JSON result")
 
     p_um = sub.add_parser("user-model", help="View or update user model")
     p_um.add_argument("--show", action="store_true", help="Show parsed model")
+    p_um.add_argument("--json", action="store_true", help="Return parsed JSON")
     p_um.add_argument("--update", nargs=2, metavar=("TYPE", "DATA"),
                        help="Update model: --update correction 'data'")
 
@@ -584,25 +899,58 @@ def _build_parser() -> argparse.ArgumentParser:
 def main():
     parser = _build_parser()
     args = parser.parse_args()
+    runtime = _runtime()
 
     if args.command == "recall":
         src_list = [s.strip() for s in args.sources.split(",")]
+        if args.json:
+            report = runtime.recall.recall(RecallQuery(query=args.query, limit=args.limit, sources=src_list))
+            print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
+            return
+
         results = unified_recall(args.query, limit=args.limit, sources=src_list)
         if not results:
             print("No results found.")
             return
         for r in results:
             score = r.get("score", 0)
-            print(f"[{score:.2f}] {r.get('item_type', '?'):12s} "
-                  f"{r.get('file', '?'):40s} {r.get('snippet', '')[:80]}")
+            print(
+                f"[{score:.2f} | {r.get('confidence', 'low'):6s}] "
+                f"{r.get('item_type', '?'):12s} {r.get('citation', r.get('file', '?')):50s} "
+                f"{r.get('snippet', '')[:80]}"
+            )
 
     elif args.command == "summary":
         print(recall_summary(args.query, limit=args.limit))
 
+    elif args.command == "report":
+        src_list = [s.strip() for s in args.sources.split(",")]
+        report = runtime.recall.recall(RecallQuery(query=args.query, limit=args.limit, sources=src_list)).to_dict()
+        if args.json:
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+        else:
+            print(recall_summary(args.query, limit=args.limit))
+
+    elif args.command == "related":
+        src_list = [s.strip() for s in args.sources.split(",")]
+        report = build_related_recall(args.query, limit=args.limit, sources=src_list)
+        if args.json:
+            print(json.dumps(report, indent=2, ensure_ascii=False))
+        else:
+            print(related_recall_summary(args.query, limit=args.limit))
+
     elif args.command == "capture":
-        result = smart_capture(args.content, context=args.context)
+        capture = runtime.recall.capture(CaptureRequest(content=args.content, context=args.context))
+        result = capture.to_dict()
+        result["file"] = result["path"]
+        result["duplicate_warning"] = result["message"] if result["duplicate"] or not result["added"] else ""
+        if getattr(args, "json", False):
+            print(json.dumps(result, indent=2, ensure_ascii=False))
+            return
         print(f"Type:    {result['type']}")
         print(f"File:    {result['file']}")
+        if result.get("tags"):
+            print(f"Tags:    {', '.join(result['tags'])}")
         if result.get("duplicate_warning"):
             print(f"Warning: {result['duplicate_warning']}")
         else:
@@ -611,12 +959,14 @@ def main():
     elif args.command == "user-model":
         if args.update:
             signal_type, signal_data = args.update
-            update_user_model(signal_type, signal_data)
+            runtime.recall.update_user_model(UserModelSignal(signal_type=signal_type, data=signal_data))
             print(f"Updated user model ({signal_type}): {signal_data}")
         else:
-            import json
-            model = get_user_model()
-            print(json.dumps(model, indent=2, ensure_ascii=False))
+            model = runtime.recall.get_user_model()
+            if args.json or args.show:
+                print(json.dumps(model, indent=2, ensure_ascii=False))
+            else:
+                print(json.dumps(model, indent=2, ensure_ascii=False))
 
     else:
         parser.print_help()

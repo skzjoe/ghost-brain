@@ -26,6 +26,8 @@ Ghost Brain gives your AI assistant a persistent, self-organizing memory system:
 | ⏰ **10 Automated Routines** | Morning briefing, EOD summary, commitment alerts, weekly distill, backups |
 | 💰 **Token Efficiency** | Rate limiting, context discipline, lean memory — save 30-50% on API costs |
 | 🔍 **13-Part Audit** | System-wide health check with scoring + actionable improvement suggestions |
+| 🧭 **Working Memory** | Fast briefings, due follow-ups, and session context snapshots for quick restarts |
+| 🧪 **Research & Eval** | Built-in eval, safety, continuity, regression, and experiment tracking |
 
 ## Before / After
 
@@ -72,7 +74,7 @@ bash setup-crons.sh
 | Memory templates | 7 | `~/.openclaw/workspace/memory/` |
 | Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
 | Cron prompts | 10 | `~/.openclaw/workspace/scripts/` |
-| Memory tools | 6 | `~/.openclaw/workspace/scripts/` |
+| Core + research scripts | 20+ | `~/.openclaw/workspace/scripts/` |
 
 **Non-destructive** — won't overwrite existing files. Use `--force` to update code files (your data files are always protected).
 
@@ -116,6 +118,18 @@ Morning briefing surfaces your priorities. Learning review resurfaces past lesso
 | `/conflicts` | Scan for contradictions across brain files |
 | `/auto-skills` | Auto-skill pipeline dashboard — what's been created, used, promoted, retired |
 | `/export` | Portable markdown bundle for backup or migration |
+
+## Product CLIs
+
+These scripts expose Ghost Brain surfaces directly when you want machine-readable output or automation hooks:
+
+```bash
+python3 scripts/ghost_cli.py brief --json
+python3 scripts/ghost_cli.py followups due --json
+python3 scripts/ghost_cli.py context show --json
+python3 scripts/ghost_cli.py research dashboard --json
+python3 scripts/ghost_cli.py research focus --json
+```
 
 ## Knowledge Docs
 

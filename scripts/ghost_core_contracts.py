@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+"""Backward-compatible shim for Ghost core contracts."""
+
+from ghost_core.contracts import (
+    CaptureRequest,
+    CaptureResult,
+    LearningDigest,
+    LearningReflectionRequest,
+    LearningReflectionResult,
+    LearningStatusSnapshot,
+    RecallEvidence,
+    RecallHit,
+    RecallQuery,
+    RecallReport,
+    SCHEMA_CAPTURE,
+    SCHEMA_LEARNING,
+    SCHEMA_RECALL,
+    SCHEMA_SESSION,
+    SOURCE_LABELS,
+    SessionContextSnapshot,
+    UserModelSignal,
+    build_citation,
+    confidence_from_score,
+)
+
+__all__ = [
+    "CaptureRequest",
+    "CaptureResult",
+    "LearningDigest",
+    "LearningReflectionRequest",
+    "LearningReflectionResult",
+    "LearningStatusSnapshot",
+    "RecallEvidence",
+    "RecallHit",
+    "RecallQuery",
+    "RecallReport",
+    "SCHEMA_CAPTURE",
+    "SCHEMA_LEARNING",
+    "SCHEMA_RECALL",
+    "SCHEMA_SESSION",
+    "SOURCE_LABELS",
+    "SessionContextSnapshot",
+    "UserModelSignal",
+    "build_citation",
+    "confidence_from_score",
+]
