@@ -14,7 +14,7 @@ Examples:
 ```json
 [
   {"Name": "Alice", "Role": "CTO", "Company": "Acme"},
-  {"Name": "Aum", "Role": "Ops", "Company": "1stCraft"}
+  {"Name": "Taylor", "Role": "Ops", "Company": "ExampleCo"}
 ]
 ```
 
@@ -23,7 +23,7 @@ Examples:
   "rows": [
     ["Name", "Role", "Company"],
     ["Alice", "CTO", "Acme"],
-    ["Aum", "Ops", "1stCraft"]
+    ["Taylor", "Ops", "ExampleCo"]
   ]
 }
 ```

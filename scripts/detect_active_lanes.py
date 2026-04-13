@@ -24,7 +24,7 @@ LANE_SIGNALS = {
     "Team Management": ["1:1", "expectation", "performance", "team", "ba ", "developer", "training"],
     "Trading / EA": ["mt5", "ea ", "backtest", "drawdown", "profit factor", "trading"],
     "Product Launch / Sales": ["launch", "pricing", "gumroad", "lemonsqueezy", "checkout", "payment link", "sales page"],
-    "WordPress / Client Delivery": ["wordpress", "elementor", "zipwp", "piyapodok", "client delivery", "hosting"],
+    "WordPress / Client Delivery": ["wordpress", "elementor", "zipwp", "site delivery", "client delivery", "hosting"],
     "Product / System Ops": ["cron", "audit", "heartbeat", "ghost brain", "memory db", "pipeline", "backup", "resilience"],
 }
 

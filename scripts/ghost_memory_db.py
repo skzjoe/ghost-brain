@@ -975,7 +975,7 @@ def parse_decisions(content, src):
                 decision_source = "meeting"
             elif any(kw in reasoning.lower() for kw in ("email", "mail")):
                 decision_source = "email"
-            elif any(kw in reasoning.lower() for kw in ("joe", "user", "feedback", "correction")):
+            elif any(kw in reasoning.lower() for kw in ("user", "feedback", "correction")):
                 decision_source = "conversation"
             items.append({"item_type": "decision", "title": m[2][:200],
                 "content": f"{m[2]}\n\nReasoning: {reasoning}" if reasoning else m[2],

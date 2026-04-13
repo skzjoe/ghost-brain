@@ -323,4 +323,4 @@ MIT
 
 ## Credits
 
-Built by [Joe](https://github.com/skzjoe) with Ghost 👻
+Built with Ghost 👻

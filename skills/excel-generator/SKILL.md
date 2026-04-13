@@ -92,7 +92,7 @@ skills/excel-generator/scripts/generate_business_project_pack_xlsx.py \
   --output media/project_pack.xlsx \
   --project-name "ERPNext Implementation" \
   --customer-name "Customer Name" \
-  --brand-name "1stCraft" \
+  --brand-name "ExampleCo" \
   --theme-color 385723 \
   --include-logo \
   --weeks 16
@@ -105,7 +105,7 @@ skills/excel-generator/scripts/generate_business_project_pack_xlsx.py \
   --output media/project_pack_no_logo.xlsx \
   --project-name "ERPNext Implementation" \
   --customer-name "Customer Name" \
-  --brand-name "1stCraft" \
+  --brand-name "ExampleCo" \
   --no-logo \
   --weeks 16
 ```

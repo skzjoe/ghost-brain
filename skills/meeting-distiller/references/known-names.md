@@ -1,12 +1,12 @@
 # Known Names & ASR Corrections
 
-Accumulated corrections from real usage. Check this before guessing.
+Example-only corrections for transcript repair. Replace these with confirmed names from the current workspace before using in a real client context.
 
-## Thai name ASR corrections (confirmed by the user)
+## Thai name ASR correction examples
 
 | ASR variants | Correct name | Context / Project | Added |
 |---|---|---|---|
-| คุณแพ้, คุณแพร่, คุณพา | คุณแพร | Biopalm training | <date> |
+| <misheard-name-a>, <misheard-name-b> | <confirmed-name-a> | client training | <date> |
 
 ## English/technical term corrections
 
@@ -15,14 +15,12 @@ Accumulated corrections from real usage. Check this before guessing.
 | ควิสต์, ควิซ, ควิส | Quiz | online exam system |
 | อะนาลิติก, analytic | Analytics | dashboard/reporting |
 
-## Speaker maps (from prior meetings)
+## Speaker map examples
 
 | Project / Client | Speaker label | Real name | Confidence | Date |
 |---|---|---|---|---|
-| SPP (Superpart/CPS) | อ้อม | คุณออม | Confirmed by the user | <date> |
-| SPP (Superpart/CPS) | <user-name> | <user> | Confirmed by the user | <date> |
-| SPP (Superpart/CPS) | เคน | คุณเคน | Confirmed by the user | <date> |
-| SPP (Superpart/CPS) | เอ | คุณเอ (เจ้าของ Superpart) | Confirmed by the user | <date> |
+| <project-alpha> | Speaker A | <person-a> | Confirmed by the user | <date> |
+| <project-alpha> | Speaker B | <person-b> | Confirmed by the user | <date> |
 
 ## Rules for this file
 

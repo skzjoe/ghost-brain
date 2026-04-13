@@ -110,7 +110,7 @@ def parse_daily_notes(since: datetime) -> dict:
             "LifeOps": ["phantom", "fam fund"],
             "Coding": ["claude code", "codex", "script", "python", "deploy"],
             "Docs": ["document", "pdf", "manual", "เอกสาร"],
-            "Northstar": ["awc", "aw client"],
+            "Support": ["support phase", "client support", "maintenance"],
         }
         for theme, kws in keywords.items():
             for kw in kws:

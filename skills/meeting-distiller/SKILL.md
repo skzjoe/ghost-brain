@@ -26,7 +26,7 @@ Turn noisy meeting material into operational summaries the user can trust and re
 Before any analysis, scan the transcript for ASR errors. Read `references/thai-transcript-repair.md` for rules.
 
 Quick summary of repair behavior:
-- Fix obvious Thai ASR name errors when context is clear (e.g. "คุณแพ้" → "คุณแพร")
+- Fix obvious Thai ASR name errors when context is clear (e.g. a misheard Thai name → the confirmed spelling)
 - Fix common Thai filler/garbled phrases (e.g. "พาเข้าใจ" → "พอเข้าใจ")
 - Preserve English technical terms that are likely correct (e.g. "open link", "quiz", "analytics")
 - When uncertain, keep the original and mark `[unclear]`
@@ -143,7 +143,7 @@ Include when transcript repairs were made. Format:
 
 ```
 ## Normalization Notes
-- "คุณแพ้" → likely "คุณแพร" (name, consistent across transcript)
+- a misheard Thai name → likely the confirmed name spelling (when consistent across transcript)
 - "ดึงคำอากาศ" → unclear, possibly "ดึงคำถาม" from context
 - "analytic" → "analytics" (English term correction)
 ```

@@ -98,7 +98,7 @@ def main():
     p.add_argument('--output', required=True)
     p.add_argument('--project-name', default='ERPNext Implementation')
     p.add_argument('--customer-name', default='Customer')
-    p.add_argument('--brand-name', default='1stCraft')
+    p.add_argument('--brand-name', default='ExampleCo')
     p.add_argument('--weeks', type=int, default=16)
     p.add_argument('--theme-color', default='385723', help='Hex color, e.g. 385723 or FF385723')
     p.add_argument('--include-logo', action='store_true', default=False)

@@ -34,7 +34,7 @@ def test_session_context_snapshot_extracts_fields(tmp_path):
     )
     commitments = tmp_path / "memory" / "commitments.md"
     commitments.parent.mkdir(parents=True, exist_ok=True)
-    commitments.write_text("| 2026-03-23 | คุณเมย์ | Project Atlas | Deadline: 16 Apr 2569 |\n", encoding="utf-8")
+    commitments.write_text("| 2026-03-23 | Example Contact | Project Atlas | Deadline: 16 Apr 2569 |\n", encoding="utf-8")
 
     snapshot = SessionContextAdapter(
         workspace=tmp_path,

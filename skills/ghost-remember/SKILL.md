@@ -10,7 +10,7 @@ Capture content into the right Ghost memory file automatically.
 
 ## Usage
 ```
-/remember We decided to park ROIads until after Piyapodok ships
+/remember We decided to pause Project Beacon until after Project Atlas ships
 /remember Follow up with Jane on hosting migration by Friday
 /remember Learned: do not treat OpenClaw cron as system crontab
 ```
@@ -27,5 +27,5 @@ Capture content into the right Ghost memory file automatically.
    - detected type
    - destination file
    - short captured summary
-5. If the script warns about a duplicate, do not write again blindly. Tell Joe it looks similar to an existing item and ask whether to keep or skip.
+5. If the script warns about a duplicate, do not write again blindly. Tell the user it looks similar to an existing item and ask whether to keep or skip.
 6. For learning-like content, mention that it was routed into the learning system.

@@ -222,7 +222,7 @@ Ghost as a product layer — is the product boundary clear, scripts functional, 
 
 4. **Starter readiness**
    - [ ] Template files exist (`.template` variants or clearly separable config)?
-   - [ ] Joe-specific content is separated from generic product files?
+   - [ ] User-specific content is separated from generic product files?
    - [ ] Could the workspace be packaged by copying the starter file list from `GHOST_PRODUCT_PLAN.md`?
    - [ ] Rate readiness: ready / partially ready / not ready
 
@@ -272,7 +272,7 @@ For each pillar, look at:
 | E1 | {specific suggestion} | High/Med/Low | High/Med/Low |
 ...
 
-### 🔮 Proactive — คาดการณ์ก่อน Joe ถาม
+### 🔮 Proactive — anticipate before the user asks
 | # | Suggestion | Impact | Effort |
 |---|---|---|---|
 | R1 | {specific suggestion} | High/Med/Low | High/Med/Low |

@@ -63,7 +63,7 @@ def memory_dir(tmp_path):
         encoding="utf-8",
     )
     (mem / "people.md").write_text(
-        "# People\n\n## คุณนนท์\nRole: PM at Northstar\n",
+        "# People\n\n## คุณตัวอย่าง\nRole: PM at Northstar\n",
         encoding="utf-8",
     )
     (mem / "2026-04-10.md").write_text(
@@ -284,7 +284,7 @@ class TestRelatedRecall:
         mock_recall.return_value = [
             {"source": "db:fts", "file": "memory/decisions.md", "line": 0, "snippet": "Decision about Project Atlas", "score": 0.8, "item_type": "decision", "date": "2026-04-13"},
             {"source": "grep", "file": "memory/follow-ups.md", "line": 3, "snippet": "Project Atlas waiting on client inputs", "score": 0.5, "item_type": "follow-up", "date": "2026-04-13"},
-            {"source": "grep", "file": "memory/people.md", "line": 5, "snippet": "คุณเมย์ coordinates Project Atlas", "score": 0.4, "item_type": "person", "date": "2026-04-13"},
+            {"source": "grep", "file": "memory/people.md", "line": 5, "snippet": "คุณตัวอย่าง coordinates Project Atlas", "score": 0.4, "item_type": "person", "date": "2026-04-13"},
         ]
         report = build_related_recall("Project Atlas")
         assert report["mode"] == "related"
@@ -336,7 +336,7 @@ class TestSmartCapture:
         assert _detect_content_type("Check with Dana about the design") == "follow-up"
 
     def test_detect_person(self):
-        assert _detect_content_type("คุณนนท์ sent the requirements") == "person"
+        assert _detect_content_type("คุณตัวอย่าง sent the requirements") == "person"
 
     def test_detect_learning(self):
         assert _detect_content_type("Learned that WSL needs special config") == "learning"
@@ -401,9 +401,9 @@ class TestSmartCapture:
         assert "Tags: [Redis, perf-meeting]" in entry
 
     def test_extract_tags_finds_entities(self):
-        tags = _extract_tags("Waiting on Atlas approval from คุณเมย์", context="ghost-brain review")
+        tags = _extract_tags("Waiting on Atlas approval from คุณตัวอย่าง", context="ghost-brain review")
         assert "Atlas" in tags
-        assert "คุณเมย์" in tags
+        assert "คุณตัวอย่าง" in tags
         assert "ghost-brain" in tags
 
 

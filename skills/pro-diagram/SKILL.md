@@ -120,7 +120,7 @@ If no title: replace `{{HEADER_HTML}}` with empty string.
 
 **Footer HTML** (if attribution wanted):
 ```html
-<div class="diagram-footer">1stCraft Digital Solutions</div>
+<div class="diagram-footer">ExampleCo Digital</div>
 ```
 If no footer: replace `{{FOOTER_HTML}}` with empty string.
 

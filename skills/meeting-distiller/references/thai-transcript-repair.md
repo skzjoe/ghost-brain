@@ -21,7 +21,7 @@ People names, company names, project names, system names.
 
 Rules:
 - If the same name appears multiple times in different spellings, pick the most likely correct form.
-- Use context to decide: if someone says "คุณแพ้ได้ล็อคอินเว็บไซต์แล้วหรือยัง" → "คุณแพ้" is almost certainly "คุณแพร" (a person being asked to log in).
+- Use context to decide: if someone says a clearly misheard Thai name in a login context, normalize it to the confirmed spelling (a person being asked to log in).
 - If the user has mentioned the name before in other sessions, use the known correct spelling.
 - Always note the correction in Normalization Notes.
 - If truly uncertain, keep original + add `[likely: ...]`.
@@ -29,9 +29,9 @@ Rules:
 Common Thai name ASR errors:
 | ASR output | Likely correct | Clue |
 |---|---|---|
-| แพ้, แพร่, พราว, พา | แพร | common Thai female name |
-| ป๊อก, ป๊อค, ป้อก | ป๊อก | common Thai nickname |
-| จ๋อ, จ้อ, โจ | <user-name> | context: the user himself |
+| <misheard-name> | <confirmed-name> | common Thai name pattern |
+| <variant-a>, <variant-b> | <confirmed-nickname> | common Thai nickname pattern |
+| <misheard-user-name> | <user-name> | context: the main speaker |
 | บุตรดม | ? | needs more context — could be a course name |
 
 ### Category 2: Technical terms (MEDIUM CAUTION)
@@ -97,7 +97,7 @@ Rules:
 ## Normalization Notes
 | Original | Corrected to | Category | Confidence |
 |---|---|---|---|
-| คุณแพ้ | คุณแพร | Name | High |
+| <misheard-name> | <confirmed-name> | Name | High |
 | ควิสต์ | Quiz | Tech term | High |
 | ดึงคำอากาศ | [unclear] | Garbled | Low |
 | พาเข้าใจ | พอเข้าใจ | Garbled phrase | High |

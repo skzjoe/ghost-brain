@@ -11,7 +11,7 @@ Search across Ghost's unified memory layer.
 ## Usage
 ```
 /recall OpenClaw cron
-/recall Piyapodok deadline
+/recall Project Atlas deadline
 /recall Omix MCC naming correction
 ```
 

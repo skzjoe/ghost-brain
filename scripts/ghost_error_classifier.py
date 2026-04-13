@@ -44,7 +44,7 @@ TAXONOMY: list[ErrorClass] = [
     ErrorClass("git_lock",         "Git index.lock conflict",      True,
                "Run: rm -f <vault>/.git/index.lock then retry. Usually caused by concurrent git processes."),
     ErrorClass("vault_unmounted",  "Obsidian vault not mounted",   True,
-               "iCloud drive may not be accessible from WSL. Check /mnt/c/Users/passa/iCloudDrive/. Retry in ~30s."),
+               "iCloud drive may not be accessible from WSL. Check /mnt/c/Users/<user>/iCloudDrive/. Retry in ~30s."),
     ErrorClass("python_env",       "Wrong Python runtime",         False,
                "Use /home/linuxbrew/.linuxbrew/bin/python3 for sqlite-vec scripts. Not system python3."),
     ErrorClass("frappe_auth",      "Frappe/MCP auth failure",      True,
