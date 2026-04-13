@@ -165,6 +165,21 @@ class TestUnifiedRecall:
         results = unified_recall("test", sources=["learnings"])
         assert all(_classify_source(r["file"]) == "learnings" for r in results)
 
+    @patch("ghost_unified_recall._search_conversations")
+    @patch("ghost_unified_recall._search_db")
+    @patch("ghost_unified_recall._search_grep")
+    def test_source_filter_conversations(self, mock_grep, mock_db, mock_conversations):
+        mock_db.return_value = []
+        mock_grep.return_value = []
+        mock_conversations.return_value = [
+            {"source": "conversation", "file": "~/.openclaw/agents/main/sessions/a.jsonl", "line": 5,
+             "snippet": "We discussed release hygiene", "score": 0.7, "item_type": "conversation", "date": "2026-04-12",
+             "source_bucket": "conversation", "source_label": "Conversations", "citation": "~/.openclaw/agents/main/sessions/a.jsonl#L5", "confidence": "medium"},
+        ]
+        results = unified_recall("release hygiene", sources=["conversation"])
+        assert len(results) == 1
+        assert results[0]["source_bucket"] == "conversation"
+
     @patch("ghost_unified_recall._search_db")
     @patch("ghost_unified_recall._search_grep")
     def test_limit_respected(self, mock_grep, mock_db):
@@ -401,7 +416,8 @@ class TestSmartCapture:
         assert "Tags: [Redis, perf-meeting]" in entry
 
     def test_extract_tags_finds_entities(self):
-        tags = _extract_tags("Waiting on Atlas approval from คุณตัวอย่าง", context="ghost-brain review")
+        tags = _extract_tags("Waiting on Project Atlas approval from คุณตัวอย่าง", context="ghost-brain review")
+        assert "Project" in tags
         assert "Atlas" in tags
         assert "คุณตัวอย่าง" in tags
         assert "ghost-brain" in tags

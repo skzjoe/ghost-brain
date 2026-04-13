@@ -59,6 +59,8 @@ SOURCE_FILTERS = {
     "memory": {"memory"},
     "learnings": {"learnings"},
     "daily": {"daily"},
+    "conversation": {"conversation"},
+    "conversations": {"conversation"},
     "all": {"memory", "learnings", "daily"},
 }
 
@@ -109,11 +111,13 @@ def unified_recall(
     results_by_key: dict[str, dict] = {}
     futures = {}
 
-    with ThreadPoolExecutor(max_workers=3) as pool:
+    with ThreadPoolExecutor(max_workers=4) as pool:
         if "memory" in allowed or "learnings" in allowed or "daily" in allowed:
             futures[pool.submit(_search_db, query, limit * 2)] = "db"
-        if "memory" in allowed or "daily" in allowed:
+        if "memory" in allowed or "daily" in allowed or "learnings" in allowed:
             futures[pool.submit(_search_grep, query, limit * 2)] = "grep"
+        if "conversation" in allowed:
+            futures[pool.submit(_search_conversations, query, limit * 2)] = "conversation"
 
         for future in as_completed(futures):
             try:
@@ -134,7 +138,10 @@ def unified_recall(
 
 
 def _classify_source(file_path: str) -> str:
-    if ".learnings" in file_path:
+    lowered = file_path.lower()
+    if "/sessions/" in lowered or lowered.endswith(".jsonl") and "/agents/" in lowered:
+        return "conversation"
+    if ".learnings" in lowered:
         return "learnings"
     if re.search(r"\d{4}-\d{2}-\d{2}", Path(file_path).name):
         return "daily"
@@ -247,6 +254,15 @@ def _search_db(query: str, limit: int) -> list[dict]:
                 }],
             })
         return out
+    except Exception:
+        return []
+
+
+def _search_conversations(query: str, limit: int) -> list[dict]:
+    try:
+        from ghost_conversation_memory import search_conversation_hits
+
+        return search_conversation_hits(query, limit=limit)
     except Exception:
         return []
 
@@ -396,6 +412,8 @@ def _build_recall_recommendations(results: list[dict]) -> list[str]:
         ]
 
     recs = []
+    if any(r["source_bucket"] == "conversation" for r in results[:3]):
+        recs.append("Raw conversation history matched this query, promote any durable conclusion into structured memory if you will need it again.")
     top = results[0]
     if top["source_bucket"] == "daily":
         recs.append("Top evidence is still in daily notes, promote durable facts into structured memory if this will matter again.")
@@ -487,7 +505,7 @@ def recall_summary(
         f"## Recall: {query}\n",
         f"Found **{report['total_results']}** result(s). Strongest signal: **{report['strongest_signal']}**.\n",
     ]
-    for src_key in ("memory", "daily", "learnings"):
+    for src_key in ("memory", "daily", "learnings", "conversation"):
         items = grouped.get(src_key, [])
         if not items:
             continue

@@ -7,6 +7,7 @@ SOURCE_LABELS = {
     "memory": "Structured Memory",
     "daily": "Daily Notes",
     "learnings": "Learnings",
+    "conversation": "Conversations",
 }
 
 
@@ -14,6 +15,9 @@ SCHEMA_RECALL = "ghost-recall/v1"
 SCHEMA_LEARNING = "ghost-learning-loop/v1"
 SCHEMA_CAPTURE = "ghost-capture/v1"
 SCHEMA_SESSION = "ghost-session-context/v1"
+SCHEMA_CONVERSATION = "ghost-conversations/v1"
+SCHEMA_GUARDRAILS = "ghost-guardrails/v1"
+SCHEMA_MEMORY_SYNC = "ghost-memory-sync/v1"
 SCHEMA_EVAL = "ghost-eval/v1"
 SCHEMA_TRAJECTORY = "ghost-trajectory/v1"
 SCHEMA_REGRESSION = "ghost-regression/v1"
@@ -194,6 +198,8 @@ class SessionContextSnapshot:
     next_actions: list[str] = field(default_factory=list)
     commitments_due: list[str] = field(default_factory=list)
     second_brain_focus: dict[str, Any] = field(default_factory=dict)
+    guardrails: dict[str, Any] = field(default_factory=dict)
+    memory_sync: dict[str, Any] = field(default_factory=dict)
     schema_version: str = SCHEMA_SESSION
 
     def to_dict(self) -> dict[str, Any]:

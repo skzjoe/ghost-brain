@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+- `scripts/ghost_conversation_memory.py`, `scripts/ghost_guardrails.py`, and `scripts/ghost_memory_sync.py` plus matching `ghost_cli.py` commands for transcript recall, uncaptured-work guardrails, and markdown↔SQLite drift checks
+- Public pytest coverage for conversation recall, guardrails, memory sync, and the updated context/working-memory surfaces
+
+### Changed
+- `scripts/ghost_auto_skill.py` now uses weighted local matching instead of raw keyword overlap alone
+- `scripts/ghost_session_context.py` and `scripts/ghost_working_memory.py` now surface guardrail and memory-sync signals
+- Conversation recall stays explicit and opt-in instead of being mixed into default recall-all behavior
+- Root installer and smoke test now provision and verify the new product scripts
+
 ### Fixed
 - Root and starter installers now copy `BOOTSTRAP.md` into the workspace and align starter packaging with repo-root layouts
 - Public install/docs now match the actually shipped command surface (`/recall`, `/remember`, `/learnings`) and no longer advertise `/auto-skills` as a slash command

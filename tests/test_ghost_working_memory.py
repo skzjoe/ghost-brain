@@ -66,6 +66,8 @@ def test_build_brief_includes_decisions_followups_and_focus(tmp_path):
     assert len(payload["recent_decisions"]) == 2
     assert payload["followups_due"]["items"]
     assert "second_brain_focus" in payload
+    assert "guardrails" in payload
+    assert "memory_sync" in payload
 
 
 
@@ -89,6 +91,7 @@ def test_cli_brief_and_followups_json(tmp_path, monkeypatch):
     brief_payload = json.loads(brief.stdout)
     assert brief_payload["schema_version"] == "ghost-brief/v1"
     assert brief_payload["followups_due"]["items"]
+    assert "guardrails" in brief_payload
 
     followups = subprocess.run(
         [sys.executable, str(CLI), "followups", "due", "--json"],

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Ghost Brain — Auto Skill Pipeline
+ghost_auto_skill.py — Auto Skill Creation + Self-Validation Pipeline
 
-Immune-system approach to skill management: create skills from experience,
+Immune system for Ghost Brain: create skills from experience,
 validate through real usage, self-improve on failure, retire what doesn't work.
 
-Zero review burden — user sees a dashboard, not an approval queue.
+Zero review burden — the user sees a dashboard, not an approval queue.
 
 Lifecycle:
   detect  → is this task skill-worthy?
@@ -13,29 +13,16 @@ Lifecycle:
   match   → find matching auto-skill for incoming task
   record  → track success/failure from real usage
   improve → revise skill based on failure context
-  promote → graduate to active (manual or auto at threshold)
+  promote → graduate to skills/ (manual or auto at threshold)
   retire  → deactivate underperforming skills
   status  → dashboard view
   list    → list all auto-skills with stats
-  cleanup → remove retired skills
 
 State: .local/auto_skills.json
 Skills: skills/.auto/<name>/SKILL.md
 
 Auto-promote: 3+ successes, 0 failures, success_rate >= 90%
 Auto-retire: 3+ uses, success_rate < 50%
-
-Usage:
-  python3 scripts/ghost_auto_skill.py detect '<task_log>'
-  python3 scripts/ghost_auto_skill.py create '<name>' '<task_log>' [description]
-  python3 scripts/ghost_auto_skill.py match '<task_description>'
-  python3 scripts/ghost_auto_skill.py record <skill_id> success|failure
-  python3 scripts/ghost_auto_skill.py improve <skill_id> '<failure_context>'
-  python3 scripts/ghost_auto_skill.py promote <skill_id>
-  python3 scripts/ghost_auto_skill.py retire <skill_id>
-  python3 scripts/ghost_auto_skill.py status
-  python3 scripts/ghost_auto_skill.py list
-  python3 scripts/ghost_auto_skill.py cleanup
 """
 
 import json
@@ -46,19 +33,27 @@ import hashlib
 from datetime import datetime, timezone
 from pathlib import Path
 
-WORKSPACE = Path(__file__).parent.parent
-STATE_FILE = WORKSPACE / ".local" / "auto_skills.json"
-SKILLS_AUTO_DIR = WORKSPACE / "skills" / ".auto"
-SKILLS_DIR = WORKSPACE / "skills"
+from ghost_core.workspace import get_workspace_paths
 
+# Paths
+_workspace_hint = os.environ.get("GHOST_WORKSPACE") or os.environ.get("OPENCLAW_WORKSPACE")
+_paths = get_workspace_paths(_workspace_hint)
+WORKSPACE = _paths.workspace
+STATE_FILE = _paths.local_dir / "auto_skills.json"
+SKILLS_AUTO_DIR = _paths.skills_dir / ".auto"
+SKILLS_DIR = _paths.skills_dir
+
+# Thresholds
 PROMOTE_MIN_SUCCESSES = 3
 PROMOTE_MIN_RATE = 0.9
 RETIRE_MIN_USES = 3
 RETIRE_MAX_RATE = 0.5
-SIMILARITY_THRESHOLD = 0.3
+MATCH_THRESHOLD = 0.45
+WEAK_MATCH_THRESHOLD = 0.25
 
 
 def _load_state():
+    """Load auto-skills state."""
     if STATE_FILE.exists():
         with open(STATE_FILE) as f:
             return json.load(f)
@@ -66,17 +61,21 @@ def _load_state():
 
 
 def _save_state(state):
+    """Save auto-skills state."""
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2, ensure_ascii=False)
 
 
 def _skill_id(name):
+    """Generate a stable skill ID from name."""
     slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
     return slug[:60]
 
 
 def _extract_keywords(text):
+    """Extract meaningful keywords from text for fingerprinting."""
+    # Remove common stop words, keep technical terms
     stop = {
         "the", "a", "an", "is", "are", "was", "were", "be", "been", "being",
         "have", "has", "had", "do", "does", "did", "will", "would", "could",
@@ -89,19 +88,23 @@ def _extract_keywords(text):
         "so", "than", "too", "very", "just", "and", "but", "or", "if", "this",
         "that", "these", "those", "i", "me", "my", "we", "our", "you", "your",
         "he", "she", "it", "they", "them", "what", "which", "who", "whom",
+        "ที่", "ของ", "ใน", "และ", "ไม่", "ได้", "จะ", "ให้", "มี", "เป็น",
+        "แล้ว", "ก็", "กับ", "ว่า", "ไป", "มา", "อยู่", "จาก", "ด้วย",
     }
     words = re.findall(r"[a-z0-9_\-\.]+", text.lower())
     keywords = [w for w in words if len(w) > 2 and w not in stop]
+    # Deduplicate while preserving order
     seen = set()
     unique = []
     for k in keywords:
         if k not in seen:
             seen.add(k)
             unique.append(k)
-    return unique[:30]
+    return unique[:30]  # Cap at 30 keywords
 
 
 def _keyword_similarity(kw1, kw2):
+    """Calculate Jaccard similarity between two keyword lists."""
     if not kw1 or not kw2:
         return 0.0
     s1, s2 = set(kw1), set(kw2)
@@ -110,15 +113,78 @@ def _keyword_similarity(kw1, kw2):
     return len(intersection) / len(union) if union else 0.0
 
 
+def _coverage_score(source_keywords, target_keywords):
+    if not source_keywords or not target_keywords:
+        return 0.0
+    source_set = set(source_keywords)
+    target_set = set(target_keywords)
+    return len(source_set & target_set) / len(source_set)
+
+
+def _phrase_bonus(task_description, skill_name, overlap):
+    lowered_task = task_description.lower()
+    lowered_name = skill_name.lower()
+    if lowered_name and lowered_name in lowered_task:
+        return 0.15
+    if len(overlap) >= 3:
+        return 0.1
+    if len(overlap) == 2:
+        return 0.05
+    return 0.0
+
+
+def _usage_bonus(skill):
+    rate = _success_rate(skill)
+    if rate is None or skill["usage"]["count"] < 2:
+        return 0.0
+    return min(0.08, rate * 0.08)
+
+
+def _match_score(task_description, task_kw, skill):
+    skill_kw = skill["fingerprint"].get("keywords", [])
+    overlap = sorted(set(task_kw) & set(skill_kw))
+    keyword_similarity = _keyword_similarity(task_kw, skill_kw)
+    task_coverage = _coverage_score(task_kw, skill_kw)
+    skill_coverage = _coverage_score(skill_kw, task_kw)
+    phrase_bonus = _phrase_bonus(task_description, skill["name"], overlap)
+    usage_bonus = _usage_bonus(skill)
+    score = (
+        (task_coverage * 0.5)
+        + (skill_coverage * 0.2)
+        + (keyword_similarity * 0.2)
+        + phrase_bonus
+        + usage_bonus
+    )
+    reasons = []
+    if overlap:
+        reasons.append(f"shared keywords: {', '.join(overlap[:5])}")
+    if phrase_bonus >= 0.1:
+        reasons.append("strong phrase/name match")
+    if usage_bonus > 0:
+        reasons.append("boosted by prior successful usage")
+    return {
+        "score": round(min(score, 0.99), 3),
+        "keyword_similarity": round(keyword_similarity, 3),
+        "task_coverage": round(task_coverage, 3),
+        "skill_coverage": round(skill_coverage, 3),
+        "overlap": overlap,
+        "reasons": reasons,
+    }
+
+
+def _match_confidence(score):
+    if score >= 0.7:
+        return "high"
+    if score >= MATCH_THRESHOLD:
+        return "medium"
+    if score >= WEAK_MATCH_THRESHOLD:
+        return "low"
+    return "none"
+
+
 def _now_iso():
+    """Current time as ISO string."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-
-
-def _success_rate(skill):
-    total = skill["usage"]["count"]
-    if total == 0:
-        return None
-    return skill["usage"]["successes"] / total
 
 
 # ─── Commands ────────────────────────────────────────────────────────
@@ -127,16 +193,17 @@ def _success_rate(skill):
 def cmd_detect(task_log):
     """
     Analyze a task log to determine if it's skill-worthy.
+    Returns a fingerprint + recommendation.
 
-    Criteria:
-    - Multi-step (3+ distinct actions or 5+ keywords)
-    - Uses tools or structured workflow
-    - Has sequential structure
-    - Non-trivial length (>100 chars)
+    Criteria for skill-worthiness:
+    - Multi-step (3+ distinct actions/tools)
+    - Repeatable pattern (not one-off data)
+    - Has clear input → output structure
     """
     keywords = _extract_keywords(task_log)
     lines = task_log.strip().split("\n")
 
+    # Heuristics for skill-worthiness
     signals = {
         "multi_step": len(lines) >= 3 or len(keywords) >= 5,
         "has_tools": any(
@@ -144,12 +211,15 @@ def cmd_detect(task_log):
             for t in [
                 "exec", "write", "read", "browser", "fetch", "search",
                 "python", "script", "api", "curl", "git", "npm",
-                "spawn", "deploy", "build", "install", "configure",
+                "gog", "mcporter", "claude", "spawn",
             ]
         ),
         "has_structure": any(
             s in task_log.lower()
-            for s in ["step", "then", "next", "first", "finally", "→", "->"]
+            for s in [
+                "step", "then", "next", "first", "finally", "→", "->",
+                "ขั้นตอน", "แล้ว", "จากนั้น", "สุดท้าย",
+            ]
         ),
         "not_trivial": len(task_log) > 100,
     }
@@ -175,7 +245,10 @@ def cmd_detect(task_log):
 
 
 def cmd_create(name, task_log, description=None):
-    """Create an auto-skill from a task log."""
+    """
+    Create an auto-skill from a task log.
+    Generates SKILL.md in skills/.auto/<name>/
+    """
     state = _load_state()
     sid = _skill_id(name)
 
@@ -186,6 +259,7 @@ def cmd_create(name, task_log, description=None):
     keywords = _extract_keywords(task_log)
     desc = description or f"Auto-generated skill from task: {name}"
 
+    # Create skill directory and SKILL.md
     skill_dir = SKILLS_AUTO_DIR / sid
     skill_dir.mkdir(parents=True, exist_ok=True)
 
@@ -217,12 +291,15 @@ The following procedure was extracted from a successful task execution:
     with open(skill_dir / "SKILL.md", "w") as f:
         f.write(skill_md)
 
+    # Register in state
     state["skills"][sid] = {
         "name": name,
         "description": desc,
         "created": _now_iso(),
         "source_task_hash": hashlib.sha256(task_log.encode()).hexdigest()[:16],
-        "fingerprint": {"keywords": keywords},
+        "fingerprint": {
+            "keywords": keywords,
+        },
         "status": "draft",
         "skill_path": str(skill_dir / "SKILL.md"),
         "usage": {
@@ -244,47 +321,66 @@ The following procedure was extracted from a successful task execution:
 
 
 def cmd_match(task_description):
-    """Find the best matching auto-skill for a task description."""
+    """
+    Find the best matching auto-skill for a task description.
+    Returns strong matches first, with a weak-candidate fallback band.
+    """
     state = _load_state()
     task_kw = _extract_keywords(task_description)
 
     matches = []
+    weak_matches = []
     for sid, skill in state["skills"].items():
         if skill["status"] in ("retired",):
             continue
-        skill_kw = skill["fingerprint"].get("keywords", [])
-        sim = _keyword_similarity(task_kw, skill_kw)
-        if sim >= SIMILARITY_THRESHOLD:
-            matches.append({
-                "skill_id": sid,
-                "name": skill["name"],
-                "similarity": round(sim, 3),
-                "status": skill["status"],
-                "success_rate": _success_rate(skill),
-                "usage_count": skill["usage"]["count"],
-                "path": skill["skill_path"],
-            })
+        metrics = _match_score(task_description, task_kw, skill)
+        score = metrics["score"]
+        candidate = {
+            "skill_id": sid,
+            "name": skill["name"],
+            "similarity": score,
+            "keyword_similarity": metrics["keyword_similarity"],
+            "task_coverage": metrics["task_coverage"],
+            "skill_coverage": metrics["skill_coverage"],
+            "confidence": _match_confidence(score),
+            "reasons": metrics["reasons"],
+            "status": skill["status"],
+            "success_rate": _success_rate(skill),
+            "usage_count": skill["usage"]["count"],
+            "path": skill["skill_path"],
+        }
+        if score >= MATCH_THRESHOLD:
+            matches.append(candidate)
+        elif score >= WEAK_MATCH_THRESHOLD:
+            weak_matches.append(candidate)
 
     matches.sort(key=lambda m: m["similarity"], reverse=True)
+    weak_matches.sort(key=lambda m: m["similarity"], reverse=True)
+    output = matches or weak_matches[:3]
 
-    if matches:
-        print(f"🎯 Found {len(matches)} matching skill(s):")
-        for m in matches[:5]:
+    if output:
+        heading = "🎯 Found matching skill(s):" if matches else "🤔 No strong match, but these weak candidates are closest:"
+        print(heading)
+        for m in output[:5]:
             rate = f"{m['success_rate']:.0%}" if m['success_rate'] is not None else "n/a"
             print(
                 f"   [{m['similarity']:.0%}] {m['name']} "
-                f"(status: {m['status']}, used: {m['usage_count']}x, "
-                f"success: {rate})"
+                f"(confidence: {m['confidence']}, status: {m['status']}, used: {m['usage_count']}x, success: {rate})"
             )
+            if m["reasons"]:
+                print(f"         because {m['reasons'][0]}")
             print(f"         → {m['path']}")
     else:
         print("❌ No matching auto-skill found.")
 
-    return matches
+    return output
 
 
 def cmd_record(skill_id, outcome):
-    """Record a usage outcome. Triggers auto-promote or auto-retire."""
+    """
+    Record a usage outcome (success/failure).
+    Triggers auto-promote or auto-retire if thresholds met.
+    """
     state = _load_state()
     if skill_id not in state["skills"]:
         print(f"❌ Skill '{skill_id}' not found")
@@ -305,6 +401,7 @@ def cmd_record(skill_id, outcome):
     rate = _success_rate(skill)
     action = None
 
+    # Auto-promote check
     if (
         skill["status"] == "draft"
         and skill["usage"]["successes"] >= PROMOTE_MIN_SUCCESSES
@@ -315,6 +412,7 @@ def cmd_record(skill_id, outcome):
         action = "promoted"
         print(f"🎉 Auto-promoted '{skill_id}' → active (success rate: {rate:.0%})")
 
+    # Auto-retire check
     if (
         skill["usage"]["count"] >= RETIRE_MIN_USES
         and rate is not None
@@ -338,7 +436,10 @@ def cmd_record(skill_id, outcome):
 
 
 def cmd_improve(skill_id, failure_context):
-    """Add improvement notes from failure context to the skill."""
+    """
+    Mark a skill for improvement with failure context.
+    Appends failure notes to SKILL.md for LLM to revise.
+    """
     state = _load_state()
     if skill_id not in state["skills"]:
         print(f"❌ Skill '{skill_id}' not found")
@@ -351,6 +452,7 @@ def cmd_improve(skill_id, failure_context):
         print(f"❌ Skill file not found: {skill_path}")
         return
 
+    # Append failure context
     improvement_note = f"""
 
 ## Improvement Note #{skill['improvements'] + 1} ({_now_iso()})
@@ -362,6 +464,7 @@ def cmd_improve(skill_id, failure_context):
         f.write(improvement_note)
 
     skill["improvements"] += 1
+    # Update keywords with failure context
     new_kw = _extract_keywords(failure_context)
     existing = set(skill["fingerprint"]["keywords"])
     for kw in new_kw:
@@ -370,8 +473,10 @@ def cmd_improve(skill_id, failure_context):
             existing.add(kw)
 
     _save_state(state)
-    print(f"🔧 Added improvement note #{skill['improvements']} to '{skill_id}'")
-    print(f"   Revise: {skill_path}")
+    print(
+        f"🔧 Added improvement note #{skill['improvements']} to '{skill_id}'"
+    )
+    print(f"   LLM should revise: {skill_path}")
     return True
 
 
@@ -381,8 +486,10 @@ def cmd_promote(skill_id):
     if skill_id not in state["skills"]:
         print(f"❌ Skill '{skill_id}' not found")
         return
-    old_status = state["skills"][skill_id]["status"]
-    state["skills"][skill_id]["status"] = "active"
+
+    skill = state["skills"][skill_id]
+    old_status = skill["status"]
+    skill["status"] = "active"
     _save_state(state)
     print(f"✅ Promoted '{skill_id}': {old_status} → active")
 
@@ -393,8 +500,10 @@ def cmd_retire(skill_id):
     if skill_id not in state["skills"]:
         print(f"❌ Skill '{skill_id}' not found")
         return
-    old_status = state["skills"][skill_id]["status"]
-    state["skills"][skill_id]["status"] = "retired"
+
+    skill = state["skills"][skill_id]
+    old_status = skill["status"]
+    skill["status"] = "retired"
     _save_state(state)
     print(f"💀 Retired '{skill_id}': {old_status} → retired")
 
@@ -410,13 +519,16 @@ def cmd_status():
         print("   Use: ghost_auto_skill.py create '<name>' '<task_log>'")
         return
 
+    # Count by status
     counts = {}
     for s in skills.values():
         counts[s["status"]] = counts.get(s["status"], 0) + 1
 
     total_uses = sum(s["usage"]["count"] for s in skills.values())
     total_successes = sum(s["usage"]["successes"] for s in skills.values())
-    overall_rate = total_successes / total_uses if total_uses > 0 else None
+    overall_rate = (
+        total_successes / total_uses if total_uses > 0 else None
+    )
 
     print("📊 Auto Skill Pipeline — Dashboard")
     print(f"   Total skills: {len(skills)}")
@@ -428,6 +540,7 @@ def cmd_status():
         print(f"   Overall success rate: {overall_rate:.0%}")
     print()
 
+    # List skills
     for sid, skill in sorted(
         skills.items(), key=lambda x: x[1]["usage"]["count"], reverse=True
     ):
@@ -445,7 +558,7 @@ def cmd_status():
 
 
 def cmd_list():
-    """List all auto-skills as JSON."""
+    """List all auto-skills with basic info."""
     state = _load_state()
     skills = state.get("skills", {})
 
@@ -489,6 +602,17 @@ def cmd_cleanup():
     print(f"Cleaned up {removed} retired skill(s).")
 
 
+# ─── Helpers ─────────────────────────────────────────────────────────
+
+
+def _success_rate(skill):
+    """Calculate success rate, None if no uses."""
+    total = skill["usage"]["count"]
+    if total == 0:
+        return None
+    return skill["usage"]["successes"] / total
+
+
 # ─── CLI ─────────────────────────────────────────────────────────────
 
 
@@ -496,19 +620,18 @@ USAGE = """
 Usage: ghost_auto_skill.py <command> [args]
 
 Commands:
-  detect  <task_log>                   Check if task is skill-worthy
-  create  <name> <task_log> [desc]     Create auto-skill from task
-  match   <task_description>           Find matching skill for task
+  detect  <task_log>                  Check if task is skill-worthy
+  create  <name> <task_log> [desc]    Create auto-skill from task
+  match   <task_description>          Find matching skill for task
   record  <skill_id> <success|failure> Record usage outcome
   improve <skill_id> <failure_context> Add improvement note
-  promote <skill_id>                   Manual promote to active
-  retire  <skill_id>                   Manual retire
-  status                               Dashboard
-  list                                 List all with JSON
-  cleanup                              Remove retired skills
+  promote <skill_id>                  Manual promote to active
+  retire  <skill_id>                  Manual retire
+  status                              Dashboard
+  list                                List all with JSON
+  cleanup                             Remove retired skills
 
 Lifecycle: detect → create → [match → use → record] → auto-promote/retire
-Thresholds: promote at 3 successes ≥90% | retire at <50% after 3 uses
 """
 
 

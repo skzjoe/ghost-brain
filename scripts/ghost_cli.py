@@ -26,6 +26,9 @@ from ghost_core.defaults import build_default_runtime
 from ghost_core.workspace import get_workspace_paths
 from ghost_learning_loop import _emit_result as emit_learning_result
 from ghost_learning_loop import _print_digest, _print_status
+from ghost_conversation_memory import print_recent_report, print_search_report, recent_conversations, search_conversations
+from ghost_guardrails import build_guardrail_report, print_guardrail_report
+from ghost_memory_sync import build_memory_sync_report, print_memory_sync_report
 from ghost_research import (
     build_dashboard,
     build_focus_report,
@@ -141,6 +144,32 @@ def _build_parser() -> argparse.ArgumentParser:
     f_due.add_argument("--json", action="store_true")
     f_due.add_argument("--limit", type=int, default=10)
     f_due.add_argument("--stale-after-days", type=int, default=7)
+
+    conversation_p = sub.add_parser("conversation", help="Conversation and transcript recall")
+    conversation_sub = conversation_p.add_subparsers(dest="conversation_command")
+    conv_search = conversation_sub.add_parser("search", help="Search raw session transcripts")
+    conv_search.add_argument("query")
+    conv_search.add_argument("--days", type=int, default=30)
+    conv_search.add_argument("--limit", type=int, default=10)
+    conv_search.add_argument("--json", action="store_true")
+    conv_recent = conversation_sub.add_parser("recent", help="Summarize recent non-automated sessions")
+    conv_recent.add_argument("--days", type=int, default=7)
+    conv_recent.add_argument("--limit", type=int, default=8)
+    conv_recent.add_argument("--json", action="store_true")
+
+    guardrails_p = sub.add_parser("guardrails", help="Self-discipline guardrails")
+    guardrails_sub = guardrails_p.add_subparsers(dest="guardrails_command")
+    guardrails_check = guardrails_sub.add_parser("check", help="Inspect uncaptured-session risk")
+    guardrails_check.add_argument("--days", type=int, default=3)
+    guardrails_check.add_argument("--json", action="store_true")
+    guardrails_pre_new = guardrails_sub.add_parser("pre-new", help="Block /new when uncaptured work risk exists")
+    guardrails_pre_new.add_argument("--days", type=int, default=3)
+    guardrails_pre_new.add_argument("--json", action="store_true")
+
+    memory_sync_p = sub.add_parser("memory-sync", help="Markdown to Memory DB freshness checks")
+    memory_sync_sub = memory_sync_p.add_subparsers(dest="memory_sync_command")
+    memory_sync_check = memory_sync_sub.add_parser("check", help="Check markdown↔DB freshness and drift")
+    memory_sync_check.add_argument("--json", action="store_true")
 
     research_p = sub.add_parser("research", help="Research and eval surfaces")
     research_sub = research_p.add_subparsers(dest="research_command")
@@ -368,6 +397,12 @@ def main() -> None:
                     print("   Commitments due:")
                     for item in snapshot["commitments_due"][:5]:
                         print(f"     - {item}")
+                guardrails = snapshot.get("guardrails") or {}
+                if guardrails:
+                    print(f"   Capture risk: {guardrails.get('capture_risk', '-')}")
+                memory_sync = snapshot.get("memory_sync") or {}
+                if memory_sync:
+                    print(f"   Memory sync: {memory_sync.get('status', '-')}")
         else:
             parser.print_help()
         return
@@ -387,6 +422,47 @@ def main() -> None:
                 print(json.dumps(payload, indent=2, ensure_ascii=False))
             else:
                 print_followups(payload)
+        else:
+            parser.print_help()
+        return
+
+    if args.command == "conversation":
+        if args.conversation_command == "search":
+            payload = search_conversations(args.query, limit=args.limit, days=args.days)
+            if args.json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
+            else:
+                print_search_report(payload)
+        elif args.conversation_command == "recent":
+            payload = recent_conversations(days=args.days, limit=args.limit)
+            if args.json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
+            else:
+                print_recent_report(payload)
+        else:
+            parser.print_help()
+        return
+
+    if args.command == "guardrails":
+        if args.guardrails_command in {"check", "pre-new"}:
+            payload = build_guardrail_report(days=args.days)
+            if args.json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
+            else:
+                print_guardrail_report(payload)
+            if args.guardrails_command == "pre-new" and payload.get("status") != "clear":
+                raise SystemExit(2)
+        else:
+            parser.print_help()
+        return
+
+    if args.command == "memory-sync":
+        if args.memory_sync_command == "check":
+            payload = build_memory_sync_report()
+            if args.json:
+                print(json.dumps(payload, indent=2, ensure_ascii=False))
+            else:
+                print_memory_sync_report(payload)
         else:
             parser.print_help()
         return

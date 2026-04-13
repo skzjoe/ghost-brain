@@ -9,6 +9,8 @@ from typing import Any
 
 from ghost_core.defaults import build_default_runtime
 from ghost_core.workspace import get_workspace_paths
+from ghost_guardrails import build_guardrail_report
+from ghost_memory_sync import build_memory_sync_report
 
 _paths = get_workspace_paths(os.environ.get("OPENCLAW_WORKSPACE"))
 WORKSPACE = _paths.workspace
@@ -161,6 +163,8 @@ def build_brief(workspace: str | Path | None = None, decision_limit: int = 3, fo
     followups = followups_due(workspace=workspace, limit=followup_limit)
     decisions = recent_decisions(workspace=workspace, limit=decision_limit)
     second_brain = snapshot.get("second_brain_focus") or {}
+    guardrails = snapshot.get("guardrails") or build_guardrail_report(workspace=workspace)
+    memory_sync = snapshot.get("memory_sync") or build_memory_sync_report(workspace=workspace)
     return {
         "schema_version": BRIEF_SCHEMA,
         "generated_at": now_iso(),
@@ -171,9 +175,13 @@ def build_brief(workspace: str | Path | None = None, decision_limit: int = 3, fo
         "followups_due": followups,
         "recent_decisions": decisions,
         "second_brain_focus": second_brain,
+        "guardrails": guardrails,
+        "memory_sync": memory_sync,
         "summary": {
             "repetition_risk": second_brain.get("repetition_risk", "unknown"),
             "continuity_health": second_brain.get("continuity_health", "unknown"),
+            "capture_risk": guardrails.get("capture_risk", "unknown"),
+            "memory_sync_status": memory_sync.get("status", "unknown"),
             "due_followups": followups.get("counts", {}).get("overdue", 0) + followups.get("counts", {}).get("due_this_week", 0),
             "stale_followups": followups.get("counts", {}).get("stale", 0),
         },
@@ -204,6 +212,12 @@ def print_brief(payload: dict[str, Any]) -> None:
         print(f"   Repetition risk: {second_brain.get('repetition_risk', '-')}")
         if second_brain.get("next_best_action"):
             print(f"   Next best action: {second_brain['next_best_action']}")
+    guardrails = payload.get("guardrails") or {}
+    if guardrails:
+        print(f"   Capture risk: {guardrails.get('capture_risk', '-')}")
+    memory_sync = payload.get("memory_sync") or {}
+    if memory_sync:
+        print(f"   Memory sync: {memory_sync.get('status', '-')}")
     if payload.get("blockers"):
         print("   Blockers:")
         for item in payload["blockers"][:3]:

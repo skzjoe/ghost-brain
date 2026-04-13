@@ -31,6 +31,16 @@ def _print_snapshot(snapshot: dict) -> None:
         print(f"   Second-brain risk: {second_brain.get('repetition_risk', '-')}")
         if second_brain.get("next_best_action"):
             print(f"   Next best action: {second_brain['next_best_action']}")
+    guardrails = snapshot.get("guardrails") or {}
+    if guardrails:
+        print(f"   Capture risk: {guardrails.get('capture_risk', '-')}")
+        if guardrails.get("next_action"):
+            print(f"   Guardrail action: {guardrails['next_action']}")
+    memory_sync = snapshot.get("memory_sync") or {}
+    if memory_sync:
+        print(f"   Memory sync: {memory_sync.get('status', '-')}")
+        if memory_sync.get("recommendation"):
+            print(f"   Sync action: {memory_sync['recommendation']}")
     if snapshot.get("blockers"):
         print("   Blockers:")
         for item in snapshot["blockers"][:5]:

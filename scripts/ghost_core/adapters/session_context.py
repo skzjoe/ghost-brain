@@ -27,6 +27,8 @@ class SessionContextAdapter:
             next_actions=self._extract_if_idle_actions(active_text),
             commitments_due=self._extract_commitments_due(active_text, commitments_text),
             second_brain_focus=self._extract_second_brain_focus(),
+            guardrails=self._extract_guardrails(),
+            memory_sync=self._extract_memory_sync(),
         )
 
     @staticmethod
@@ -145,3 +147,35 @@ class SessionContextAdapter:
             }
         except Exception as exc:
             return {"status": "degraded", "warnings": [f"focus_unavailable:{exc}"]}
+
+    @staticmethod
+    def _extract_guardrails() -> dict:
+        try:
+            from ghost_guardrails import build_guardrail_report
+
+            report = build_guardrail_report(days=3)
+            return {
+                "status": report.get("status", "unknown"),
+                "capture_risk": report.get("capture_risk", "unknown"),
+                "uncaptured_count": report.get("uncaptured_count", 0),
+                "next_action": report.get("next_action", ""),
+                "warnings": report.get("warnings", [])[:3],
+            }
+        except Exception as exc:
+            return {"status": "degraded", "warnings": [f"guardrails_unavailable:{exc}"]}
+
+    @staticmethod
+    def _extract_memory_sync() -> dict:
+        try:
+            from ghost_memory_sync import build_memory_sync_report
+
+            report = build_memory_sync_report()
+            return {
+                "status": report.get("status", "unknown"),
+                "drifted_count": report.get("drifted_count", 0),
+                "missing_from_db_count": report.get("missing_from_db_count", 0),
+                "recommendation": report.get("recommendation", ""),
+                "warnings": report.get("warnings", [])[:3],
+            }
+        except Exception as exc:
+            return {"status": "degraded", "warnings": [f"memory_sync_unavailable:{exc}"]}

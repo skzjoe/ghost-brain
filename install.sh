@@ -101,7 +101,7 @@ for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh r
 done
 
 # Memory, CLI, and research surfaces
-for f in learning_review.py ghost_memory_db.py detect_active_lanes.py ghost_auto_skill.py          ghost_unified_recall.py ghost_learning_loop.py ghost_error_classifier.py          ghost_todos.py model_router.py memory_content_scanner.py ghost_usage_insights.py          ghost_cli.py ghost_session_context.py ghost_working_memory.py          ghost_research.py ghost_research_lib.py ghost_eval.py ghost_regression.py          ghost_safety_benchmark.py ghost_trajectory_log.py ghost_continuity_benchmark.py          ghost_dashboard.py ghost_experiments.py ghost_core_contracts.py; do
+for f in learning_review.py ghost_memory_db.py detect_active_lanes.py ghost_auto_skill.py          ghost_unified_recall.py ghost_learning_loop.py ghost_error_classifier.py          ghost_todos.py model_router.py memory_content_scanner.py ghost_usage_insights.py          ghost_cli.py ghost_session_context.py ghost_working_memory.py          ghost_conversation_memory.py ghost_guardrails.py ghost_memory_sync.py          ghost_research.py ghost_research_lib.py ghost_eval.py ghost_regression.py          ghost_safety_benchmark.py ghost_trajectory_log.py ghost_continuity_benchmark.py          ghost_dashboard.py ghost_experiments.py ghost_core_contracts.py; do
   [[ -f "$SCRIPT_DIR/scripts/$f" ]] && {
     safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
     chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
