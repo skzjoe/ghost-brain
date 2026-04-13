@@ -8,11 +8,14 @@
 
 ### Changed
 - `scripts/ghost_auto_skill.py` now uses weighted local matching instead of raw keyword overlap alone
+- Conversation recall now keeps durable-memory sources first and only falls back to transcript history for transcript-seeking queries when primary evidence is weak
+- Conversation-search ranking now deduplicates repeated snippets, spreads top hits across sessions, and filters more single-term transcript noise on multi-term queries
 - `scripts/ghost_session_context.py` and `scripts/ghost_working_memory.py` now surface guardrail and memory-sync signals
 - Conversation recall stays explicit and opt-in instead of being mixed into default recall-all behavior
 - Root installer and smoke test now provision and verify the new product scripts
 
 ### Fixed
+- Transcript recall now strips untrusted metadata wrappers and internal-context blocks before ranking snippets
 - Root and starter installers now copy `BOOTSTRAP.md` into the workspace and align starter packaging with repo-root layouts
 - Public install/docs now match the actually shipped command surface (`/recall`, `/remember`, `/learnings`) and no longer advertise `/auto-skills` as a slash command
 - Product docs no longer carry stale skill-count, audit-numbering, or old test-count references

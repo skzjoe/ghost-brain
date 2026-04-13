@@ -168,6 +168,61 @@ class TestUnifiedRecall:
     @patch("ghost_unified_recall._search_conversations")
     @patch("ghost_unified_recall._search_db")
     @patch("ghost_unified_recall._search_grep")
+    def test_default_report_keeps_durable_sources_first(self, mock_grep, mock_db, mock_conversations):
+        mock_db.return_value = [
+            {"source": "db:both", "file": "memory/decisions.md", "line": 0,
+             "snippet": "Decided to use Project Atlas workflow", "score": 0.95, "item_type": "decision", "date": "2026-04-01"},
+        ]
+        mock_grep.return_value = []
+        mock_conversations.return_value = [
+            {"source": "conversation", "file": "~/.openclaw/agents/main/sessions/a.jsonl", "line": 4,
+             "snippet": "We discussed Project Atlas in chat", "score": 0.7, "item_type": "conversation", "date": "2026-04-12"},
+        ]
+
+        report = build_recall_report("what did we say about Project Atlas last week")
+        assert report["routing"]["conversation_considered"] is True
+        assert report["routing"]["conversation_used"] is False
+        assert report["routing"]["reason"] == "durable_memory_sufficient"
+        assert report["strongest_signal"] == "Structured Memory"
+        mock_conversations.assert_not_called()
+
+    @patch("ghost_unified_recall._search_conversations")
+    @patch("ghost_unified_recall._search_db")
+    @patch("ghost_unified_recall._search_grep")
+    def test_default_report_uses_conversation_only_as_fallback(self, mock_grep, mock_db, mock_conversations):
+        mock_db.return_value = []
+        mock_grep.return_value = []
+        mock_conversations.return_value = [
+            {"source": "conversation", "file": "~/.openclaw/agents/main/sessions/a.jsonl", "line": 4,
+             "snippet": "We discussed release hygiene in chat", "score": 0.78, "item_type": "conversation", "date": "2026-04-12",
+             "source_bucket": "conversation", "source_label": "Conversations", "citation": "~/.openclaw/agents/main/sessions/a.jsonl#L4", "confidence": "medium"},
+        ]
+
+        report = build_recall_report("what did we say about release hygiene last week")
+        assert report["routing"]["conversation_used"] is True
+        assert report["routing"]["reason"] == "conversation_fallback_no_primary_results"
+        assert report["results"][0]["source_bucket"] == "conversation"
+
+    @patch("ghost_unified_recall._search_conversations")
+    @patch("ghost_unified_recall._search_db")
+    @patch("ghost_unified_recall._search_grep")
+    def test_explicit_memory_sources_do_not_auto_fallback_to_conversation(self, mock_grep, mock_db, mock_conversations):
+        mock_db.return_value = []
+        mock_grep.return_value = []
+        mock_conversations.return_value = [
+            {"source": "conversation", "file": "~/.openclaw/agents/main/sessions/a.jsonl", "line": 4,
+             "snippet": "We discussed release hygiene in chat", "score": 0.78, "item_type": "conversation", "date": "2026-04-12"},
+        ]
+
+        report = build_recall_report("what did we say about release hygiene", sources=["memory"])
+        assert report["results"] == []
+        assert report["routing"]["reason"] == "explicit_sources"
+        assert report["routing"]["conversation_used"] is False
+        mock_conversations.assert_not_called()
+
+    @patch("ghost_unified_recall._search_conversations")
+    @patch("ghost_unified_recall._search_db")
+    @patch("ghost_unified_recall._search_grep")
     def test_source_filter_conversations(self, mock_grep, mock_db, mock_conversations):
         mock_db.return_value = []
         mock_grep.return_value = []

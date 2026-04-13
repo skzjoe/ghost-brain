@@ -21,7 +21,7 @@ import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
 from ghost_core_contracts import (
     RecallEvidence,
@@ -63,6 +63,103 @@ SOURCE_FILTERS = {
     "conversations": {"conversation"},
     "all": {"memory", "learnings", "daily"},
 }
+
+TRANSCRIPT_INTENT_PATTERNS = [
+    re.compile(pattern, re.I)
+    for pattern in [
+        r"\b(what|when|where) did (we|you|i) say\b",
+        r"\b(exact wording|verbatim|transcript|chat history|conversation history)\b",
+        r"\b(in (our|the) chat|in conversation|in the session|session transcript)\b",
+        r"\b(earlier|previously|last week|last time)\b",
+        r"\b(we discussed|you mentioned|i mentioned|you said|i said)\b",
+    ]
+]
+
+
+def _normalize_sources(sources: Optional[list[str]]) -> list[str]:
+    normalized = [str(source).strip() for source in (sources or ["all"]) if str(source).strip()]
+    return normalized or ["all"]
+
+
+def _query_prefers_conversation(query: str) -> bool:
+    cleaned = (query or "").strip().lower()
+    if not cleaned:
+        return False
+    return any(pattern.search(cleaned) for pattern in TRANSCRIPT_INTENT_PATTERNS)
+
+
+def _primary_results_sufficient(results: list[dict[str, Any]]) -> bool:
+    durable = [item for item in results if item.get("source_bucket") != "conversation"]
+    if not durable:
+        return False
+    top = durable[0]
+    if top.get("confidence") == "high":
+        return True
+    if top.get("confidence") == "medium" and float(top.get("score", 0) or 0) >= 0.6:
+        return True
+    return sum(1 for item in durable[:3] if item.get("confidence") in {"high", "medium"}) >= 2
+
+
+def _merge_ranked_results(query: str, *batches: list[dict[str, Any]], limit: int = 10) -> list[dict[str, Any]]:
+    results_by_key: dict[str, dict[str, Any]] = {}
+    for batch in batches:
+        for item in batch:
+            key = _candidate_key(item)
+            existing = results_by_key.get(key)
+            if existing is None:
+                results_by_key[key] = item
+            else:
+                results_by_key[key] = _merge_result(existing, item)
+
+    query_terms = _normalize_query_terms(query)
+    results = list(results_by_key.values())
+    results.sort(key=lambda r: r.get("score", 0), reverse=True)
+    return [_finalize_result(query, item, query_terms) for item in results[:limit]]
+
+
+def _run_recall_with_routing(
+    query: str, limit: int = 10, sources: Optional[list[str]] = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    requested_sources = _normalize_sources(sources)
+    explicit_conversation = any(source in {"conversation", "conversations"} for source in requested_sources)
+    explicit_source_selection = requested_sources != ["all"]
+
+    if explicit_source_selection:
+        results = unified_recall(query, limit=limit, sources=requested_sources)
+        return results, {
+            "mode": "explicit",
+            "requested_sources": requested_sources,
+            "effective_sources": requested_sources,
+            "conversation_considered": explicit_conversation,
+            "conversation_used": any(item.get("source_bucket") == "conversation" for item in results),
+            "reason": "explicit_sources",
+        }
+
+    primary_sources = ["memory", "daily", "learnings"]
+    primary_results = unified_recall(query, limit=max(limit * 2, 10), sources=primary_sources)
+    transcript_intent = _query_prefers_conversation(query)
+    primary_sufficient = _primary_results_sufficient(primary_results)
+    routing = {
+        "mode": "strict-fallback",
+        "requested_sources": requested_sources,
+        "effective_sources": primary_sources[:],
+        "conversation_considered": transcript_intent,
+        "conversation_used": False,
+        "reason": "durable_memory_sufficient" if primary_sufficient else "query_not_transcript_seeking",
+    }
+
+    if not transcript_intent:
+        return primary_results[:limit], routing
+
+    if primary_sufficient:
+        return primary_results[:limit], routing
+
+    conversation_results = unified_recall(query, limit=max(limit * 2, 10), sources=["conversation"])
+    merged = _merge_ranked_results(query, primary_results, conversation_results, limit=limit)
+    routing["effective_sources"] = primary_sources + (["conversation"] if conversation_results else [])
+    routing["conversation_used"] = any(item.get("source_bucket") == "conversation" for item in merged)
+    routing["reason"] = "conversation_fallback_no_primary_results" if not primary_results else "conversation_fallback_low_confidence"
+    return merged, routing
 
 # ---------------------------------------------------------------------------
 # GhostMemory import with graceful fallback
@@ -379,7 +476,7 @@ def build_recall_report(
     query: str, limit: int = 10, sources: Optional[list] = None,
 ) -> dict:
     """Return a structured, evidence-first recall report."""
-    raw_results = unified_recall(query, limit=limit, sources=sources)
+    raw_results, routing = _run_recall_with_routing(query, limit=limit, sources=sources)
     results = [
         item if "source_bucket" in item and "confidence" in item and "citation" in item
         else _enrich_result(query, item)
@@ -390,7 +487,7 @@ def build_recall_report(
         grouped_counts[item["source_bucket"]] = grouped_counts.get(item["source_bucket"], 0) + 1
 
     strongest_signal = results[0]["source_label"] if results else "none"
-    recommendations = _build_recall_recommendations(results)
+    recommendations = _build_recall_recommendations(results, routing=routing)
 
     report = RecallReport(
         query=query,
@@ -400,11 +497,12 @@ def build_recall_report(
         strongest_signal=strongest_signal,
         recommendations=recommendations,
         results=results,
+        routing=routing,
     )
     return report.to_dict()
 
 
-def _build_recall_recommendations(results: list[dict]) -> list[str]:
+def _build_recall_recommendations(results: list[dict], routing: Optional[dict[str, Any]] = None) -> list[str]:
     if not results:
         return [
             "Broaden the query or try a project/person name.",
@@ -412,6 +510,9 @@ def _build_recall_recommendations(results: list[dict]) -> list[str]:
         ]
 
     recs = []
+    routing = routing or {}
+    if routing.get("reason") in {"conversation_fallback_no_primary_results", "conversation_fallback_low_confidence"}:
+        recs.append("Conversation history was used only as fallback because durable memory was missing or too weak for a confident answer.")
     if any(r["source_bucket"] == "conversation" for r in results[:3]):
         recs.append("Raw conversation history matched this query, promote any durable conclusion into structured memory if you will need it again.")
     top = results[0]

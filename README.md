@@ -143,6 +143,23 @@ python3 scripts/ghost_auto_skill.py status
 python3 scripts/ghost_auto_skill.py match "summarize a customer escalation and propose next steps"
 ```
 
+## Recall Routing Examples
+
+Use durable memory first, and pull raw transcripts only when you actually need chat-history reconstruction:
+
+```bash
+# Default recall: structured memory + daily notes + learnings
+python3 scripts/ghost_cli.py recall report "release hygiene" --json
+
+# Explicit transcript search when you need wording/history
+python3 scripts/ghost_cli.py conversation search "what did we say about release hygiene last week" --json
+
+# Explicitly constrain recall to transcript sources
+python3 scripts/ghost_cli.py recall report "what did we say about the rollout" --sources conversation --json
+```
+
+Default routing keeps `memory`, `daily`, and `learnings` ahead of transcript history. Conversation results appear only when you request them explicitly or when recall detects a transcript-seeking query and durable evidence is too weak.
+
 ## Knowledge Docs
 
 | Doc | What you learn |

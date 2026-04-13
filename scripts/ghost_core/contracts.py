@@ -89,6 +89,7 @@ class RecallReport:
     strongest_signal: str
     recommendations: list[str]
     results: list[dict[str, Any]]
+    routing: dict[str, Any] = field(default_factory=dict)
     schema_version: str = SCHEMA_RECALL
 
     def to_dict(self) -> dict[str, Any]:

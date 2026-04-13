@@ -169,6 +169,8 @@ def test_cli_conversation_guardrails_and_memory_sync_json(tmp_path, monkeypatch)
     assert conversation.returncode == 0
     conversation_payload = json.loads(conversation.stdout)
     assert conversation_payload["schema_version"] == "ghost-conversations/v1"
+    assert conversation_payload["total_results"] == len(conversation_payload["results"])
+    assert conversation_payload["unique_sessions"] >= 1
     assert conversation_payload["results"]
 
     guardrails = subprocess.run(

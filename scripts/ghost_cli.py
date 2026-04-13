@@ -44,7 +44,7 @@ from ghost_research import (
     save_baseline,
     show_run,
 )
-from ghost_unified_recall import build_related_recall, recall_summary, related_recall_summary, unified_recall
+from ghost_unified_recall import build_recall_report, build_related_recall, recall_summary, related_recall_summary
 from ghost_working_memory import build_brief, followups_due, print_brief, print_followups
 
 _paths = get_workspace_paths(os.environ.get("OPENCLAW_WORKSPACE"))
@@ -256,7 +256,7 @@ def main() -> None:
                 report = runtime.recall.recall(RecallQuery(query=args.query, limit=args.limit, sources=sources))
                 print(json.dumps(report.to_dict(), indent=2, ensure_ascii=False))
             else:
-                results = unified_recall(args.query, limit=args.limit, sources=sources)
+                results = build_recall_report(args.query, limit=args.limit, sources=sources).get("results", [])
                 if not results:
                     print("No results found.")
                     return

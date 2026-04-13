@@ -14,7 +14,8 @@ from ghost_core.contracts import SCHEMA_CONVERSATION, SOURCE_LABELS, build_citat
 
 QUERY_STOPWORDS = {
     "the", "and", "for", "with", "from", "that", "this", "what", "when", "where", "were", "have",
-    "has", "had", "you", "your", "our", "about", "into", "just", "then", "than", "them", "they",
+    "has", "had", "did", "say", "said", "you", "your", "our", "we", "i", "about", "into", "just", "then", "than", "them", "they",
+    "last", "week", "time", "earlier", "previously", "mentioned", "discussed", "chat", "conversation", "session",
     "เรา", "คือ", "และ", "ของ", "ได้", "ไม่", "ให้", "กับ", "แล้ว", "ครับ", "ค่ะ",
 }
 TOPIC_STOPWORDS = QUERY_STOPWORDS | {
@@ -94,11 +95,35 @@ def _extract_text_parts(content: Any) -> list[str]:
     return parts
 
 
+def _strip_envelope_noise(text: str) -> str:
+    cleaned = text or ""
+    block_patterns = [
+        r"Conversation info \(untrusted metadata\):\s*```json.*?```",
+        r"Sender \(untrusted metadata\):\s*```json.*?```",
+        r"Replied message \(untrusted.*?\):\s*```json.*?```",
+        r"<<<BEGIN_OPENCLAW_INTERNAL_CONTEXT>>>.*?<<<END_OPENCLAW_INTERNAL_CONTEXT>>>",
+        r"<<<BEGIN_UNTRUSTED_CHILD_RESULT>>>.*?<<<END_UNTRUSTED_CHILD_RESULT>>>",
+    ]
+    for pattern in block_patterns:
+        cleaned = re.sub(pattern, " ", cleaned, flags=re.IGNORECASE | re.DOTALL)
+
+    line_patterns = [
+        r"^System \(untrusted\):.*$",
+        r"^Sender \(untrusted metadata\):.*$",
+        r"^Conversation info \(untrusted metadata\):.*$",
+    ]
+    for pattern in line_patterns:
+        cleaned = re.sub(pattern, " ", cleaned, flags=re.IGNORECASE | re.MULTILINE)
+
+    cleaned = re.sub(r"\[\[\s*reply_to[^\]]*\]\]", " ", cleaned, flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", cleaned).strip()
+
+
 def _message_text(record: dict[str, Any]) -> str:
     message = record.get("message") or {}
     content = message.get("content")
     text = " ".join(_extract_text_parts(content)).strip()
-    return re.sub(r"\s+", " ", text)
+    return _strip_envelope_noise(text)
 
 
 def _message_timestamp(record: dict[str, Any]) -> datetime | None:
@@ -157,6 +182,48 @@ def _topic_keywords(texts: list[str], limit: int = 5) -> list[str]:
                 continue
             counter[token] += 1
     return [token for token, _ in counter.most_common(limit)]
+
+
+def _normalized_match_text(text: str) -> str:
+    return re.sub(r"\s+", " ", (text or "").strip().lower())[:220]
+
+
+def _phrase_bonus(text: str, query_terms: list[str]) -> float:
+    if len(query_terms) < 2:
+        return 0.0
+    lowered = (text or "").lower()
+    bigrams = [f"{query_terms[i]} {query_terms[i + 1]}" for i in range(len(query_terms) - 1)]
+    return 0.05 if any(phrase in lowered for phrase in bigrams) else 0.0
+
+
+def _postprocess_hits(hits: list[dict[str, Any]], *, limit: int, per_session_limit: int = 2) -> list[dict[str, Any]]:
+    hits.sort(
+        key=lambda item: (
+            item.get("score", 0),
+            item.get("timestamp", ""),
+            item.get("line", 0),
+        ),
+        reverse=True,
+    )
+
+    filtered: list[dict[str, Any]] = []
+    seen_snippets: set[str] = set()
+    session_counts: Counter[str] = Counter()
+    for item in hits:
+        snippet_key = _normalized_match_text(item.get("snippet", ""))
+        if snippet_key and snippet_key in seen_snippets:
+            continue
+        session_id = str(item.get("session_id") or "")
+        if session_id and session_counts[session_id] >= per_session_limit:
+            continue
+        if snippet_key:
+            seen_snippets.add(snippet_key)
+        if session_id:
+            session_counts[session_id] += 1
+        filtered.append(item)
+        if len(filtered) >= limit:
+            break
+    return filtered
 
 
 def collect_session_summaries(
@@ -258,10 +325,12 @@ def search_conversation_hits(
     session_root: str | Path | None = None,
     agent: str | None = None,
     roles: set[str] | None = None,
+    per_session_limit: int = 2,
 ) -> list[dict[str, Any]]:
     query_terms = _normalize_query_terms(query)
     if not query_terms:
         return []
+    min_matches = 2 if len(query_terms) >= 3 else 1
     allowed_roles = roles or {"user", "assistant"}
     hits: list[dict[str, Any]] = []
     for path in _iter_session_files(session_root, agent=agent, days=days, max_sessions=max_sessions):
@@ -287,7 +356,7 @@ def search_conversation_hits(
                 continue
             lowered = text.lower()
             matched_terms = [term for term in query_terms if term in lowered]
-            if not matched_terms:
+            if len(matched_terms) < min_matches:
                 continue
             timestamp = _message_timestamp(record)
             coverage = len(matched_terms) / max(len(query_terms), 1)
@@ -298,7 +367,16 @@ def search_conversation_hits(
                     recency_bonus = 0.12
                 elif age_days <= 14:
                     recency_bonus = 0.06
-            score = min(0.98, 0.35 + (coverage * 0.45) + recency_bonus + (0.04 if role == "user" else 0.0))
+            specificity_bonus = min(0.1, max(0, len(set(matched_terms)) - 1) * 0.03)
+            score = min(
+                0.98,
+                0.35
+                + (coverage * 0.45)
+                + recency_bonus
+                + (0.04 if role == "user" else 0.0)
+                + specificity_bonus
+                + _phrase_bonus(text, query_terms),
+            )
             file_ref = _display_path(path)
             hits.append(
                 {
@@ -332,8 +410,7 @@ def search_conversation_hits(
                 }
             )
 
-    hits.sort(key=lambda item: item.get("score", 0), reverse=True)
-    return hits[:limit]
+    return _postprocess_hits(hits, limit=limit, per_session_limit=per_session_limit)
 
 
 def search_conversations(
@@ -369,6 +446,8 @@ def search_conversations(
         "query": query,
         "days": days,
         "sessions_scanned": scanned,
+        "total_results": len(results),
+        "unique_sessions": len({item.get("session_id") for item in results if item.get("session_id")}),
         "results": results,
         "recommendations": recommendations,
     }
