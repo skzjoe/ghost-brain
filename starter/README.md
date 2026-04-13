@@ -98,13 +98,18 @@ cat BOOTSTRAP.md
 | `learning_review.py` | Spaced repetition for learnings |
 | `model_router.py` | Advisory model routing (cheap/strong/heavy) |
 | `heartbeat_pulse.sh` | Bash-first proactive signal detection |
+| `ghost_cli.py` | Unified product-facing CLI over recall, learning, context, and research |
+| `ghost_session_context.py` | Snapshot active focus, blockers, deadlines, and continuity signals |
+| `ghost_working_memory.py` | Build briefings and triage due/stale follow-ups |
+| `ghost_research.py` | Eval, safety, regression, continuity, dashboard, and experiment umbrella CLI |
 
 ## Testing
 
 ```bash
-/home/linuxbrew/.linuxbrew/bin/python3 -m pytest tests/ -q
-# 210 tests
+python3 -m pytest tests/ -q
 ```
+
+The starter now ships targeted tests for recall, Ghost core adapters/contracts, session context, working memory, and research surfaces.
 
 ## License
 

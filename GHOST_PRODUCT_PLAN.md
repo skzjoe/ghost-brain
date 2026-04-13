@@ -356,7 +356,7 @@ ghost-brain-starter/
 │   ├── ghost-projects/
 │   └── ghost-onboard/
 ├── tests/
-│   └── (210 tests)
+│   └── (targeted pytest coverage for core product surfaces)
 ├── install.sh                # Bootstrap script
 ├── BOOTSTRAP.md              # Setup checklist
 ├── CHANGELOG.md

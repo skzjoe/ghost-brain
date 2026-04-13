@@ -2,34 +2,66 @@
 
 ## Unreleased
 
+- No unreleased changes yet.
+
+## [1.2.0] — 2026-04-13
+
 ### Added
 - **Auto Skill Pipeline** (`scripts/ghost_auto_skill.py`) — immune-system skill lifecycle: detect → create → match → record → improve → auto-promote/retire. Zero human review needed. Skills earn active status through real usage (3+ successes ≥90%) and auto-retire when failing (<50% after 3 uses). See `AUTO-SKILL.md`
 - `AUTO-SKILL.md` — documentation for the auto skill pipeline
-- `scripts/ghost_error_classifier.py` — 12-category structured error taxonomy with retryable flags + recovery hints. Logs `[ERR-YYYYMMDD-NNN]` format entries to `.learnings/ERRORS.md`
-- `scripts/ghost_todos.py` — intra-session todo store (JSON-backed, survives context compression). Commands: add, done, list, status, clear
-- `scripts/obsidian_merge.py` — shared section-aware merge engine with source attribution (`*(Ghost)*` markers) and data-loss protection (85% size sanity check, atomic writes)
-- `BEHAVIORAL-RULES.md` — on-demand behavioral rules (model routing, error handling, todos, vault writes). Read only when relevant, not at startup
+- `scripts/ghost_error_classifier.py` — 12-category structured error taxonomy with retryable flags + recovery hints
+- `scripts/ghost_todos.py` — intra-session todo store (JSON-backed, survives context compression)
+- `scripts/obsidian_merge.py` — shared section-aware merge engine with source attribution and data-loss protection
+- `BEHAVIORAL-RULES.md` — on-demand behavioral rules for model routing, vault safety, error handling, and todos
 - `memory/now.md` template for a shared 24–72 hour execution lens across briefing, heartbeat, EOD, and weekly review
 - `scripts/run_memory_pipeline.sh` wrapper for automation-safe Memory DB maintenance
+- `scripts/memory_content_scanner.py` — content safety scanning and duplicate/size guardrails for memory writes
+- `scripts/ghost_cli.py` — unified product-facing CLI over recall, learning, context, working-memory, and research surfaces
+- `scripts/ghost_core/` — additive Ghost core package with contracts, ports, defaults, workspace resolver, and adapters
+- `scripts/ghost_session_context.py` — Ghost-owned execution-state snapshot CLI
+- `scripts/ghost_working_memory.py` — briefings and due/stale follow-up triage
+- Ghost research stack: `ghost_research.py`, `ghost_research_lib.py`, `ghost_eval.py`, `ghost_regression.py`, `ghost_safety_benchmark.py`, `ghost_trajectory_log.py`, `ghost_continuity_benchmark.py`, `ghost_dashboard.py`, `ghost_experiments.py`
+- Release/interface docs: `GHOST_CORE_INTERFACES.md`, `GHOST_CORE_MIGRATION_NOTES.md`, `GHOST_CORE_CHANGELOG.md`, `GHOST_CORE_RELEASE_NOTES.md`, `GHOST_RESEARCH_STACK.md`
+- Automated pytest coverage for Ghost core contracts/adapters, unified recall, session context, working memory, and research surfaces
 
 ### Changed
-- `scripts/obsidian_push_daily.sh` — refactored to use `obsidian_merge.py` (merge-not-overwrite policy). Configurable via env vars (`GHOST_DEST_DAILY`, `GHOST_VAULT`)
-- Heartbeat pulse — deadline-aware follow-up threshold (5d if deadline ≤7d, else 7d) + urgent alert format
-- Playbook trimmed (~19KB → ~17KB) by splitting behavioral rules into separate on-demand file
-- Memory DB docs now distinguish interactive direct script use from cron/automation wrapper use
-- Second Brain docs now document NOW layer usage and stricter follow-up normalization rules
-- Playbook now includes follow-up hygiene guidance and short-horizon refresh behavior
-- Cron docs and prompts now prefer wrapper-based Memory DB runs and acknowledge fully-qualified messaging targets in automation
-- Install flow now ships `now.md`, `run_memory_pipeline.sh`, `detect_active_lanes.py`, and `generate_context_bridge.sh`
-- Follow-up skill guidance now suggests re-scoping vague or non-closure-oriented items
+- `scripts/obsidian_push_daily.sh` now uses `obsidian_merge.py` (merge-not-overwrite policy) with configurable env vars
+- Heartbeat pulse now uses deadline-aware follow-up thresholds and clearer urgent alert formatting
+- Install flow now ships `now.md`, `run_memory_pipeline.sh`, `detect_active_lanes.py`, `generate_context_bridge.sh`, the Ghost core package, unified CLI, and research surfaces
+- `scripts/ghost_unified_recall.py` now provides more explainable recall, related recall, capture tags, and cleaner automation output
+- `scripts/ghost_learning_loop.py` now emits structured/state-aware automation surfaces and immediate review-state sync on capture
+- `scripts/ghost_usage_insights.py` now supports command-log overrides and cleaner generic theme labels
+- `README.md`, `starter/README.md`, `install.sh`, and `test.sh` updated to reflect the current product surface
+- Public repo examples, fixtures, and reference files were scrubbed to generic/product-safe examples before release
 
-### Vault Safety
+### Safety & Reliability
 - Merge-everywhere policy: all Obsidian vault writes must be merge/append, never blind overwrite
-- Git safety snapshots before every write (recoverable via `git checkout`)
-- Source attribution on appended content (HTML comments) for multi-agent traceability
-- Size sanity check aborts if merged result < 85% of original (prevents silent data loss)
+- Git safety snapshots before every vault write (recoverable via `git checkout`)
+- Memory writes now have duplicate detection, size checks, and content scanning
+- Research storage now uses atomic writes, locked JSONL appends, baseline validation, and manifest drift warnings
+- Product repo got an explicit PII hygiene sweep before release
 
-## v1.0.0 — 2026-03-17
+## [1.1.0] — 2026-04-12
+
+### Added
+- `GHOST_PRODUCT_PLAN.md` — Ghost Product Master Plan v1 (3-layer architecture)
+- `starter/` — complete starter distribution with templates, install.sh, and bootstrap checklist
+- `/health` skill — consolidated Ghost product health view (memory, learning, execution state, proactive, capture)
+- `/audit` Part 14 — Product Health dimension (13 dimensions total)
+- `/recall` skill — unified memory search
+- `/remember` skill — smart capture routing
+- `/learnings` skill — learning loop status
+- `ghost_learning_loop.py` — reflect, promote, detect skill candidates
+- `ghost_unified_recall.py` — unified search + smart capture + user model
+- `ghost_usage_insights.py` — session/activity analytics
+- `model_router.py` — advisory model routing (cheap/strong/heavy)
+
+### Changed
+- `/health` now reports Ghost-layer concerns only (no overlap with OpenClaw status/doctor)
+- `/audit` scoring updated for 13 dimensions including Product Health
+- `starter/README.md` has full command reference and architecture diagram
+
+## [1.0.0] — 2026-03-17
 
 **First stable release.** Ghost Brain has been in daily production use since February 2026. This release consolidates all features into a single installable package ready for distribution.
 
@@ -83,24 +115,3 @@
 - MIT License
 - Example outputs (audit, daily note, auto-capture)
 - All cron scripts timezone/city-generic with `{{USER_NAME}}` placeholder
-
-## [1.1.0] — 2026-04-12
-
-### Added
-- GHOST_PRODUCT_PLAN.md — Ghost Product Master Plan v1 (3-layer architecture)
-- starter/ — complete starter distribution with templates, install.sh, and bootstrap checklist
-- /health skill — consolidated Ghost product health view (memory, learning, execution state, proactive, capture)
-- /audit Part 14 — Product Health dimension (13 dimensions total)
-- /recall skill — unified memory search
-- /remember skill — smart capture routing
-- /learnings skill — learning loop status
-- ghost_learning_loop.py — reflect, promote, detect skill candidates
-- ghost_unified_recall.py — unified search + smart capture + user model
-- ghost_usage_insights.py — session/activity analytics
-- model_router.py — advisory model routing (cheap/strong/heavy)
-
-### Changed
-- /health now reports Ghost-layer concerns only (no overlap with openclaw status/doctor)
-- /audit scoring updated for 13 dimensions including Product Health
-- README.md in starter/ has full command reference and architecture diagram
-
