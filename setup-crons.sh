@@ -2,7 +2,13 @@
 set -euo pipefail
 
 # 👻 Ghost Brain — Cron Setup (Interactive)
-# Creates all 10 automated routines for your Ghost Brain.
+# Compatibility only: bulk creation is not idempotent.
+
+if [[ "$#" -ne 1 || "${1:-}" != "--legacy" ]]; then
+  echo "Legacy cron setup is opt-in: bash setup-crons.sh --legacy" >&2
+  echo "Prefer approved native OpenClaw controls. Review existing jobs, prompts and adapters first." >&2
+  exit 2
+fi
 
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
 SCRIPTS="$WORKSPACE/scripts"
@@ -45,8 +51,8 @@ echo "   Timezone: $TZ"
 echo "   Model:    $MODEL"
 echo "   Obsidian: $USE_OBSIDIAN"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-read -rp "Create cron jobs? (y/n) [y]: " CONFIRM
-CONFIRM="${CONFIRM:-y}"
+read -rp "Create legacy cron jobs? (y/n) [n]: " CONFIRM
+CONFIRM="${CONFIRM:-n}"
 [[ "$CONFIRM" != "y" ]] && { echo "Aborted."; exit 0; }
 echo ""
 

@@ -1,3 +1,8 @@
+> **Legacy compatibility reference.** Not installed or enabled by the default setup.
+> Prefer native OpenClaw controls and Skill Workshop under its approval policy.
+> Review effects and knowledge ownership before using these older local workflows.
+> See [README.md](README.md) for the current supported install surface.
+
 # Learning Review — Resurface Learnings Automatically
 
 A lightweight interval-based review system that ensures learnings from `.learnings/` actually get used, not just stored.

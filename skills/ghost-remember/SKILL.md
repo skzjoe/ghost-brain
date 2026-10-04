@@ -1,31 +1,13 @@
 ---
 name: remember
-description: "Capture a note into the right Ghost memory layer automatically. Usage: /remember <content>"
+description: "Save a requested durable note using the existing capture workflow and configured canonical destination."
 user-invocable: true
 ---
 
 # /remember
 
-Capture content into the right Ghost memory file automatically.
+Parse the requested note. If empty, ask what to remember in the user's language.
 
-## Usage
-```
-/remember We decided to pause Project Beacon until after Project Atlas ships
-/remember Follow up with Jane on hosting migration by Friday
-/remember Learned: do not treat OpenClaw cron as system crontab
-```
+Read and follow `skills/ghost-capture/SKILL.md` for destination resolution, duplicate checking, scoped write and readback. This is the same capture workflow, not a second memory pipeline. If that skill is unavailable, report the missing dependency rather than falling back to a legacy script.
 
-## Instructions
-
-1. Parse the remainder of the message as the capture content.
-2. If empty, ask: `อยากให้จำเรื่องอะไรครับ?`
-3. Run:
-   ```bash
-   python3 scripts/ghost_unified_recall.py capture '<content>'
-   ```
-4. Read the output and confirm:
-   - detected type
-   - destination file
-   - short captured summary
-5. If the script warns about a duplicate, do not write again blindly. Tell the user it looks similar to an existing item and ask whether to keep or skip.
-6. For learning-like content, mention that it was routed into the learning system.
+Preserve the user's meaning. Do not turn a correction or an ordinary successful task into automatic skill creation. Reusable procedure work belongs in native Skill Workshop when available, under its approval policy; notes belong in the configured knowledge store.

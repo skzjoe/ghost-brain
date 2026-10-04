@@ -1,116 +1,25 @@
-# Second Brain — Memory Structure
+# Knowledge ownership
 
-A lightweight system for persistent context across sessions.
+## Resolve the source before using it
 
-## The problem
-AI agents wake up fresh every session. Without structured memory, users repeat context constantly. MEMORY.md alone isn't enough — it becomes a dumping ground.
+1. Read the workspace's existing knowledge instructions and configured destinations.
+2. If an Obsidian vault is configured, read its schema. The vault is the canonical knowledge store; do not guess paths or create a parallel wiki.
+3. Without a vault, follow the existing local memory convention. If none exists, agree on a destination with the user before the first write.
 
-## Solution: 5 specialized files + daily notes
+## Capture
 
-Add one more lightweight layer for execution focus:
+Capture durable facts, decisions and requested notes within the user's scope. Check the destination for duplicates, preserve unrelated content, and read back the saved entry. Report the actual path and whether it is canonical or only local staging. An unavailable vault is a blocker, not permission to claim a completed sync.
 
-### NOW layer (`memory/now.md`)
-A compact 24–72 hour execution lens. This is not long-term memory, and it should never become another dumping ground. It exists so morning briefing, EOD, weekly distill, and heartbeat can all look at the same short list of what matters now.
+When local staging is authorized, label it pending; merge and read back the canonical entry before declaring completion. Do not invent a background sync path.
 
-Suggested sections:
-```markdown
-## Top 3 Priorities
-## Due Soon
-## Active Blockers / Risks
-## Waiting on Others
-## Closure Recommendations
-## Watchlist / Don't Forget
-```
+## Recall
 
-Think of it as the bridge between your large memory system and today's actual work.
+Use available native memory/search tools first, then inspect the relevant source passage. Search results and local indexes are retrieval aids, not independent authority. Use transcript history only when wording or chronology requires it, and keep private/personal context separate from team or customer contexts.
 
-### Daily notes (`memory/YYYY-MM-DD.md`)
-One per day. Sections:
-```markdown
-## 🧠 Log
-- What happened today (auto-appended by agent)
+If tools, access or evidence are missing, state the gap. Never equate absence of a search hit with proof that an event did not happen.
 
-## ✅ Done
-- Completed items
+## Derived views and compatibility
 
-## 🧾 Decisions
-- Decisions made and reasoning
+`ACTIVE_WORK.md`, local follow-up summaries and SQLite indexes are derived when a canonical vault exists. Keep source references rather than creating a second authority. Bootstrap files are operating instructions, not a knowledge database.
 
-## 📌 Next Actions
-- What's next
-
-## 🤝 Follow-ups (optional)
-- Items waiting on others
-
-## 📎 Artifacts (optional)
-- Links to files/outputs created
-```
-
-### Decision journal (`memory/decisions.md`)
-Captures significant decisions with reasoning. Auto-appended by agent.
-```markdown
-## 2026-03-15 — Chose Prisma v6 over v7
-- **Context:** Setting up Supabase connection for dashboard
-- **Decision:** Use Prisma v6
-- **Reasoning:** v7 has connection URL complexities on WSL
-- **Alternatives:** Direct pg client, Drizzle
-```
-
-### People CRM (`memory/people.md`)
-Lightweight contact context. Auto-updated when people come up in conversation.
-```markdown
-## Sarah Chen
-- **Role:** Product Manager @ ClientCo
-- **Relationship:** Client
-- **Context:** Primary contact for Phase 2 rollout
-- **Last interaction:** 2026-03-10 — reviewed milestone deliverables
-```
-
-### Idea parking lot (`memory/ideas.md`)
-Ideas mentioned in passing. Auto-captured when user says "someday", "might want to", "would be cool".
-Reviewed weekly → promote to active work or archive after 30 days.
-
-### Commitments (`memory/commitments.md`)
-Promises made to clients/stakeholders with deadlines. Auto-captured.
-Agent alerts when deadlines approach.
-
-### Follow-ups (`memory/follow-ups.md`)
-Items waiting on someone else. Table format with staleness tracking.
-```markdown
-| Item | Waiting On | Since | Deadline | Status |
-|---|---|---|---|---|
-| API credentials | DevOps team | 2026-03-10 | 2026-03-17 | Active |
-```
-
-**Normalization rule:** only keep concrete, closure-oriented follow-ups here. Avoid mixing in broad watchlists, standing streams, or vague reminders. If an item does not have a clear owner, waiting state, or next closure action, it belongs in active work or a general watchlist, not in `follow-ups.md`.
-
-## How to activate
-Add to your `AGENTS.md`:
-```markdown
-## Second Brain
-After conversations, auto-capture:
-- Significant decisions → memory/decisions.md (with reasoning)
-- People mentioned in work context → memory/people.md
-- Future ideas ("someday", "might want to") → memory/ideas.md
-- Promises to clients/stakeholders → memory/commitments.md
-- Items waiting on others → memory/follow-ups.md
-
-At end of day, consolidate into memory/YYYY-MM-DD.md daily note.
-- Refresh `memory/now.md` from the daily note, commitments, follow-ups, and active work so every routine shares the same short-horizon focus.
-```
-
-## Weekly distillation
-Once a week (cron or manual):
-1. Read all daily notes for the week
-2. Update MEMORY.md (add new, remove stale)
-3. Review ideas — promote or archive
-4. Review follow-ups — mark completed, escalate stale, archive vague/non-actionable entries
-5. Refresh `memory/now.md` so the next week starts with a clean short-horizon lens
-6. Review commitments — flag overdue
-7. Save weekly summary to `memory/weekly/YYYY-Www.md`
-
-## Tips
-- Keep MEMORY.md lean — it's loaded every message
-- Daily notes are cheap — append freely, archive monthly
-- The 5 specialized files prevent MEMORY.md from becoming a mess
-- Auto-capture is key — don't rely on the user remembering to save
+The legacy Python CLIs and push scripts are retained compatibility utilities. They do not implement automatic canonical-vault routing or conflict-safe migration. Review their destinations and effects before any use; do not run them merely because they are present.

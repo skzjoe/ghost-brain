@@ -1,76 +1,17 @@
 ---
 name: capture
-description: "Quick-capture to the right second brain file — decisions, ideas, commitments, follow-ups, or people. Usage: /capture <type>: <content>"
+description: "Save a requested decision, idea, commitment, follow-up or contact to the configured knowledge store, with readback."
 user-invocable: true
 ---
 
 # /capture
 
-Universal quick-capture command. Routes content to the correct second brain file without relying on auto-detection triggers.
+Usage: `/capture decision: use the existing database for the prototype`
 
-## Usage
-```
-/capture idea: build a CLI dashboard for metrics
-/capture decision: use Prisma v6 over v7 — simpler connection handling
-/capture commitment: deliver report to client by Friday
-/capture followup: waiting on design team for mockups
-/capture person: Sarah — PM at Acme Corp, met at kickoff meeting
-```
+1. Parse the type and content. Supported types include decision, idea, commitment, follow-up and person. Ask only if ambiguity affects the destination or meaning; do not invent names, dates or obligations.
+2. Read existing workspace knowledge instructions and `memory/reference/SECOND-BRAIN.md`. If Obsidian is configured, read its schema and resolve the canonical destination. Otherwise use the agreed local convention; if none exists, ask where to save before writing.
+3. Check the destination for duplicates. Update an existing entry only within the user's requested scope; otherwise ask when a conflict requires a decision.
+4. Use available approved file/knowledge tools to preserve unrelated content and write the entry. Do not interpolate user text into shell commands. Keep private facts in their intended context, not public skills or repositories.
+5. Read back the saved entry. Confirm the actual path, short summary and whether it is canonical or local staging. If the write or readback fails, report the exact gap rather than claiming completion.
 
-## Instructions
-
-1. Parse the user's message for `<type>: <content>` pattern. Supported types:
-   - `idea` → `memory/ideas.md`
-   - `decision` → `memory/decisions.md`
-   - `commitment` → `memory/commitments.md`
-   - `followup` / `follow-up` / `fu` → `memory/follow-ups.md`
-   - `person` / `people` / `contact` → `memory/people.md`
-
-2. If no type is specified or type is unrecognized, ask:
-   > What kind of capture? → [Idea] [Decision] [Commitment] [Follow-up] [Person]
-   (Use inline buttons)
-
-3. Before appending, **dedup check**: scan existing entries in the target file for similar content. If a near-duplicate exists, warn and ask whether to skip or append anyway.
-
-4. Format and append based on file type:
-
-### Ideas → `memory/ideas.md`
-Append under `## Active Ideas`:
-```markdown
-### {short title extracted from content}
-- **Source:** {today} capture
-- **Idea:** {content}
-- **Status:** Parking
-```
-
-### Decisions → `memory/decisions.md`
-Append as:
-```markdown
-[{today}] {content} (manual capture)
-```
-
-### Commitments → `memory/commitments.md`
-Append row under `## Active`:
-```markdown
-| {today} | {to — extract if mentioned, else "TBD"} | {commitment text} | /capture |
-```
-
-### Follow-ups → `memory/follow-ups.md`
-Append row under `## Active`:
-```markdown
-| {item text} | {owner — extract if mentioned, else "Me"} | {today} | — | Pending |
-```
-
-### People → `memory/people.md`
-Append under the most appropriate section (Team/Clients/Personal), or create new entry:
-```markdown
-### {name}
-- **Role/Context:** {extracted context}
-- **Last mentioned:** {today}
-```
-
-5. Confirm what was captured and where:
-   > ✅ Captured idea → `memory/ideas.md`: "{short title}"
-
-6. If the daily note exists for today, also add a brief log entry:
-   > - Captured {type}: {short summary}
+A configured but unavailable vault is a blocker. Local staging requires authorization and must be labeled pending; do not claim it synced. Do not call legacy capture/index/promotion scripts merely because they exist, or create a second authoritative copy in a daily note.

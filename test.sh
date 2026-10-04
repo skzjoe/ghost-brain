@@ -2,9 +2,29 @@
 set -euo pipefail
 
 # 👻 Ghost Brain — Smoke Test
-# Run after install to verify everything works.
+# File checks are not evidence of runtime or assistant behavior.
 
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
+if [[ "$#" -gt 1 || ( "$#" -eq 1 && "$1" != "--legacy" ) ]]; then
+  echo "Usage: bash test.sh [--legacy]" >&2
+  exit 2
+fi
+
+if [[ "$#" -eq 0 ]]; then
+  missing=0
+  for file in skills/ghost-audit/SKILL.md skills/ghost-capture/SKILL.md \
+              skills/ghost-recall/SKILL.md skills/ghost-remember/SKILL.md \
+              memory/reference/PLAYBOOK.md memory/reference/SECOND-BRAIN.md \
+              AGENTS.md BOOTSTRAP.md; do
+    if [[ ! -s "$WORKSPACE/$file" ]]; then
+      echo "Missing or empty: $file" >&2
+      missing=$((missing + 1))
+    fi
+  done
+  echo "Default installation file checks: $missing missing. Runtime behavior not tested."
+  [[ "$missing" -eq 0 ]]
+  exit
+fi
 PASS=0
 FAIL=0
 

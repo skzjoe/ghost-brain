@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Changed
+- Default installation is now four native-first skills and generic guidance, with no package installs, indexing, schedules or runtime changes. The starter entrypoint uses the same installer.
+- Capture/remember resolve the configured canonical destination and require readback; recall prefers available native retrieval. A configured Obsidian vault is canonical, not a second local copy.
+- Audit now reviews observed Understand / Complete / Proactive / Trustworthy / Simple outcomes, distinguishing failures from missing evidence without a private harness dependency.
+- Older Python CLIs remain available; full local-memory installation and bulk cron setup require `--legacy`. Automatic skill pipelines are compatibility references, not the recommended Skill Workshop path. Existing installations are not automatically migrated or disabled.
+
+### Fixed
+- Forced directory updates copy into the existing destination instead of nesting a duplicate skill/package directory.
+- Added isolated installer/cron regressions and fixed a date-dependent legacy test by pinning its fixture clock.
+
 ## [1.3.0] — 2026-04-13
 
 ### Added

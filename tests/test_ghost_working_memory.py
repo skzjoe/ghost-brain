@@ -4,6 +4,8 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from datetime import datetime
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
@@ -50,7 +52,9 @@ def _seed_workspace(root: Path) -> None:
 
 def test_followups_due_categorizes_and_sorts(tmp_path):
     _seed_workspace(tmp_path)
-    payload = followups_due(workspace=tmp_path, limit=10, stale_after_days=7)
+    with patch("ghost_working_memory.datetime", wraps=datetime) as clock:
+        clock.now.return_value = datetime(2026, 4, 13, 12)
+        payload = followups_due(workspace=tmp_path, limit=10, stale_after_days=7)
     assert payload["schema_version"] == "ghost-followups/v1"
     assert payload["total_active"] == 3
     assert payload["counts"]["due_this_week"] >= 1

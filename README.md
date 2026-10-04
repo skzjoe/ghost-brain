@@ -1,355 +1,82 @@
 # 👻 Ghost Brain
 
-**Your AI forgets everything every session. Ghost Brain fixes that.**
+**A small assistant workflow layer for [OpenClaw](https://github.com/openclaw/openclaw).**
 
-An AI second brain for [OpenClaw](https://github.com/openclaw/openclaw) — self-learning memory, automated routines, and structured recall that make your AI assistant permanently smarter.
+Ghost provides capture, recall and evidence-based review instructions. OpenClaw owns runtime, tools, permissions, sessions, orchestration and scheduling. Use native Skill Workshop for reusable skill work when available, under its approval policy—not a second automatic promotion pipeline.
 
----
+## Quick start
 
-## The Problem
-
-Every AI session starts from zero. Your assistant doesn't remember last week's decisions, forgets the same mistakes, misses deadlines, and burns tokens re-reading context. You end up being your AI's memory — which defeats the purpose.
-
-## The Solution
-
-Ghost Brain gives your AI assistant a persistent, self-organizing memory system:
-
-| Capability | What it does |
-|---|---|
-| 🧠 **Auto-Capture** | Decisions, people, ideas, commitments, follow-ups — captured from normal conversation |
-| 📚 **Self-Learning** | Errors logged once, patterns promoted to rules. Your AI stops repeating mistakes |
-| 🔄 **Learning Review** | Critical learnings resurface on interval-based review until mastered |
-| 🗄️ **Memory DB** | SQLite + vector search — SQL queries + semantic search in one zero-infra file |
-| 🕸️ **Knowledge Graph** | Auto-linked relationships. Ask "what do I know about X" and get connected context |
-| 🧬 **Auto Skill Pipeline** | Skills born from experience, validated through real usage, self-improving, auto-retiring failures |
-| 🎯 **NOW Layer** | One compact 24–72h execution lens shared by briefing, heartbeat, EOD, and weekly review |
-| ⏰ **10 Automated Routines** | Morning briefing, EOD summary, commitment alerts, weekly distill, backups |
-| 💰 **Token Efficiency** | Rate limiting, context discipline, lean memory — save 30-50% on API costs |
-| 🔍 **13-Part Audit** | System-wide health check with scoring + actionable improvement suggestions |
-| 🧭 **Working Memory** | Fast briefings, due follow-ups, session context snapshots, guardrails, and memory-sync status for quick restarts |
-| 🧪 **Research & Eval** | Built-in eval, safety, continuity, regression, and experiment tracking |
-
-## Before / After
-
-| | Without Ghost Brain | With Ghost Brain |
-|---|---|---|
-| New session | Re-explain everything | AI knows your context |
-| Same mistake | Repeats every time | Learns, never repeats |
-| Deadlines | Forget until someone asks | Alerts 2 days before |
-| API costs | Uncontrolled | 30-50% reduction |
-| End of day | Nothing saved | Auto-summarized daily note |
-| Weekly review | Manual effort | Auto-generated brief |
-| Old decisions | Lost in chat history | Searchable with reasoning |
-| Knowledge decay | Never reviewed | Stale alerts + resurfacing |
-
-## Quick Start
+Start with an existing, configured OpenClaw workspace. Review the files before installing:
 
 ```bash
 git clone https://github.com/skzjoe/ghost-brain.git
 cd ghost-brain
 bash install.sh
+bash test.sh
 ```
 
-That's it. Installs dependencies, indexes your memory, and initializes the learning system.
+Set `OPENCLAW_WORKSPACE` if your workspace is elsewhere. Bash and standard file utilities are sufficient for the default install. It does **not** run OpenClaw, install Python packages, index notes, configure a vault, create schedules or touch credentials.
 
-**Optional:** Set `GEMINI_API_KEY` for semantic vector search (free at [ai.google.dev](https://ai.google.dev)):
-```bash
-export GEMINI_API_KEY=your_key_here
-bash install.sh
-```
-Without it, full-text search still works — you just don't get semantic similarity.
+### What the default installs
 
-Set up automated routines:
-```bash
-bash setup-crons.sh
-# Interactive — asks your timezone, preferred model, and Obsidian preference
-```
-
-## What Gets Installed
-
-| Component | Count | Location |
-|---|---|---|
-| Skills (commands) | 20 | `~/.openclaw/workspace/skills/` |
-| Knowledge docs | 8 | `~/.openclaw/workspace/memory/reference/` |
-| Memory templates | 7 | `~/.openclaw/workspace/memory/` |
-| Learnings structure | 3 | `~/.openclaw/workspace/.learnings/` |
-| Cron prompts | 10 | `~/.openclaw/workspace/scripts/` |
-| Core + research scripts | 20+ | `~/.openclaw/workspace/scripts/` |
-
-**Non-destructive** — won't overwrite existing files. Use `--force` to update code files (your data files are always protected).
-
-## Daily Usage
-
-Ghost Brain works in the background. Here's the only workflow you need:
-
-### 1. Just chat
-Talk to your AI like normal. Ghost Brain auto-captures decisions, people, ideas, and commitments as they come up in conversation. No special syntax, no commands — just talk.
-
-### 2. `/logs` before `/new` — the safety net
-Auto-capture catches most things in real-time, but `/logs` is your safety net. It scans the entire session and catches anything that slipped through — then files everything to the right brain files.
-
-Think of it like **autosave vs Ctrl+S**: autosave works in the background, but you still save before closing. **Always run `/logs` before `/new`.**
-
-### 3. Correct your AI
-When your AI gets something wrong, tell it. The correction gets logged as a learning and won't happen again. Over time, your AI gets noticeably better at your specific workflows.
-
-### 4. Let cron handle the rest
-Morning briefing surfaces your priorities. Learning review resurfaces past lessons. EOD summary catches anything you missed. Weekly distill keeps memory lean. You don't need to manage any of this.
-
-**That's it.** Chat → `/logs` → `/new` → repeat. Everything else is automatic.
-
-## Commands
-
-| Command | What it does |
+| Files | Purpose |
 |---|---|
-| `/onboard` | Guided first-run setup — populates your brain files from a few questions |
-| `/capture` | Quick-capture: `/capture idea: ...`, `/capture decision: ...` |
-| `/logs` | Summarize session → daily note + auto-capture to all brain files |
-| `/audit` | 13-dimension system audit with scorecard + 4-pillar improvement suggestions |
-| `/health` | Quick health check — memory, capture, cron, security |
-| `/weekly` | Weekly review — synthesize patterns, suggest housekeeping |
-| `/projects` | Active and dormant workstreams at a glance |
-| `/commitments` | Promises and deadlines with urgency indicators |
-| `/decisions` | Decision journal with reasoning |
-| `/followups` | Follow-up items with staleness (🟢🟡🔴) |
-| `/ideas` | Idea parking lot |
-| `/people` | Lightweight contact CRM |
-| `/fastlanes` | Domain-specific response templates |
-| `/conflicts` | Scan for contradictions across brain files |
-| `/recall` | Search unified memory across files, learnings, and indexed recall sources |
-| `/remember` | Smart-capture a note into the right memory layer |
-| `/learnings` | Show review state, overdue learnings, and promotion status |
-| `/export` | Portable markdown bundle for backup or migration |
+| Four skills: `/audit`, `/capture`, `/recall`, `/remember` | Behavioral review and source-aware memory workflows |
+| `memory/reference/PLAYBOOK.md` | Small operating rules and completion boundaries |
+| `memory/reference/SECOND-BRAIN.md` | Canonical-source and local-staging rules |
+| `AGENTS.md`, `BOOTSTRAP.md` (only if missing) | Generic routing and setup checklist |
 
-## Product CLIs
+Existing files are skipped. `--force` updates packaged skills/reference docs, preserving unrelated files and never replacing existing `AGENTS.md` or `BOOTSTRAP.md`. Back up customizations before using it. If you already have workspace instructions, merge the relevant guidance from [the template](starter/templates/AGENTS.md); the installer does not merge instructions for you. `starter/install.sh` delegates to the same installer from a full clone.
 
-These scripts expose Ghost Brain surfaces directly when you want machine-readable output or automation hooks:
+## Everyday use
 
-```bash
-python3 scripts/ghost_cli.py brief --json
-python3 scripts/ghost_cli.py followups due --json
-python3 scripts/ghost_cli.py context show --json
-python3 scripts/ghost_cli.py conversation recent --json
-python3 scripts/ghost_cli.py guardrails check --json
-python3 scripts/ghost_cli.py memory-sync check --json
-python3 scripts/ghost_cli.py research dashboard --json
-python3 scripts/ghost_cli.py research focus --json
-```
+- **Capture:** ask to remember something, or use `/capture decision: …`. The skill resolves the configured destination, checks duplicates, writes and reads it back.
+- **Recall:** use `/recall <question>`. Prefer available native retrieval, verify material claims at their source, and identify missing evidence.
+- **Audit:** use `/audit` to review observed behavior across **Understand / Complete / Proactive / Trustworthy / Simple**. Missing proof is not failure; installed files and passing tests are not proof of assistant quality.
 
-Auto-skill pipeline operations are exposed as product CLIs rather than slash commands:
+These are instructions executed by your configured model and available tools, not an always-on service or a guarantee of automatic capture. Command discovery depends on your OpenClaw setup. Nothing runs merely because a file was copied.
+
+## One canonical knowledge store
+
+When an Obsidian vault is configured, it is canonical. Read its schema and use its approved tools/paths. Local notes are staging until merged and read back; local indexes and active-work summaries are derived. Do not maintain competing authoritative copies.
+
+Without a configured vault, use the workspace's existing memory convention. If none exists, agree on a local destination first. The default install contains **no vault connector, sync service or migration**. The older Python capture CLI writes local files and does not automatically route to Obsidian.
+
+## Existing installations and legacy tools
+
+Nothing is removed or disabled automatically. Existing scripts, skills and schedules remain until you review them. Avoid running legacy promotion/sync routines alongside native Skill Workshop or a canonical-vault workflow.
+
+The older local-memory/SQLite/learning/research bundle remains available for compatibility:
 
 ```bash
-python3 scripts/ghost_auto_skill.py status
-python3 scripts/ghost_auto_skill.py match "summarize a customer escalation and propose next steps"
+bash install.sh --legacy
+# Explicit, optional compatibility setup only, after reviewing prompts and dependencies:
+bash setup-crons.sh --legacy
 ```
 
-## Recall Routing Examples
+The legacy installer retains package installation and local indexing behavior. It needs Python 3.10+; SQLite/vector features require `sqlite-vec`. Optional Gemini embeddings use `google-genai` and may send note content to the configured provider. Review that privacy boundary before enabling it. No new dependency is required by the default install.
 
-Use durable memory first, and pull raw transcripts only when you actually need chat-history reconstruction:
+Existing `scripts/ghost_cli.py` entrypoints and tests remain; they are local compatibility tools, not replacements for native runtime orchestration. [AUTO-SKILL.md](AUTO-SKILL.md), [CRON-PATTERNS.md](CRON-PATTERNS.md), older product plans, release notes and learning docs describe that legacy bundle, not today's recommended setup. The bulk cron helper is not idempotent; inspect existing jobs first. Some prompts require your own adapters (for example a backup script).
+
+## Verification
+
+- `bash test.sh` checks only default installed files, without invoking runtime or memory tools.
+- `bash test.sh --legacy` runs the older compatibility smoke checks; it may open/create a local database.
+- The Python tests cover local code/contracts, not live model behavior or platform compatibility. Run them with an isolated HOME, workspace and session root; some legacy tests write fixtures and research state:
 
 ```bash
-# Default recall: structured memory + daily notes + learnings
-python3 scripts/ghost_cli.py recall report "release hygiene" --json
-
-# Explicit transcript search when you need wording/history
-python3 scripts/ghost_cli.py conversation search "what did we say about release hygiene last week" --json
-
-# Explicitly constrain recall to transcript sources
-python3 scripts/ghost_cli.py recall report "what did we say about the rollout" --sources conversation --json
+sandbox=$(mktemp -d)
+mkdir -p "$sandbox/home" "$sandbox/workspace" "$sandbox/sessions"
+env -i PATH="$PATH" HOME="$sandbox/home" \
+  OPENCLAW_WORKSPACE="$sandbox/workspace" \
+  OPENCLAW_SESSIONS_ROOT="$sandbox/sessions" GHOST_EMBEDDING_PROVIDER=local \
+  python3 -m pytest tests/ -q -p no:cacheprovider
 ```
 
-Default routing keeps `memory`, `daily`, and `learnings` ahead of transcript history. Conversation results appear only when you request them explicitly or when recall detects a transcript-seeking query and durable evidence is too weak.
+Use an interpreter with pytest already installed. Live OpenClaw/model behavior must be verified separately using observed requests, tool receipts and delivery evidence; no blanket version-compatibility or quality score is claimed.
 
-## Knowledge Docs
+## Removal
 
-| Doc | What you learn |
-|---|---|
-| `TOKEN-EFFICIENCY.md` | Context management, rate limiting, output discipline, anti-patterns |
-| `SELF-LEARNING.md` | How to set up `.learnings/` for continuous improvement |
-| `PLAYBOOK.md` | Response patterns, critique-by-default, proactive triggers |
-| `SECOND-BRAIN.md` | Memory architecture — daily notes + 5 specialized capture files |
-| `CRON-PATTERNS.md` | 10 automation patterns with schedules and prompt templates |
-| `MEMORY-DB.md` | SQLite + sqlite-vec structured memory layer |
-| `LEARNING-REVIEW.md` | Auto-resurface learnings with interval-based recall |
-| `CODING-WORKFLOW.md` | Brownfield-safe AI coding workflow with research/plan/implement/compaction |
+Remove only files you know this installer added, after checking for customizations. Keep your notes. Use approved OpenClaw controls to review/remove any separately configured jobs. No runtime configuration is changed by the default installer.
 
-## Memory DB
-
-Ghost Brain includes a structured memory layer powered by SQLite + [sqlite-vec](https://github.com/asg017/sqlite-vec):
-
-- **Full-text search** (FTS5) + **semantic vector search** in one `.db` file
-- **Knowledge graph** — auto-links items (people→decisions→projects→learnings)
-- **Deduplication** — finds and merges duplicate entries
-- **Temporal intelligence** — tracks access patterns, flags stale knowledge, surfaces hot items
-- **Source tracking** — auto-detects where knowledge came from
-- **Cross-session context bridge** — generates relevant startup context from DB
-- **Zero infrastructure** — single SQLite file, no server, no Docker
-
-```bash
-# Search semantically
-python3 scripts/ghost_memory_db.py search "deployment errors last month"
-
-# Query by type
-python3 scripts/ghost_memory_db.py query decision --days 30
-
-# Full maintenance pipeline (interactive use)
-python3 scripts/ghost_memory_db.py pipeline
-
-# Cron / automation-safe wrapper
-bash scripts/run_memory_pipeline.sh pipeline
-```
-
-Use the wrapper for cron and automation so Ghost Brain can pick a Python interpreter that actually has `sqlite-vec` available.
-
-## Auto Skill Pipeline
-
-Ghost Brain creates skills from experience — no human review needed.
-
-```
-Task completed → detect (skill-worthy?)
-  → create draft in skills/.auto/
-    → match similar task later → use the skill
-      → record success/failure
-        → 3 successes ≥90% → auto-promote ✅
-        → <50% after 3 uses → auto-retire 💀
-        → failure → improve and retry
-```
-
-Unlike simple auto-creation (create and forget), this pipeline **validates through real usage** and **kills what doesn't work**. Bad skills die automatically. Good skills earn their way to active status.
-
-```bash
-# After completing a complex task
-python3 scripts/ghost_auto_skill.py detect 'Step 1: read config. Step 2: parse API keys. Step 3: test endpoints.'
-
-# Create skill from successful task
-python3 scripts/ghost_auto_skill.py create 'API Endpoint Tester' 'procedure here...'
-
-# Before starting a task — check for matching skills
-python3 scripts/ghost_auto_skill.py match 'test API endpoints'
-
-# Record outcome after using a skill
-python3 scripts/ghost_auto_skill.py record api-endpoint-tester success
-
-# Dashboard
-python3 scripts/ghost_auto_skill.py status
-```
-
-See [AUTO-SKILL.md](AUTO-SKILL.md) for full documentation.
-
-## NOW Layer
-
-Ghost Brain includes `memory/now.md`, a compact short-horizon execution layer for the next 24–72 hours.
-
-Use it to keep these routines aligned:
-- Morning briefing
-- Heartbeat / nudge systems
-- EOD summary
-- Weekly distill
-
-This prevents different routines from drifting into different versions of "what matters now".
-
-## Automated Routines
-
-| Schedule | Job |
-|---|---|
-| Daily 08:00 | Morning Briefing — priorities, calendar, blockers |
-| Daily 08:15 | Learning Review — resurface 3 learnings |
-| Daily 08:30 | Commitment Deadline Alert |
-| Daily 23:00 | EOD Session Log — consolidate notes + capture + re-index Memory DB |
-| Daily 23:05 | Obsidian Daily Sync (optional) |
-| Every 6h | Gateway Healthcheck |
-| Sunday 20:00 | Weekly Backup |
-| Sunday 21:00 | Weekly Memory Distill — compact + weekly brief |
-| Monday 08:30 | Weekly Report |
-| 1st of month | Monthly Note Archive |
-
-## How It Works
-
-```
-You chat normally with your AI
-         ↓
-Ghost Brain auto-captures decisions, people, ideas, commitments
-         ↓
-EOD cron summarizes → structured daily notes → re-indexes Memory DB
-         ↓
-Morning cron resurfaces 3 learnings based on review intervals
-         ↓
-Memory DB provides SQL + vector search across all your knowledge
-         ↓
-Weekly distill compacts memory → weekly brief
-         ↓
-Complex tasks auto-generate skills → validated by real usage → promote or retire
-         ↓
-/audit scores your system health across 13 dimensions
-```
-
-## See It In Action
-
-- 📋 [Full audit output](examples/audit-output.md) — 13-dimension scorecard + improvement suggestions
-- 📝 [Daily note example](examples/daily-note.md) — what EOD auto-summary produces
-- 🧠 [Auto-capture demo](examples/capture-in-action.md) — decisions, people, commitments from normal chat
-- 🛠️ [Coding workflow example](examples/coding-workflow-example.md) — research → plan → implement → compaction for a brownfield bug fix
-
-## Customization
-
-| What | Where |
-|---|---|
-| Response patterns | `memory/reference/PLAYBOOK.md` — add domain-specific fast lanes |
-| Cron schedules | `openclaw cron list` → `openclaw cron edit <id>` |
-| Capture triggers | Skills: `ghost-capture`, `ghost-logs` |
-| Memory templates | `memory/*.md` — edit sections/headers |
-| Heartbeat checks | `scripts/heartbeat_pulse.sh` |
-| Audit scoring | `skills/ghost-audit/SKILL.md` |
-| Coding workflow | `memory/reference/CODING-WORKFLOW.md` + `skills/assets/coding-*-template.md` |
-
-## Obsidian Integration (optional)
-
-Push daily and weekly notes to your Obsidian vault:
-
-1. Set `OBSIDIAN_DAILY_DIR` in `scripts/obsidian_push_daily.sh`
-2. Answer "y" to Obsidian during `setup-crons.sh`
-
-## Automation hygiene
-
-- In automation, prefer fully-qualified channel targets such as `telegram:<chat_id>` instead of bare ids.
-- For Memory DB maintenance in scheduled jobs, use `bash scripts/run_memory_pipeline.sh ...` instead of raw `python3`.
-- Keep `memory/follow-ups.md` limited to concrete, closure-oriented items. Broad watchlists belong elsewhere.
-
-## Gateway Watchdog
-
-OS-level monitor that alerts you if OpenClaw gateway goes down (cron jobs can't alert when the gateway itself is offline):
-
-```bash
-echo "YOUR_BOT_TOKEN" > ~/.openclaw/workspace/secrets/telegram_bot_token.txt
-echo "YOUR_CHAT_ID" > ~/.openclaw/workspace/secrets/telegram_chat_id.txt
-
-# Add to OS crontab (every 2 minutes)
-*/2 * * * * bash ~/.openclaw/workspace/scripts/gateway_watchdog.sh
-```
-
-## Requirements
-
-- [OpenClaw](https://github.com/openclaw/openclaw) 2026.3.x+
-- Python 3.10+
-- Any LLM provider (Claude, GPT, Gemini, etc.)
-
-## Uninstall
-
-Ghost Brain only adds files — doesn't modify OpenClaw config:
-
-```bash
-rm -rf ~/.openclaw/workspace/skills/ghost-*
-rm -rf ~/.openclaw/workspace/skills/self-improving-agent
-rm -f ~/.openclaw/workspace/memory/reference/{TOKEN-EFFICIENCY,SELF-LEARNING,PLAYBOOK,SECOND-BRAIN,CRON-PATTERNS,MEMORY-DB,LEARNING-REVIEW,CODING-WORKFLOW,CODING-QUICKSTART}.md
-rm -f ~/.openclaw/workspace/skills/assets/coding-*-template.md
-openclaw cron list  # then: openclaw cron rm <id> for each Ghost Brain job
-# Your data files (decisions.md, people.md, etc.) are yours — keep or delete
-```
-
-## License
-
-MIT
-
-## Credits
-
-Built with Ghost 👻
+MIT licensed. Built with Ghost 👻

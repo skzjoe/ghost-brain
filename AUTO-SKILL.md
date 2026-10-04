@@ -1,3 +1,8 @@
+> **Legacy compatibility reference.** Not installed or enabled by the default setup.
+> Prefer native OpenClaw controls and Skill Workshop under its approval policy.
+> Review effects and knowledge ownership before using these older local workflows.
+> See [README.md](README.md) for the current supported install surface.
+
 # Auto Skill Pipeline
 
 Immune-system approach to skill management. Ghost creates skills from experience, validates through real usage, self-improves on failure, and retires what doesn't work — all without human review.

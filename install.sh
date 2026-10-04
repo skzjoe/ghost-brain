@@ -6,7 +6,20 @@ set -euo pipefail
 # Safe: won't overwrite existing files unless you use --force.
 
 FORCE=false
-[[ "${1:-}" == "--force" ]] && FORCE=true
+LEGACY=false
+for arg in "$@"; do
+  case "$arg" in
+    --force) FORCE=true ;;
+    --legacy) LEGACY=true ;;
+    --help|-h)
+      echo "Usage: bash install.sh [--force] [--legacy]"
+      echo "Default: native-first skills and guidance only; no dependencies or runtime changes."
+      echo "--force updates packaged files, never user data or workspace instructions."
+      echo "--legacy also installs the older local-memory scripts, dependencies and templates."
+      exit 0 ;;
+    *) echo "Unknown option: $arg. Use --help." >&2; exit 2 ;;
+  esac
+done
 
 WORKSPACE="${OPENCLAW_WORKSPACE:-$HOME/.openclaw/workspace}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -28,7 +41,12 @@ safe_copy() {
     return
   fi
   mkdir -p "$(dirname "$dst")"
-  cp -r "$src" "$dst"
+  if [[ -d "$src" ]]; then
+    mkdir -p "$dst"
+    cp -R "$src/." "$dst/"
+  else
+    cp "$src" "$dst"
+  fi
   echo "   ✅ $(basename "$dst")"
 }
 
@@ -43,6 +61,25 @@ safe_copy_data() {
   echo "   ✅ $(basename "$dst")"
 }
 
+if [[ "$LEGACY" != true ]]; then
+  echo "📦 Installing native-first Ghost skills..."
+  for skill in ghost-audit ghost-capture ghost-recall ghost-remember; do
+    safe_copy "$SCRIPT_DIR/skills/$skill" "$WORKSPACE/skills/$skill"
+  done
+  safe_copy "$SCRIPT_DIR/PLAYBOOK.md" "$WORKSPACE/memory/reference/PLAYBOOK.md"
+  safe_copy "$SCRIPT_DIR/SECOND-BRAIN.md" "$WORKSPACE/memory/reference/SECOND-BRAIN.md"
+  safe_copy_data "$SCRIPT_DIR/starter/templates/AGENTS.md" "$WORKSPACE/AGENTS.md"
+  safe_copy_data "$SCRIPT_DIR/starter/BOOTSTRAP.md" "$WORKSPACE/BOOTSTRAP.md"
+  echo ""
+  echo "Ghost Brain installed. Existing workspace instructions were preserved."
+  echo "Review BOOTSTRAP.md; merge the packaged AGENTS.md guidance if yours already exists."
+  echo "Run bash test.sh for file checks; use /audit for behavioral evidence."
+  echo "No dependencies, indexes, cron jobs, credentials or OpenClaw settings changed."
+  exit 0
+fi
+
+echo "Legacy compatibility install selected: local memory and learning pipelines."
+echo "Review legacy instructions before use; they do not configure Skill Workshop or a canonical vault."
 echo "📦 Installing skills..."
 shopt -s nullglob
 for skill_dir in "$SCRIPT_DIR"/skills/ghost-*/ "$SCRIPT_DIR"/skills/self-improving-agent/; do
@@ -180,15 +217,15 @@ else
 fi
 
 echo ""
-echo "  🛡️ Gateway watchdog (recommended):"
+echo "  Legacy gateway watchdog (optional; not part of recommended setup):"
 echo "     1. Create secrets/telegram_bot_token.txt and secrets/telegram_chat_id.txt"
 echo "     2. Add to OS crontab: */2 * * * * bash $WORKSPACE/scripts/gateway_watchdog.sh"
 echo ""
 echo "Next steps:"
-echo "  1. Verify install: bash test.sh"
-echo "  2. Set up cron jobs: bash setup-crons.sh"
-echo "  3. Try /audit to verify everything works"
-echo "  4. Start chatting — Ghost captures decisions, ideas, and learnings automatically"
+echo "  1. Verify legacy install: bash test.sh --legacy"
+echo "  2. Review legacy cron prompts before opting in: bash setup-crons.sh --legacy"
+echo "  3. Use /audit to inspect evidence, not to assume everything works"
+echo "  4. Prefer native OpenClaw controls and Skill Workshop over legacy automation"
 echo ""
 echo "Docs: read the .md files in memory/reference/ for full details."
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
