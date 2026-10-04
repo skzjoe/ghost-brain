@@ -26,7 +26,7 @@ Set `OPENCLAW_WORKSPACE` if your workspace is elsewhere. Bash and standard file 
 | `memory/reference/SECOND-BRAIN.md` | Canonical-source and local-staging rules |
 | `AGENTS.md`, `BOOTSTRAP.md` (only if missing) | Generic routing and setup checklist |
 
-Existing files are skipped. `--force` updates packaged skills/reference docs, preserving unrelated files and never replacing existing `AGENTS.md` or `BOOTSTRAP.md`. Back up customizations before using it. If you already have workspace instructions, merge the relevant guidance from [the template](starter/templates/AGENTS.md); the installer does not merge instructions for you. `starter/install.sh` delegates to the same installer from a full clone.
+Existing files are skipped. `--force` updates packaged skills/reference docs, preserving unrelated files and never replacing existing `AGENTS.md` or `BOOTSTRAP.md`. Before copying anything, the installer checks all selected destination ancestors and colliding descendants: symbolic links (including dangling links) and incompatible file/directory types are rejected with a path to review. Existing user-data/instruction links are left untouched, including dangling `AGENTS.md`/`BOOTSTRAP.md` links. Use a real, non-symlinked workspace path and do not modify the destination concurrently during installation. Back up customizations before using it. If you already have workspace instructions, merge the relevant guidance from [the template](starter/templates/AGENTS.md); the installer does not merge instructions for you. `starter/install.sh` delegates to the same installer from a full clone.
 
 ## Everyday use
 

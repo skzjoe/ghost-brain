@@ -28,6 +28,55 @@ echo "👻 Ghost Brain Installer"
 echo "   Target: $WORKSPACE"
 echo ""
 
+# Keep lexical ancestors visible: resolving links here would hide unsafe targets.
+[[ "$WORKSPACE" = /* ]] || WORKSPACE="$PWD/$WORKSPACE"
+
+reject_path() {
+  echo "Unsafe install destination: $1 ($2). No files installed." >&2
+  echo "Use a real workspace directory; move conflicting links/files aside manually, then retry." >&2
+  exit 1
+}
+
+check_directory() {
+  local path="$1" parent
+  while [[ "$path" != / && "$path" == */ ]]; do path="${path%/}"; done
+  [[ "$path" == / ]] && return
+  parent=$(dirname "$path")
+  check_directory "$parent"
+  [[ ! -L "$path" ]] || reject_path "$path" "symbolic link"
+  [[ ! -e "$path" || -d "$path" ]] || reject_path "$path" "not a directory"
+}
+
+check_copy() {
+  local src="${1%/}" dst="$2" child
+  check_directory "$(dirname "$dst")"
+  [[ ! -L "$dst" ]] || reject_path "$dst" "symbolic link"
+  if [[ -L "$src" ]]; then
+    echo "Unsupported source symbolic link: $src. Review the package before installing." >&2
+    exit 1
+  fi
+  if [[ -d "$src" ]]; then
+    [[ ! -e "$dst" || -d "$dst" ]] || reject_path "$dst" "directory/file collision"
+    # Include dotfiles; unmatched patterns are explicitly ignored.
+    for child in "$src"/* "$src"/.[!.]* "$src"/..?*; do
+      [[ -e "$child" || -L "$child" ]] || continue
+      check_copy "$child" "$dst/$(basename "$child")"
+    done
+  else
+    [[ ! -e "$dst" || -f "$dst" ]] || reject_path "$dst" "file/directory collision"
+  fi
+}
+
+safe_mkdir() {
+  check_directory "$1"
+  [[ "$PREFLIGHT" == true ]] || mkdir -p "$1"
+}
+
+safe_chmod() {
+  [[ "$PREFLIGHT" == true ]] || chmod +x "$1" 2>/dev/null || true
+}
+
+check_directory "$WORKSPACE"
 if [[ ! -d "$WORKSPACE" ]]; then
   echo "❌ Workspace not found: $WORKSPACE"
   echo "   Set OPENCLAW_WORKSPACE or run 'openclaw setup' first."
@@ -36,7 +85,11 @@ fi
 
 safe_copy() {
   local src="$1" dst="$2"
-  if [[ -e "$dst" ]] && [[ "$FORCE" != true ]]; then
+  if [[ "$PREFLIGHT" == true ]]; then
+    check_copy "$src" "$dst"
+    return
+  fi
+  if [[ -e "$dst" || -L "$dst" ]] && [[ "$FORCE" != true ]]; then
     echo "   ⏭️  Skip (exists): $(basename "$dst")"
     return
   fi
@@ -52,8 +105,13 @@ safe_copy() {
 
 safe_copy_data() {
   local src="$1" dst="$2"
-  if [[ -e "$dst" ]]; then
+  check_directory "$(dirname "$dst")"
+  if [[ -e "$dst" || -L "$dst" ]]; then
     echo "   ⏭️  Skip (user data): $(basename "$dst")"
+    return
+  fi
+  if [[ "$PREFLIGHT" == true ]]; then
+    check_copy "$src" "$dst"
     return
   fi
   mkdir -p "$(dirname "$dst")"
@@ -61,6 +119,9 @@ safe_copy_data() {
   echo "   ✅ $(basename "$dst")"
 }
 
+# The same selected file operations run read-only first, then write.
+# No package/runtime initialization occurs until the whole preflight passes.
+install_files() {
 if [[ "$LEGACY" != true ]]; then
   echo "📦 Installing native-first Ghost skills..."
   for skill in ghost-audit ghost-capture ghost-recall ghost-remember; do
@@ -75,7 +136,7 @@ if [[ "$LEGACY" != true ]]; then
   echo "Review BOOTSTRAP.md; merge the packaged AGENTS.md guidance if yours already exists."
   echo "Run bash test.sh for file checks; use /audit for behavioral evidence."
   echo "No dependencies, indexes, cron jobs, credentials or OpenClaw settings changed."
-  exit 0
+  return
 fi
 
 echo "Legacy compatibility install selected: local memory and learning pipelines."
@@ -91,7 +152,7 @@ shopt -u nullglob
 
 echo ""
 echo "📚 Installing knowledge docs..."
-mkdir -p "$WORKSPACE/memory/reference"
+safe_mkdir "$WORKSPACE/memory/reference"
 for doc in TOKEN-EFFICIENCY.md SELF-LEARNING.md PLAYBOOK.md SECOND-BRAIN.md CRON-PATTERNS.md MEMORY-DB.md LEARNING-REVIEW.md CODING-WORKFLOW.md CODING-QUICKSTART.md; do
   [[ -f "$SCRIPT_DIR/$doc" ]] && safe_copy "$SCRIPT_DIR/$doc" "$WORKSPACE/memory/reference/$doc"
 done
@@ -99,7 +160,7 @@ done
 echo ""
 echo "🧠 Setting up memory structure..."
 for dir in weekly projects reference; do
-  mkdir -p "$WORKSPACE/memory/$dir"
+  safe_mkdir "$WORKSPACE/memory/$dir"
 done
 
 for f in decisions.md people.md ideas.md commitments.md follow-ups.md now.md heartbeat-state.json; do
@@ -109,7 +170,7 @@ done
 echo ""
 echo "📝 Setting up .learnings/..."
 for dir in domains projects archive; do
-  mkdir -p "$WORKSPACE/.learnings/$dir"
+  safe_mkdir "$WORKSPACE/.learnings/$dir"
 done
 
 for f in LEARNINGS.md ERRORS.md FEATURE_REQUESTS.md; do
@@ -120,20 +181,20 @@ done
 
 echo ""
 echo "🛠️ Installing scripts..."
-mkdir -p "$WORKSPACE/scripts"
+safe_mkdir "$WORKSPACE/scripts"
 
 safe_copy "$SCRIPT_DIR/scripts/gateway_watchdog.sh" "$WORKSPACE/scripts/gateway_watchdog.sh"
-chmod +x "$WORKSPACE/scripts/gateway_watchdog.sh" 2>/dev/null || true
+safe_chmod "$WORKSPACE/scripts/gateway_watchdog.sh"
 
 [[ -f "$SCRIPT_DIR/scripts/heartbeat_pulse.sh" ]] && {
   safe_copy "$SCRIPT_DIR/scripts/heartbeat_pulse.sh" "$WORKSPACE/scripts/heartbeat_pulse.sh"
-  chmod +x "$WORKSPACE/scripts/heartbeat_pulse.sh" 2>/dev/null || true
+  safe_chmod "$WORKSPACE/scripts/heartbeat_pulse.sh"
 }
 
 for f in obsidian_push_daily.sh obsidian_push_today.sh obsidian_push_weekly.sh run_memory_pipeline.sh; do
   [[ -f "$SCRIPT_DIR/scripts/$f" ]] && {
     safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
-    chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
+    safe_chmod "$WORKSPACE/scripts/$f"
   }
 done
 
@@ -141,7 +202,7 @@ done
 for f in learning_review.py ghost_memory_db.py detect_active_lanes.py ghost_auto_skill.py          ghost_unified_recall.py ghost_learning_loop.py ghost_error_classifier.py          ghost_todos.py model_router.py memory_content_scanner.py ghost_usage_insights.py          ghost_cli.py ghost_session_context.py ghost_working_memory.py          ghost_conversation_memory.py ghost_guardrails.py ghost_memory_sync.py          ghost_research.py ghost_research_lib.py ghost_eval.py ghost_regression.py          ghost_safety_benchmark.py ghost_trajectory_log.py ghost_continuity_benchmark.py          ghost_dashboard.py ghost_experiments.py ghost_core_contracts.py; do
   [[ -f "$SCRIPT_DIR/scripts/$f" ]] && {
     safe_copy "$SCRIPT_DIR/scripts/$f" "$WORKSPACE/scripts/$f"
-    chmod +x "$WORKSPACE/scripts/$f" 2>/dev/null || true
+    safe_chmod "$WORKSPACE/scripts/$f"
   }
 done
 
@@ -149,12 +210,21 @@ done
 
 [[ -f "$SCRIPT_DIR/scripts/generate_context_bridge.sh" ]] && {
   safe_copy "$SCRIPT_DIR/scripts/generate_context_bridge.sh" "$WORKSPACE/scripts/generate_context_bridge.sh"
-  chmod +x "$WORKSPACE/scripts/generate_context_bridge.sh" 2>/dev/null || true
+  safe_chmod "$WORKSPACE/scripts/generate_context_bridge.sh"
 }
 
 for f in "$SCRIPT_DIR"/scripts/cron_*.md; do
   [[ -f "$f" ]] && safe_copy "$f" "$WORKSPACE/scripts/$(basename "$f")"
 done
+safe_mkdir "$WORKSPACE/.local"
+
+}
+
+PREFLIGHT=true
+install_files >/dev/null
+PREFLIGHT=false
+install_files
+[[ "$LEGACY" == true ]] || exit 0
 
 echo ""
 echo "📦 Installing Python dependencies..."

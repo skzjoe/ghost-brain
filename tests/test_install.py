@@ -1,4 +1,5 @@
 import subprocess
+import shutil
 from pathlib import Path
 
 import pytest
@@ -123,3 +124,154 @@ def test_legacy_cron_uses_fake_runtime_only(tmp_path):
     result = run_script("setup-crons.sh", env, "--legacy", input_text="UTC\nfixture/model\nn\ny\n")
     assert result.returncode == 0, result.stdout + result.stderr
     assert calls.read_text().splitlines() == ["cron add"] * 9
+
+
+
+def snapshot_tree(root):
+    """Record links without following them, plus all regular file bytes/modes."""
+    result = {}
+    for path in sorted(root.rglob("*")):
+        key = str(path.relative_to(root))
+        if path.is_symlink():
+            result[key] = ("link", str(path.readlink()))
+        elif path.is_file():
+            result[key] = ("file", path.read_bytes(), path.stat().st_mode)
+        else:
+            result[key] = ("dir", path.stat().st_mode)
+    return result
+
+
+@pytest.mark.parametrize("relative", [
+    "skills", "skills/ghost-audit", "skills/ghost-audit/SKILL.md",
+    "skills/ghost-remember/SKILL.md", "memory", "memory/reference",
+    "memory/reference/SECOND-BRAIN.md",
+])
+@pytest.mark.parametrize("dangling", [False, True])
+@pytest.mark.parametrize("force", [False, True])
+def test_selected_links_rejected_before_any_writes(install_env, relative, dangling, force):
+    env, workspace, _ = install_env
+    external = workspace.parent / "external"
+    external.mkdir()
+    victim = external / "victim"
+    if not dangling:
+        if relative.endswith(".md"):
+            victim.write_text("External data must survive\n")
+        else:
+            victim.mkdir()
+            (victim / "SKILL.md").write_text("External data must survive\n")
+    link = workspace / relative
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(victim)
+    before = snapshot_tree(workspace.parent)
+    result = run_script("install.sh", env, *(["--force"] if force else []))
+    assert result.returncode != 0
+    assert "symbolic link" in result.stderr
+    assert "move conflicting links/files aside manually" in result.stderr
+    assert snapshot_tree(workspace.parent) == before
+
+
+@pytest.mark.parametrize("location", ["target", "ancestor"])
+@pytest.mark.parametrize("suffix", ["", "/", "/."])
+def test_workspace_links_rejected_before_any_writes(install_env, location, suffix):
+    env, workspace, _ = install_env
+    alias = workspace.parent / "alias"
+    alias.symlink_to(workspace if location == "target" else workspace.parent)
+    target = alias if location == "target" else alias / workspace.name
+    env["OPENCLAW_WORKSPACE"] = str(target) + suffix
+    before = snapshot_tree(workspace.parent)
+    result = run_script("install.sh", env, "--force")
+    assert result.returncode != 0
+    assert "symbolic link" in result.stderr
+    assert snapshot_tree(workspace.parent) == before
+
+
+@pytest.mark.parametrize("name", ["AGENTS.md", "BOOTSTRAP.md"])
+@pytest.mark.parametrize("dangling", [False, True])
+def test_preserved_instruction_links_are_not_followed(install_env, name, dangling):
+    env, workspace, _ = install_env
+    external = workspace.parent / "external-note"
+    if not dangling:
+        external.write_text("Preserve user instructions\n")
+    link = workspace / name
+    link.symlink_to(external)
+    result = run_script("install.sh", env, "--force")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert link.is_symlink() and link.readlink() == external
+    assert (workspace / "skills/ghost-audit/SKILL.md").is_file()
+    if dangling:
+        assert not external.exists()
+    else:
+        assert external.read_text() == "Preserve user instructions\n"
+
+
+@pytest.mark.parametrize("relative", ["skills/ghost-remember", "memory/reference/SECOND-BRAIN.md"])
+def test_type_collisions_rejected_without_partial_install(install_env, relative):
+    env, workspace, _ = install_env
+    target = workspace / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if relative.endswith(".md"):
+        target.mkdir()
+    else:
+        target.write_text("User data\n")
+    before = snapshot_tree(workspace.parent)
+    assert run_script("install.sh", env, "--force").returncode != 0
+    assert snapshot_tree(workspace.parent) == before
+
+
+@pytest.mark.parametrize("relative", [
+    "scripts/ghost_core/__init__.py", "scripts/generate_context_bridge.sh", ".local",
+])
+def test_legacy_late_link_rejected_before_writes_or_runtime(install_env, relative):
+    env, workspace, _ = install_env
+    external = workspace.parent / "external"
+    external.write_text("Private fixture\n")
+    link = workspace / relative
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(external)
+    before = snapshot_tree(workspace.parent)
+    result = run_script("install.sh", env, "--legacy", "--force")
+    assert result.returncode != 0
+    assert "symbolic link" in result.stderr
+    assert snapshot_tree(workspace.parent) == before
+
+
+
+def test_unrelated_destination_link_is_preserved(install_env):
+    env, workspace, _ = install_env
+    assert run_script("install.sh", env).returncode == 0
+    external = workspace.parent / "external-user-note"
+    external.write_text("Keep unrelated data\n")
+    link = workspace / "skills/ghost-audit/user-note"
+    link.symlink_to(external)
+    assert run_script("install.sh", env, "--force").returncode == 0
+    assert link.is_symlink()
+    assert external.read_text() == "Keep unrelated data\n"
+
+
+@pytest.mark.parametrize("source_link", [False, True])
+def test_nested_package_paths_are_preflighted(install_env, source_link):
+    env, workspace, _ = install_env
+    package = workspace.parent / "package"
+    package.mkdir()
+    shutil.copy2(ROOT / "install.sh", package / "install.sh")
+    for name in DEFAULT_SKILLS:
+        shutil.copytree(ROOT / "skills" / name, package / "skills" / name)
+    shutil.copytree(ROOT / "starter", package / "starter")
+    for name in ("PLAYBOOK.md", "SECOND-BRAIN.md"):
+        shutil.copy2(ROOT / name, package / name)
+    extra = package / "skills/ghost-remember/.hidden/nested"
+    extra.mkdir(parents=True)
+    external = workspace.parent / "external-nested"
+    external.write_text("Keep external data\n")
+    if source_link:
+        (extra / "file.md").symlink_to(external)
+    else:
+        (extra / "file.md").write_text("Packaged fixture\n")
+        target = workspace / "skills/ghost-remember/.hidden/nested/file.md"
+        target.parent.mkdir(parents=True)
+        target.symlink_to(external)
+    before = snapshot_tree(workspace.parent)
+    result = run_script(str(package / "install.sh"), env, "--force")
+    assert result.returncode != 0
+    assert "symbolic link" in result.stderr
+    assert snapshot_tree(workspace.parent) == before

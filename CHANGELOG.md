@@ -9,6 +9,7 @@
 - Older Python CLIs remain available; full local-memory installation and bulk cron setup require `--legacy`. Automatic skill pipelines are compatibility references, not the recommended Skill Workshop path. Existing installations are not automatically migrated or disabled.
 
 ### Fixed
+- Preflight selected install paths before any copies/chmod/runtime initialization; reject destination symlinks and type collisions without partial installation. Preserve existing user-data links, including dangling instruction links.
 - Forced directory updates copy into the existing destination instead of nesting a duplicate skill/package directory.
 - Added isolated installer/cron regressions and fixed a date-dependent legacy test by pinning its fixture clock.
 
